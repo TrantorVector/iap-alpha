@@ -19,6 +19,7 @@ pub mod users;
     paths(
         health::health_check,
         auth::login,
+        auth::refresh_token,
         // More paths added as we implement them
     ),
     components(schemas(
@@ -26,6 +27,8 @@ pub mod users;
         auth::LoginRequest,
         auth::LoginResponse,
         auth::UserInfo,
+        auth::RefreshRequest,
+        auth::RefreshResponse,
     )),
     tags(
         (name = "health", description = "Health check endpoints"),

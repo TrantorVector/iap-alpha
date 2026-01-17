@@ -197,6 +197,28 @@ impl UserRepository {
         Ok(id)
     }
 
+    /// Find a refresh token by hash (regardless of revocation or expiration)
+    /// Used for token refresh to provide accurate error messages
+    pub async fn find_refresh_token(
+        &self,
+        token_hash: &str,
+    ) -> DbResult<Option<RefreshToken>> {
+        let token = sqlx::query_as::<_, RefreshToken>(
+            r#"
+            SELECT id, user_id, token_hash, expires_at, revoked,
+                   device_info, ip_address, created_at
+            FROM refresh_tokens
+            WHERE token_hash = $1
+            "#,
+        )
+        .bind(token_hash)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(DbError::from)?;
+
+        Ok(token)
+    }
+
     /// Find a valid (non-revoked, non-expired) refresh token
     pub async fn find_valid_refresh_token(
         &self,

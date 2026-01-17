@@ -6,7 +6,6 @@ use argon2::{
 };
 use axum::{
     extract::State,
-    response::IntoResponse,
     Json,
 };
 use db::repositories::user::UserRepository;
@@ -135,6 +134,94 @@ pub async fn login(
     }))
 }
 
-pub async fn refresh_token(State(_state): State<AppState>) -> Result<impl IntoResponse, ApiError> {
-    Ok(Json("Refresh token placeholder"))
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct RefreshRequest {
+    #[schema(example = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...")]
+    pub refresh_token: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct RefreshResponse {
+    pub access_token: String,
+    pub token_type: String,
+    pub expires_in: i64,
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/auth/refresh",
+    request_body = RefreshRequest,
+    responses(
+        (status = 200, description = "Token refreshed successfully", body = RefreshResponse),
+        (status = 401, description = "Invalid or expired refresh token"),
+        (status = 500, description = "Internal server error")
+    ),
+    tag = "auth"
+)]
+pub async fn refresh_token(
+    State(state): State<AppState>,
+    Json(payload): Json<RefreshRequest>,
+) -> Result<Json<RefreshResponse>, ApiError> {
+    // Validate request body
+    if payload.refresh_token.is_empty() {
+        return Err(ApiError(AppError::ValidationError("Refresh token is required".to_string())));
+    }
+
+    // Hash the provided refresh token
+    let refresh_token_hash = state
+        .jwt_service
+        .hash_token(&payload.refresh_token)
+        .map_err(|e| {
+            warn!("Failed to hash refresh token: {}", e);
+            ApiError(AppError::AuthError("Invalid refresh token".to_string()))
+        })?;
+
+    let user_repo = UserRepository::new(state.db.clone());
+
+    // Look up the refresh token in the database
+    let token_record = match user_repo.find_refresh_token(&refresh_token_hash).await {
+        Ok(Some(token)) => token,
+        Ok(None) => {
+            warn!("Refresh token not found in database");
+            return Err(ApiError(AppError::AuthError("Invalid or expired refresh token".to_string())));
+        }
+        Err(e) => {
+            warn!("Database error during refresh token lookup: {}", e);
+            return Err(ApiError(AppError::InternalError("Database error".into())));
+        }
+    };
+
+    // Verify token is not revoked
+    if token_record.revoked {
+        warn!("Attempted to use revoked refresh token");
+        return Err(ApiError(AppError::AuthError("Invalid or expired refresh token".to_string())));
+    }
+
+    // Verify token is not expired
+    let now = chrono::Utc::now();
+    if token_record.expires_at < now {
+        warn!("Refresh token has expired");
+        return Err(ApiError(AppError::AuthError("Invalid or expired refresh token".to_string())));
+    }
+
+    // Generate new access token
+    let access_token = state
+        .jwt_service
+        .create_access_token(token_record.user_id, vec![])
+        .map_err(ApiError)?;
+
+    // Calculate access token expires_in (seconds)
+    let access_claims = state
+        .jwt_service
+        .decode_without_validating(&access_token)
+        .map_err(ApiError)?;
+    let expires_in = access_claims.exp - now.timestamp();
+
+    info!("Refresh token used successfully for user_id: {}", token_record.user_id);
+
+    Ok(Json(RefreshResponse {
+        access_token,
+        token_type: "Bearer".to_string(),
+        expires_in,
+    }))
 }

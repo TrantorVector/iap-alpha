@@ -108,6 +108,13 @@ impl JwtService {
         Ok(token_data.claims)
     }
     
+    /// Hash a token using SHA256 (for storing/looking up refresh tokens)
+    pub fn hash_token(&self, token: &str) -> Result<String, AppError> {
+        let mut hasher = Sha256::new();
+        hasher.update(token.as_bytes());
+        Ok(hex::encode(hasher.finalize()))
+    }
+    
     pub fn generate_dev_keypair() -> (String, String) {
         let mut rng = rand::thread_rng();
         let bits = 2048;
