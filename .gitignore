@@ -115,3 +115,7 @@ coverage/
 *.so
 *.dylib
 *.dll
+fix_docker_perms.sh
+backend/target.old.bak/
+frontend/.vite/
+backend/vendor/

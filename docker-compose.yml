@@ -12,7 +12,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -40,16 +40,19 @@ services:
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin
       AWS_REGION: us-east-1
+      JWT_PRIVATE_KEY_PATH: /app/secrets/private_key.pem
+      JWT_PUBLIC_KEY_PATH: /app/secrets/public_key.pem
     ports:
       - "8080:8080"
     volumes:
       - ./backend:/app/api
+      - ./secrets:/app/secrets
     depends_on:
       postgres:
         condition: service_healthy
       minio:
         condition: service_started
-    command: cargo watch -x run
+    command: cargo run
     working_dir: /app/api
 
   frontend:
