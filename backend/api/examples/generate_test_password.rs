@@ -26,5 +26,5 @@ fn main() {
         .expect("Failed to hash password");
 
     println!("Password: {}", password);
-    println!("Hash: {}", password_hash.to_string());
+    println!("Hash: {}", password_hash);
 }

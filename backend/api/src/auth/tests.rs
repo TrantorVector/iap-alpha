@@ -8,7 +8,7 @@ use uuid::Uuid;
 fn test_hash_password_creates_valid_hash() {
     let password = "secure_password_123";
     let hash = hash_password(password).expect("Failed to hash password");
-    assert!(hash.len() > 0);
+    assert!(!hash.is_empty());
     assert!(hash.starts_with("$argon2id"));
 }
 
