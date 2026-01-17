@@ -21,6 +21,8 @@ pub mod users;
         auth::login,
         auth::refresh_token,
         auth::logout,
+        companies::get_company_details,
+        companies::get_company_metrics,
         // More paths added as we implement them
     ),
     components(schemas(
@@ -31,6 +33,13 @@ pub mod users;
         auth::RefreshRequest,
         auth::RefreshResponse,
         auth::LogoutRequest,
+        companies::CompanyDetailsResponse,
+        companies::MetricsResponse,
+        companies::MetricsSections,
+        companies::MetricRow,
+        companies::MetricValueOut,
+        domain::periods::FiscalPeriod,
+        domain::periods::PeriodType,
     )),
     tags(
         (name = "health", description = "Health check endpoints"),

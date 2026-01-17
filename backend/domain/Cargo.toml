@@ -12,4 +12,6 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 tracing = { workspace = true }
 sqlx = { workspace = true }
+bigdecimal = { workspace = true }
 bytes = "1.5"
+utoipa = { workspace = true }
