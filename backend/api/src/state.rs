@@ -91,7 +91,13 @@ impl AppState {
             ));
         };
 
-        let jwt_service = Arc::new(JwtService::new(&private_key, &public_key)?);
+        let jwt_private_key_str = String::from_utf8(private_key)
+            .map_err(|e| AppError::InternalError(format!("Invalid UTF-8 in private key: {}", e)))?;
+            
+        let jwt_public_key_str = String::from_utf8(public_key)
+            .map_err(|e| AppError::InternalError(format!("Invalid UTF-8 in public key: {}", e)))?;
+
+        let jwt_service = Arc::new(JwtService::new(&jwt_private_key_str, &jwt_public_key_str)?);
 
         Ok(Self {
             db,
