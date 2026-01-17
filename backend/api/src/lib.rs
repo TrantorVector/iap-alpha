@@ -6,5 +6,5 @@ pub mod routes;
 pub mod state;
 
 pub use config::Config;
-pub use state::AppState;
 pub use routes::create_router;
+pub use state::AppState;

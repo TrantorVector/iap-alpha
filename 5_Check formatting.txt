@@ -1,0 +1,262 @@
+﻿2026-01-17T18:49:18.9368900Z ##[group]Run cd backend && cargo fmt --all -- --check
+2026-01-17T18:49:18.9369284Z [36;1mcd backend && cargo fmt --all -- --check[0m
+2026-01-17T18:49:18.9388479Z shell: /usr/bin/bash -e {0}
+2026-01-17T18:49:18.9388726Z env:
+2026-01-17T18:49:18.9388931Z   CARGO_HOME: /home/runner/.cargo
+2026-01-17T18:49:18.9389168Z   CARGO_INCREMENTAL: 0
+2026-01-17T18:49:18.9389364Z   CARGO_TERM_COLOR: always
+2026-01-17T18:49:18.9389619Z   CACHE_ON_FAILURE: false
+2026-01-17T18:49:18.9389828Z ##[endgroup]
+2026-01-17T18:49:19.6978242Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/src/lib.rs:6:
+2026-01-17T18:49:19.6979334Z  pub mod state;
+2026-01-17T18:49:19.6979727Z  
+2026-01-17T18:49:19.6986831Z  pub use config::Config;
+2026-01-17T18:49:19.6987407Z -pub use state::AppState;
+2026-01-17T18:49:19.6987792Z  pub use routes::create_router;
+2026-01-17T18:49:19.6988134Z +pub use state::AppState;
+2026-01-17T18:49:19.6988392Z  
+2026-01-17T18:49:19.7099661Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:10:
+2026-01-17T18:49:19.7101087Z      let mut config = Config::from_env().unwrap_or_else(|_| {
+2026-01-17T18:49:19.7101672Z          // Create a default config if env vars are missing
+2026-01-17T18:49:19.7102101Z          Config {
+2026-01-17T18:49:19.7103626Z -            database_url: std::env::var("DATABASE_URL").unwrap_or_else(|_| "***localhost:5432/irp_dev".to_string()),
+2026-01-17T18:49:19.7104346Z +            database_url: std::env::var("DATABASE_URL")
+2026-01-17T18:49:19.7104962Z +                .unwrap_or_else(|_| "***localhost:5432/irp_dev".to_string()),
+2026-01-17T18:49:19.7105512Z              jwt_private_key_file: None,
+2026-01-17T18:49:19.7105955Z              jwt_public_key_file: None,
+2026-01-17T18:49:19.7106343Z              jwt_private_key: None,
+2026-01-17T18:49:19.7107015Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:30:
+2026-01-17T18:49:19.7107681Z      config.server_port = 0;
+2026-01-17T18:49:19.7108131Z      config.server_host = "127.0.0.1".to_string();
+2026-01-17T18:49:19.7108815Z      config.environment = api::config::Environment::Development;
+2026-01-17T18:49:19.7109390Z -    
+2026-01-17T18:49:19.7109652Z +
+2026-01-17T18:49:19.7110131Z      // Clear key paths to force auto-generation of dev keys (avoids file not found errors in CI)
+2026-01-17T18:49:19.7110728Z      config.jwt_private_key_file = None;
+2026-01-17T18:49:19.7110989Z      config.jwt_public_key_file = None;
+2026-01-17T18:49:19.7111377Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:37:
+2026-01-17T18:49:19.7111763Z  
+2026-01-17T18:49:19.7111945Z      let config = Arc::new(config);
+2026-01-17T18:49:19.7112316Z -    let state = AppState::new(config.clone()).await.expect("Failed to create AppState");
+2026-01-17T18:49:19.7112717Z +    let state = AppState::new(config.clone())
+2026-01-17T18:49:19.7112954Z +        .await
+2026-01-17T18:49:19.7113163Z +        .expect("Failed to create AppState");
+2026-01-17T18:49:19.7113423Z      let app = create_router(state);
+2026-01-17T18:49:19.7113643Z  
+2026-01-17T18:49:19.7113965Z -    let listener = TcpListener::bind("127.0.0.1:0").await.expect("Failed to bind random port");
+2026-01-17T18:49:19.7114401Z +    let listener = TcpListener::bind("127.0.0.1:0")
+2026-01-17T18:49:19.7114652Z +        .await
+2026-01-17T18:49:19.7114850Z +        .expect("Failed to bind random port");
+2026-01-17T18:49:19.7115125Z      let addr = listener.local_addr().unwrap();
+2026-01-17T18:49:19.7115373Z  
+2026-01-17T18:49:19.7115534Z      tokio::spawn(async move {
+2026-01-17T18:49:19.7115898Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:57:
+2026-01-17T18:49:19.7116268Z  }
+2026-01-17T18:49:19.7116408Z  
+2026-01-17T18:49:19.7116653Z  async fn login(client: &Client, base_url: &str) -> (String, String) {
+2026-01-17T18:49:19.7117059Z -    let resp = client.post(format!("{}/api/v1/auth/login", base_url))
+2026-01-17T18:49:19.7117359Z +    let resp = client
+2026-01-17T18:49:19.7117597Z +        .post(format!("{}/api/v1/auth/login", base_url))
+2026-01-17T18:49:19.7118148Z          .json(&json!({
+2026-01-17T18:49:19.7118354Z              "username": "testuser",
+2026-01-17T18:49:19.7118597Z              "password": "TestPass123!"
+2026-01-17T18:49:19.7118972Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:65:
+2026-01-17T18:49:19.7119345Z          .send()
+2026-01-17T18:49:19.7119510Z          .await
+2026-01-17T18:49:19.7119710Z          .expect("Failed to send login request");
+2026-01-17T18:49:19.7120050Z -        
+2026-01-17T18:49:19.7120318Z +
+2026-01-17T18:49:19.7120542Z      if resp.status() != StatusCode::OK {
+2026-01-17T18:49:19.7120830Z          panic!("Login failed: {:?}", resp.status());
+2026-01-17T18:49:19.7121068Z      }
+2026-01-17T18:49:19.7121370Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:72:
+2026-01-17T18:49:19.7121739Z -    
+2026-01-17T18:49:19.7121889Z +
+2026-01-17T18:49:19.7122159Z      let body: Value = resp.json().await.unwrap();
+2026-01-17T18:49:19.7122433Z      (
+2026-01-17T18:49:19.7122646Z          body["access_token"].as_str().unwrap().to_string(),
+2026-01-17T18:49:19.7123054Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:76:
+2026-01-17T18:49:19.7123483Z -        body["refresh_token"].as_str().unwrap().to_string()
+2026-01-17T18:49:19.7123813Z +        body["refresh_token"].as_str().unwrap().to_string(),
+2026-01-17T18:49:19.7124077Z      )
+2026-01-17T18:49:19.7124254Z  }
+2026-01-17T18:49:19.7124404Z  
+2026-01-17T18:49:19.7124694Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:81:
+2026-01-17T18:49:19.7125131Z  async fn test_login_with_valid_credentials_returns_tokens() {
+2026-01-17T18:49:19.7125440Z      let base_url = spawn_app().await;
+2026-01-17T18:49:19.7125690Z      let client = get_client().await;
+2026-01-17T18:49:19.7125908Z -    
+2026-01-17T18:49:19.7126154Z -    let resp = client.post(format!("{}/api/v1/auth/login", base_url))
+2026-01-17T18:49:19.7126465Z +
+2026-01-17T18:49:19.7126617Z +    let resp = client
+2026-01-17T18:49:19.7126855Z +        .post(format!("{}/api/v1/auth/login", base_url))
+2026-01-17T18:49:19.7127120Z          .json(&json!({
+2026-01-17T18:49:19.7127315Z              "username": "testuser",
+2026-01-17T18:49:19.7127554Z              "password": "TestPass123!"
+2026-01-17T18:49:19.7127927Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:90:
+2026-01-17T18:49:19.7128297Z          .send()
+2026-01-17T18:49:19.7128462Z          .await
+2026-01-17T18:49:19.7128639Z          .unwrap();
+2026-01-17T18:49:19.7128812Z -        
+2026-01-17T18:49:19.7128958Z +
+2026-01-17T18:49:19.7129148Z      assert_eq!(resp.status(), StatusCode::OK);
+2026-01-17T18:49:19.7129434Z      let body: Value = resp.json().await.unwrap();
+2026-01-17T18:49:19.7129711Z      assert!(body["access_token"].is_string());
+2026-01-17T18:49:19.7130105Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:103:
+2026-01-17T18:49:19.7130691Z  async fn test_login_with_invalid_password_returns_401() {
+2026-01-17T18:49:19.7130977Z      let base_url = spawn_app().await;
+2026-01-17T18:49:19.7131224Z      let client = get_client().await;
+2026-01-17T18:49:19.7131529Z -    let resp = client.post(format!("{}/api/v1/auth/login", base_url))
+2026-01-17T18:49:19.7131836Z +    let resp = client
+2026-01-17T18:49:19.7132062Z +        .post(format!("{}/api/v1/auth/login", base_url))
+2026-01-17T18:49:19.7132329Z          .json(&json!({
+2026-01-17T18:49:19.7132524Z              "username": "testuser",
+2026-01-17T18:49:19.7132754Z              "password": "WrongPassword!"
+2026-01-17T18:49:19.7133135Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:111:
+2026-01-17T18:49:19.7133513Z          .send()
+2026-01-17T18:49:19.7133689Z          .await
+2026-01-17T18:49:19.7133860Z          .unwrap();
+2026-01-17T18:49:19.7134026Z -        
+2026-01-17T18:49:19.7134181Z +
+2026-01-17T18:49:19.7134400Z      assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+2026-01-17T18:49:19.7134825Z  }
+2026-01-17T18:49:19.7134973Z  
+2026-01-17T18:49:19.7135275Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:119:
+2026-01-17T18:49:19.7135725Z  async fn test_login_with_nonexistent_user_returns_401() {
+2026-01-17T18:49:19.7136017Z      let base_url = spawn_app().await;
+2026-01-17T18:49:19.7136256Z      let client = get_client().await;
+2026-01-17T18:49:19.7136637Z -    let resp = client.post(format!("{}/api/v1/auth/login", base_url))
+2026-01-17T18:49:19.7136936Z +    let resp = client
+2026-01-17T18:49:19.7137166Z +        .post(format!("{}/api/v1/auth/login", base_url))
+2026-01-17T18:49:19.7137428Z          .json(&json!({
+2026-01-17T18:49:19.7137617Z              "username": "ghostuser",
+2026-01-17T18:49:19.7137859Z              "password": "TestPass123!"
+2026-01-17T18:49:19.7138233Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:127:
+2026-01-17T18:49:19.7138607Z          .send()
+2026-01-17T18:49:19.7138767Z          .await
+2026-01-17T18:49:19.7138935Z          .unwrap();
+2026-01-17T18:49:19.7139102Z -        
+2026-01-17T18:49:19.7139244Z +
+2026-01-17T18:49:19.7139448Z      assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+2026-01-17T18:49:19.7139708Z  }
+2026-01-17T18:49:19.7139845Z  
+2026-01-17T18:49:19.7140143Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:136:
+2026-01-17T18:49:19.7140677Z      let base_url = spawn_app().await;
+2026-01-17T18:49:19.7140911Z      let client = get_client().await;
+2026-01-17T18:49:19.7141197Z      let (_, refresh_token) = login(&client, &base_url).await;
+2026-01-17T18:49:19.7141476Z -    
+2026-01-17T18:49:19.7141719Z -    let resp = client.post(format!("{}/api/v1/auth/refresh", base_url))
+2026-01-17T18:49:19.7142023Z +
+2026-01-17T18:49:19.7142180Z +    let resp = client
+2026-01-17T18:49:19.7142426Z +        .post(format!("{}/api/v1/auth/refresh", base_url))
+2026-01-17T18:49:19.7142694Z          .json(&json!({
+2026-01-17T18:49:19.7142906Z              "refresh_token": refresh_token
+2026-01-17T18:49:19.7143137Z          }))
+2026-01-17T18:49:19.7143440Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:144:
+2026-01-17T18:49:19.7143812Z          .send()
+2026-01-17T18:49:19.7143983Z          .await
+2026-01-17T18:49:19.7144142Z          .unwrap();
+2026-01-17T18:49:19.7144315Z -        
+2026-01-17T18:49:19.7144471Z +
+2026-01-17T18:49:19.7144653Z      assert_eq!(resp.status(), StatusCode::OK);
+2026-01-17T18:49:19.7144943Z      let body: Value = resp.json().await.unwrap();
+2026-01-17T18:49:19.7145226Z      assert!(body["access_token"].is_string());
+2026-01-17T18:49:19.7145613Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:154:
+2026-01-17T18:49:19.7146048Z  async fn test_refresh_with_expired_token_returns_401() {
+2026-01-17T18:49:19.7146339Z      let base_url = spawn_app().await;
+2026-01-17T18:49:19.7146583Z      let client = get_client().await;
+2026-01-17T18:49:19.7146798Z -    
+2026-01-17T18:49:19.7147040Z -    let resp = client.post(format!("{}/api/v1/auth/refresh", base_url))
+2026-01-17T18:49:19.7147345Z +
+2026-01-17T18:49:19.7147492Z +    let resp = client
+2026-01-17T18:49:19.7147733Z +        .post(format!("{}/api/v1/auth/refresh", base_url))
+2026-01-17T18:49:19.7148002Z          .json(&json!({
+2026-01-17T18:49:19.7148261Z              "refresh_token": "valid.sha256.structure.but.expired"
+2026-01-17T18:49:19.7148551Z          }))
+2026-01-17T18:49:19.7148860Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:162:
+2026-01-17T18:49:19.7149229Z          .send()
+2026-01-17T18:49:19.7149386Z          .await
+2026-01-17T18:49:19.7149553Z          .unwrap();
+2026-01-17T18:49:19.7149723Z -        
+2026-01-17T18:49:19.7149869Z +
+2026-01-17T18:49:19.7150079Z      assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+2026-01-17T18:49:19.7150494Z  }
+2026-01-17T18:49:19.7150639Z  
+2026-01-17T18:49:19.7150939Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:171:
+2026-01-17T18:49:19.7151462Z      let base_url = spawn_app().await;
+2026-01-17T18:49:19.7151706Z      let client = get_client().await;
+2026-01-17T18:49:19.7152023Z      let (access_token, refresh_token) = login(&client, &base_url).await;
+2026-01-17T18:49:19.7152336Z -    
+2026-01-17T18:49:19.7152481Z +
+2026-01-17T18:49:19.7152631Z      // Logout
+2026-01-17T18:49:19.7152913Z -    let logout_resp = client.post(format!("{}/api/v1/auth/logout", base_url))
+2026-01-17T18:49:19.7153316Z +    let logout_resp = client
+2026-01-17T18:49:19.7153575Z +        .post(format!("{}/api/v1/auth/logout", base_url))
+2026-01-17T18:49:19.7154061Z          .header("Authorization", format!("***", access_token))
+2026-01-17T18:49:19.7154351Z          .json(&json!({
+2026-01-17T18:49:19.7154557Z              "refresh_token": refresh_token
+2026-01-17T18:49:19.7154946Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:181:
+2026-01-17T18:49:19.7155321Z          .send()
+2026-01-17T18:49:19.7155490Z          .await
+2026-01-17T18:49:19.7155652Z          .unwrap();
+2026-01-17T18:49:19.7155829Z -        
+2026-01-17T18:49:19.7156029Z +
+2026-01-17T18:49:19.7156265Z      assert_eq!(logout_resp.status(), StatusCode::NO_CONTENT);
+2026-01-17T18:49:19.7156539Z -    
+2026-01-17T18:49:19.7156691Z +
+2026-01-17T18:49:19.7156872Z      // Try to refresh with the revoked token
+2026-01-17T18:49:19.7157222Z -    let refresh_resp = client.post(format!("{}/api/v1/auth/refresh", base_url))
+2026-01-17T18:49:19.7157568Z +    let refresh_resp = client
+2026-01-17T18:49:19.7157830Z +        .post(format!("{}/api/v1/auth/refresh", base_url))
+2026-01-17T18:49:19.7158104Z          .json(&json!({
+2026-01-17T18:49:19.7158305Z              "refresh_token": refresh_token
+2026-01-17T18:49:19.7158536Z          }))
+2026-01-17T18:49:19.7158847Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:192:
+2026-01-17T18:49:19.7159221Z          .send()
+2026-01-17T18:49:19.7159392Z          .await
+2026-01-17T18:49:19.7159560Z          .unwrap();
+2026-01-17T18:49:19.7159723Z -        
+2026-01-17T18:49:19.7159879Z +
+2026-01-17T18:49:19.7160117Z      assert_eq!(refresh_resp.status(), StatusCode::UNAUTHORIZED);
+2026-01-17T18:49:19.7160560Z  }
+2026-01-17T18:49:19.7160714Z  
+2026-01-17T18:49:19.7161017Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:201:
+2026-01-17T18:49:19.7161408Z      let base_url = spawn_app().await;
+2026-01-17T18:49:19.7161653Z      let client = get_client().await;
+2026-01-17T18:49:19.7161900Z      // Using logout as protected route
+2026-01-17T18:49:19.7162218Z -    let resp = client.post(format!("{}/api/v1/auth/logout", base_url))
+2026-01-17T18:49:19.7162525Z +    let resp = client
+2026-01-17T18:49:19.7162790Z +        .post(format!("{}/api/v1/auth/logout", base_url))
+2026-01-17T18:49:19.7163230Z          .json(&json!({"refresh_token": "dummy"}))
+2026-01-17T18:49:19.7163647Z          .send()
+2026-01-17T18:49:19.7163935Z          .await
+2026-01-17T18:49:19.7164544Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:208:
+2026-01-17T18:49:19.7165254Z          .unwrap();
+2026-01-17T18:49:19.7165581Z -        
+2026-01-17T18:49:19.7165869Z +
+2026-01-17T18:49:19.7166257Z      assert_eq!(resp.status(), StatusCode::UNAUTHORIZED);
+2026-01-17T18:49:19.7166724Z  }
+2026-01-17T18:49:19.7166988Z  
+2026-01-17T18:49:19.7167542Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:215:
+2026-01-17T18:49:19.7168291Z      let base_url = spawn_app().await;
+2026-01-17T18:49:19.7168734Z      let client = get_client().await;
+2026-01-17T18:49:19.7169310Z      let (access_token, refresh_token) = login(&client, &base_url).await;
+2026-01-17T18:49:19.7169900Z -    
+2026-01-17T18:49:19.7170307Z +
+2026-01-17T18:49:19.7170624Z      // Using logout as protected route
+2026-01-17T18:49:19.7171223Z -    let resp = client.post(format!("{}/api/v1/auth/logout", base_url))
+2026-01-17T18:49:19.7172081Z +    let resp = client
+2026-01-17T18:49:19.7172483Z +        .post(format!("{}/api/v1/auth/logout", base_url))
+2026-01-17T18:49:19.7173139Z          .header("Authorization", format!("***", access_token))
+2026-01-17T18:49:19.7173644Z          .json(&json!({
+2026-01-17T18:49:19.7174004Z              "refresh_token": refresh_token
+2026-01-17T18:49:19.7174671Z Diff in /home/runner/work/iap-alpha/iap-alpha/backend/api/tests/auth_integration.rs:225:
+2026-01-17T18:49:19.7175441Z          .send()
+2026-01-17T18:49:19.7175720Z          .await
+2026-01-17T18:49:19.7176016Z          .unwrap();
+2026-01-17T18:49:19.7176313Z -        
+2026-01-17T18:49:19.7176555Z +
+2026-01-17T18:49:19.7176948Z      assert_eq!(resp.status(), StatusCode::NO_CONTENT);
+2026-01-17T18:49:19.7177390Z  }
+2026-01-17T18:49:19.7177639Z  
+2026-01-17T18:49:19.7349373Z ##[error]Process completed with exit code 1.
