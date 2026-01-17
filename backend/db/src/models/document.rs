@@ -15,10 +15,12 @@ pub struct Document {
     // Document metadata
     pub document_type: String, // "investor_presentation" | "earnings_call_transcript" | etc.
     pub period_end_date: Option<NaiveDate>,
+    pub fiscal_year: Option<i32>,
+    pub fiscal_quarter: Option<i32>,
     pub title: String,
 
     // Storage
-    pub storage_key: String, // S3 key
+    pub storage_key: Option<String>, // S3 key
     pub source_url: Option<String>,
 
     // File metadata
@@ -28,6 +30,12 @@ pub struct Document {
     // Audit
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+
+impl Document {
+    pub fn is_available(&self) -> bool {
+        self.storage_key.is_some()
+    }
 }
 
 /// Analysis report entity

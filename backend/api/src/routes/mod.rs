@@ -23,6 +23,7 @@ pub mod users;
         auth::logout,
         companies::get_company_details,
         companies::get_company_metrics,
+        companies::get_company_documents,
         // More paths added as we implement them
     ),
     components(schemas(
@@ -38,6 +39,9 @@ pub mod users;
         companies::MetricsSections,
         companies::MetricRow,
         companies::MetricValueOut,
+        companies::DocumentsResponse,
+        companies::DocumentOut,
+        companies::FreshnessMetadata,
         domain::periods::FiscalPeriod,
         domain::periods::PeriodType,
     )),

@@ -5,6 +5,7 @@ pub mod company;
 /// Each repository handles CRUD operations for a specific entity.
 pub mod user;
 pub mod verdict;
+pub mod document;
 
 // Re-export commonly used repositories
 pub use company::{
@@ -13,3 +14,4 @@ pub use company::{
 };
 pub use user::{CreateUserRequest, UserPreferencesUpdate, UserRepository};
 pub use verdict::{VerdictCreate, VerdictRepository, VerdictUpdate};
+pub use document::DocumentRepository;

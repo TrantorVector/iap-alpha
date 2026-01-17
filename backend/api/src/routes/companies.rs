@@ -6,18 +6,20 @@ use axum::{
     routing::get,
     Json, Router,
 };
-use chrono::{DateTime, Utc};
-use db::repositories::CompanyRepository;
+use chrono::{DateTime, NaiveDate, Utc};
+use db::repositories::{CompanyRepository, DocumentRepository};
 use domain::metrics::calculator::MetricsCalculator;
 use domain::periods::{PeriodWindowGenerator, PeriodType};
 use serde::{Deserialize, Serialize};
 use utoipa::{ToSchema, IntoParams};
 use uuid::Uuid;
+use chrono::Datelike;
 
 pub fn companies_router() -> Router<AppState> {
     Router::new()
         .route("/:id", get(get_company_details))
         .route("/:id/metrics", get(get_company_metrics))
+        .route("/:id/documents", get(get_company_documents))
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
@@ -327,6 +329,115 @@ pub async fn get_company_metrics(
         period_type: period_type_str,
         periods: period_labels,
         sections,
+    };
+
+    Ok(Json(response))
+}
+
+#[derive(Deserialize, IntoParams)]
+pub struct DocumentsQueryParams {
+    pub document_type: Option<String>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct DocumentsResponse {
+    pub documents: Vec<DocumentOut>,
+    pub freshness: FreshnessMetadata,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct DocumentOut {
+    pub id: Uuid,
+    pub document_type: String,
+    pub period_end_date: Option<NaiveDate>,
+    pub fiscal_year: i32,
+    pub fiscal_quarter: Option<i32>,
+    pub title: String,
+    pub source_url: Option<String>,
+    pub storage_key: Option<String>,
+    pub file_size: Option<i64>,
+    pub mime_type: Option<String>,
+    pub available: bool,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct FreshnessMetadata {
+    pub last_refreshed_at: Option<DateTime<Utc>>,
+    pub is_stale: bool,
+    pub refresh_requested: bool,
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/companies/{id}/documents",
+    params(
+        ("id" = Uuid, Path, description = "Company ID"),
+        DocumentsQueryParams
+    ),
+    responses(
+        (status = 200, description = "Company documents", body = DocumentsResponse),
+        (status = 404, description = "Company not found")
+    ),
+    tag = "companies"
+)]
+pub async fn get_company_documents(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+    Query(params): Query<DocumentsQueryParams>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let company_repo = CompanyRepository::new(state.db.clone());
+    let doc_repo = DocumentRepository::new(state.db.clone());
+
+    // 1. Fetch company for freshness and existence
+    let company = company_repo
+        .find_by_id(id)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::NOT_FOUND, "Company not found".to_string()))?;
+
+    // 2. Fetch documents
+    let docs = doc_repo
+        .find_by_company_id(id, params.document_type)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // 3. Determine freshness
+    let last_refreshed_at = Some(company.updated_at);
+    let is_stale = Utc::now().signed_duration_since(company.updated_at).num_hours() > 24;
+    let refresh_requested = false; // Could check background_jobs table for pending refreshes
+
+    if is_stale {
+        // Enqueue background refresh (placeholder)
+        tracing::info!("Company {} data is stale, would enqueue refresh", id);
+    }
+
+    // 4. Map to response (grouped by type and sorted by date via DB)
+    let documents = docs.into_iter().map(|d| {
+        let available = d.is_available();
+        DocumentOut {
+            id: d.id,
+            document_type: d.document_type,
+            period_end_date: d.period_end_date,
+            fiscal_year: d.fiscal_year.unwrap_or_else(|| {
+                d.period_end_date.map(|dt| dt.year()).unwrap_or(0)
+            }),
+            fiscal_quarter: d.fiscal_quarter,
+            title: d.title,
+            source_url: d.source_url,
+            storage_key: d.storage_key,
+            file_size: d.file_size,
+            mime_type: d.mime_type,
+            available,
+        }
+    }).collect();
+
+    let response = DocumentsResponse {
+        documents,
+        freshness: FreshnessMetadata {
+            last_refreshed_at,
+            is_stale,
+            refresh_requested,
+        },
     };
 
     Ok(Json(response))
