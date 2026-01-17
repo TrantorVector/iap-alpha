@@ -317,7 +317,7 @@ mod tests {
             .unwrap_or_else(|_| "postgres://postgres:dev@localhost:5432/irp_dev".to_string());
 
         let pool = crate::init_pool(&database_url).await.unwrap();
-        let repo = VerdictRepository::new(pool);
+        let _repo = VerdictRepository::new(pool);
 
         // This test would require setting up test data
         // Just showing the structure
