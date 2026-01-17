@@ -17,6 +17,6 @@ serde_json = { workspace = true }
 jsonwebtoken = "9"
 base64ct = "=1.6.0"
 # Internal
-core = { workspace = true }
+domain = { workspace = true }
 db = { workspace = true }
 providers = { workspace = true }

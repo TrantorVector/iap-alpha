@@ -3,7 +3,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use core::error::{ApiErrorResponse, AppError, ErrorDetails};
+use domain::error::{ApiErrorResponse, AppError, ErrorDetails};
 use serde_json::json;
 use tracing::{error, warn};
 

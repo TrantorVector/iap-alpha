@@ -1,5 +1,5 @@
-use app_core::error::AppError;
-use app_core::ports::storage::ObjectStorage;
+use domain::error::AppError;
+use domain::ports::storage::ObjectStorage;
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::time::Duration;

@@ -51,8 +51,8 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "base64ct",
- "core",
  "db",
+ "domain",
  "jsonwebtoken",
  "providers",
  "serde",
@@ -262,21 +262,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
 
 [[package]]
-name = "core"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "bytes",
- "chrono",
- "serde",
- "serde_json",
- "sqlx",
- "thiserror 1.0.69",
- "tracing",
- "uuid",
-]
-
-[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -406,6 +391,21 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.114",
+]
+
+[[package]]
+name = "domain"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "chrono",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 1.0.69",
+ "tracing",
+ "uuid",
 ]
 
 [[package]]
@@ -1486,7 +1486,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "chrono",
- "core",
+ "domain",
  "reqwest",
  "serde",
  "serde_json",
@@ -3168,8 +3168,8 @@ checksum = "d7249219f66ced02969388cf2bb044a09756a083d0fab1e566056b04d9fbcaa5"
 name = "worker"
 version = "0.1.0"
 dependencies = [
- "core",
  "db",
+ "domain",
  "providers",
  "tokio",
 ]

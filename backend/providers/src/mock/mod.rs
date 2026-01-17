@@ -1,10 +1,10 @@
-use app_core::domain::{
+use domain::domain::{
     BalanceSheet, CashFlowStatement, CompanyOverview, DailyPrice, EarningsEvent, IncomeStatement,
     OutputSize,
 };
-use app_core::error::AppError;
-use app_core::ports::market_data::MarketDataProvider;
-use app_core::ports::storage::ObjectStorage;
+use domain::error::AppError;
+use domain::ports::market_data::MarketDataProvider;
+use domain::ports::storage::ObjectStorage;
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::time::Duration;

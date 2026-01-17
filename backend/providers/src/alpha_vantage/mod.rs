@@ -1,6 +1,6 @@
-use app_core::domain::*;
-use app_core::error::AppError;
-use app_core::ports::market_data::MarketDataProvider;
+use domain::domain::*;
+use domain::error::AppError;
+use domain::ports::market_data::MarketDataProvider;
 use async_trait::async_trait;
 
 #[derive(Clone)]

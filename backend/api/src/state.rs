@@ -1,8 +1,8 @@
 use crate::auth::jwt::JwtService;
 use crate::config::{Config, Environment};
-use core::error::AppError;
-use core::ports::market_data::MarketDataProvider;
-use core::ports::storage::ObjectStorage;
+use domain::error::AppError;
+use domain::ports::market_data::MarketDataProvider;
+use domain::ports::storage::ObjectStorage;
 use db::PgPool;
 use providers::alpha_vantage::AlphaVantageClient;
 use providers::mock::{MockMarketDataProvider, MockObjectStorage};

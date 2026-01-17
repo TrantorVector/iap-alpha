@@ -9,5 +9,5 @@ async-trait = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 chrono = { workspace = true }
-app_core = { package = "core", path = "../core" }
+domain = { workspace = true }
 bytes = "1.5"
