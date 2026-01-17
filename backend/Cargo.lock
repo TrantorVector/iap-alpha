@@ -50,10 +50,13 @@ name = "api"
 version = "0.1.0"
 dependencies = [
  "argon2",
+ "async-trait",
  "axum",
  "base64ct",
+ "chrono",
  "db",
  "domain",
+ "dotenvy",
  "hex",
  "jsonwebtoken",
  "matchit",

@@ -15,6 +15,12 @@ use state::AppState;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Load .env file from the project root (../. from backend/)
+    // In production, this will just skip gracefully if .env doesn't exist
+    if let Err(e) = dotenvy::from_path("../.env") {
+        eprintln!("Warning: Could not load .env file: {}. Using existing environment variables.", e);
+    }
+
     // Initialize tracing
     tracing_subscriber::registry()
         .with(

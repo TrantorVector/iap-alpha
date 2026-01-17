@@ -18,11 +18,14 @@ pub mod users;
 #[openapi(
     paths(
         health::health_check,
+        auth::login,
         // More paths added as we implement them
     ),
     components(schemas(
         health::HealthResponse,
-        // More schemas added as we implement them
+        auth::LoginRequest,
+        auth::LoginResponse,
+        auth::UserInfo,
     )),
     tags(
         (name = "health", description = "Health check endpoints"),

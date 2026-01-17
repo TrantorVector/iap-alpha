@@ -6,7 +6,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 use sha2::{Sha256, Digest};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     pub sub: String,
     pub iat: i64,
