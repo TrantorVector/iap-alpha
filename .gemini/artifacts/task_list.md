@@ -1,8 +1,8 @@
 # Investment Research Platform - Task List
 
-**Last Updated**: January 17, 2026, 4:56 PM IST  
-**Current Phase**: Database Foundation (Step 4)  
-**Status**: Phases 4.1-4.3 Complete, 4.4-4.7 Pending
+**Last Updated**: January 17, 2026, 5:15 PM IST  
+**Current Phase**: Database Foundation (Step 4) - COMPLETE ✅  
+**Status**: All database work complete, ready for Backend API (Step 5)
 
 ---
 
@@ -68,74 +68,47 @@
   - Delete method (1 method)
   - DTOs: VerdictCreate, VerdictUpdate
 
+- [x] **4.4** Run Migrations
+  - Created migration runner example (`run_migrations.rs`)
+  - Successfully executed migrations
+  - Validated 29 tables created
+  - Verified seed data (5 companies, 1 user)
+
+- [x] **4.5** Git Checkpoint & Documentation
+  - Committed all database code
+  - Pushed to develop branch
+  - Updated artifacts documentation
+
+- [x] **4.6** PostgreSQL Setup
+  - Pulled PostgreSQL 15 Alpine image
+  - Created Docker volume for persistence
+  - Ran PostgreSQL container with specified settings
+  - Verified container running and connection with psql
+
+- [x] **4.7** Verify Database with Test Queries
+  - Connected to database with psql
+  - Verified table count, test user, Apple financial data
+  - Tested full-text search, partitions, computed columns, and triggers
+
+- [x] **4.8** Optional: SQLx Offline Mode
+  - Ran `cargo sqlx prepare`
+  - Verified `sqlx-data.json` created
+  - Tested compilation without database connection
+  - Committed `sqlx-data.json` to Git
+
 ---
 
-## 🔄 In Progress
+## 🔄 Current Focus
 
-### Database Foundation (Step 4.4-4.7)
-Currently working on infrastructure and verification phases.
+### Step 5: Backend API Development - NEXT PHASE
+
+Refer to `docs/build-plan-v3/05-backend-core.md` for detailed instructions.
 
 ---
 
 ## ⏳ Pending Tasks
 
-### Database Foundation - Infrastructure
-
-#### **4.4 Git Checkpoint & Documentation** ⬅️ NEXT
-- [ ] Add all database code to Git
-- [ ] Commit with descriptive message
-- [ ] Push to develop branch
-- [ ] Update CHANGELOG.md
-
-#### **4.5 PostgreSQL Setup**
-**Choose ONE approach:**
-
-##### Option A: Docker (Recommended)
-- [ ] Pull PostgreSQL 15 Alpine image
-- [ ] Create Docker volume for persistence
-- [ ] Run PostgreSQL container with:
-  - Database: `irp_dev`
-  - User: `postgres`
-  - Password: `dev`
-  - Port: 5432
-- [ ] Verify container is running
-- [ ] Test connection with psql
-
-##### Option B: Local Installation
-- [ ] Install PostgreSQL 15+
-- [ ] Create `irp_dev` database
-- [ ] Create user with appropriate permissions
-- [ ] Configure authentication (pg_hba.conf)
-- [ ] Test connection
-
-#### **4.6 Run Database Migrations**
-- [ ] Install sqlx-cli: `cargo install sqlx-cli --no-default-features --features postgres`
-- [ ] Set DATABASE_URL environment variable
-- [ ] Navigate to `backend/db/`
-- [ ] Run `sqlx migrate run`
-- [ ] Verify migration status with `sqlx migrate info`
-- [ ] Check for errors in migration output
-
-#### **4.7 Verify Database with Test Queries**
-- [ ] Connect to database with psql
-- [ ] List all tables (`\dt`)
-- [ ] Count companies: `SELECT COUNT(*) FROM companies;` (expect 5)
-- [ ] Verify test user exists
-- [ ] Check Apple financial data (4 quarters)
-- [ ] Test full-text search on companies
-- [ ] Verify partitions exist for daily_prices
-- [ ] Test computed columns (total_debt, net_debt, free_cash_flow)
-- [ ] Verify triggers (updated_at auto-update)
-
-#### **4.8 Optional: SQLx Offline Mode**
-- [ ] Run `cargo sqlx prepare` to generate query metadata
-- [ ] Verify `sqlx-data.json` created
-- [ ] Test compilation without database connection
-- [ ] Commit sqlx-data.json to Git
-
----
-
-### Backend API Development (Step 5) - FUTURE
+### Backend API Development (Step 5) - NEXT  ⬅️
 
 #### **5.1 Backend Project Setup**
 - [ ] Create Axum API project structure
@@ -265,15 +238,18 @@ Currently working on infrastructure and verification phases.
 
 ## 🎯 Current Focus
 
+
 **Immediate Next Steps:**
 1. ✅ Complete database code (DONE)
 2. ✅ Verify compilation (DONE)
-3. ⬅️ **NOW**: Git checkpoint (commit & push)
-4. **NEXT**: Set up PostgreSQL (Docker recommended)
-5. **THEN**: Run migrations
-6. **FINALLY**: Verify with test queries
+3. ✅ Git checkpoint (DONE - commit & push)
+4. ✅ Set up PostgreSQL (DONE - Docker)
+5. ✅ Run migrations (DONE - 29 tables created)
+6. ✅ Verify with test queries (DONE - all validated)
 
-**Today's Goal**: Complete Step 4 (Database Foundation) entirely
+**Today's Achievement**: ✅ Step 4 (Database Foundation) - 100% COMPLETE
+
+**Next Focus**: Step 5 (Backend API Development)
 
 ---
 
@@ -284,12 +260,12 @@ Currently working on infrastructure and verification phases.
 | 1. Planning & Design | ✅ Complete | 100% |
 | 2. Repository Setup | ✅ Complete | 100% |
 | 3. Docker Setup | ✅ Complete | 100% |
-| 4. Database Foundation | 🔄 In Progress | 75% |
+| **4. Database Foundation** | ✅ **Complete** | **100%** |
 | 5. Backend API | ⏳ Pending | 0% |
 | 6. Frontend | ⏳ Pending | 0% |
 | 7. Data Pipeline | ⏳ Pending | 0% |
 
-**Overall Project Progress**: ~25%
+**Overall Project Progress**: ~35%
 
 ---
 

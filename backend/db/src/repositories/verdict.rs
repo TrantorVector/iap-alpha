@@ -97,16 +97,16 @@ impl VerdictRepository {
     // =========================================================================
 
     /// Update verdict with optimistic locking
-    /// 
+    ///
     /// This method implements optimistic locking by checking the lock_version.
     /// If the version matches, it updates the verdict and increments lock_version.
     /// If the version doesn't match, it returns an OptimisticLockError.
-    /// 
+    ///
     /// # Arguments
     /// * `verdict_id` - The verdict ID to update
     /// * `update` - The update data
     /// * `expected_version` - The expected lock version
-    /// 
+    ///
     /// # Returns
     /// * `Ok(Verdict)` - The updated verdict with new lock_version
     /// * `Err(DbError::OptimisticLockError)` - If version mismatch detected
@@ -152,7 +152,7 @@ impl VerdictRepository {
             None => {
                 // Fetch current version to provide helpful error message
                 let current = self.find_by_id(verdict_id).await?;
-                
+
                 match current {
                     Some(v) => Err(DbError::OptimisticLockError(format!(
                         "Version mismatch: expected {}, current {}",
@@ -216,7 +216,7 @@ impl VerdictRepository {
     // =========================================================================
 
     /// Create a history snapshot of the current verdict state
-    /// 
+    ///
     /// This should be called before any update to preserve the previous state
     pub async fn create_history_snapshot(&self, verdict_id: Uuid) -> DbResult<VerdictHistory> {
         let id = Uuid::new_v4();
@@ -244,7 +244,7 @@ impl VerdictRepository {
     }
 
     /// Get all history snapshots for a verdict
-    /// 
+    ///
     /// Returns snapshots ordered by version (oldest to newest)
     pub async fn get_history(&self, verdict_id: Uuid) -> DbResult<Vec<VerdictHistory>> {
         let history = sqlx::query_as::<_, VerdictHistory>(
@@ -281,7 +281,7 @@ impl VerdictRepository {
     }
 
     /// Delete a verdict and its history
-    /// 
+    ///
     /// This will cascade delete to verdict_history and analysis_reports
     pub async fn delete(&self, verdict_id: Uuid) -> DbResult<()> {
         let result = sqlx::query(
@@ -315,7 +315,7 @@ mod tests {
     async fn test_optimistic_locking() {
         let database_url = std::env::var("DATABASE_URL")
             .unwrap_or_else(|_| "postgres://postgres:dev@localhost:5432/irp_dev".to_string());
-        
+
         let pool = crate::init_pool(&database_url).await.unwrap();
         let repo = VerdictRepository::new(pool);
 

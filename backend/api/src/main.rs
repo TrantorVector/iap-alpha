@@ -1,8 +1,4 @@
-use axum::{
-    routing::get,
-    Router,
-    response::Json,
-};
+use axum::{response::Json, routing::get, Router};
 use serde_json::{json, Value};
 use std::net::SocketAddr;
 use tower_http::cors::CorsLayer;
@@ -15,8 +11,7 @@ async fn main() {
     tracing_subscriber::fmt()
         .json()
         .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "info".into()),
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()),
         )
         .init();
 

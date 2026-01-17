@@ -1,13 +1,13 @@
 // Database crate for Investment Research Platform
 // Provides database models, repositories, and connection pooling
 
+mod error;
 pub mod models;
 pub mod repositories;
-mod error;
 
 // Re-export common types
 pub use error::{DbError, DbResult};
-pub use sqlx::{PgPool, postgres::PgPoolOptions};
+pub use sqlx::{postgres::PgPoolOptions, PgPool};
 pub use uuid::Uuid;
 
 use std::time::Duration;
@@ -60,7 +60,7 @@ pub async fn run_migrations(pool: &PgPool) -> DbResult<()> {
         .run(pool)
         .await
         .map_err(|e| DbError::MigrationError(e.to_string()))?;
-    
+
     Ok(())
 }
 
@@ -73,7 +73,7 @@ mod tests {
     async fn test_pool_initialization() {
         let database_url = std::env::var("DATABASE_URL")
             .unwrap_or_else(|_| "postgres://postgres:dev@localhost:5432/irp_dev".to_string());
-        
+
         let result = init_pool(&database_url).await;
         assert!(result.is_ok());
     }

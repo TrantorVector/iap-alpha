@@ -1,10 +1,10 @@
 //! Database migration runner
-//! 
+//!
 //! This example connects to the database and runs all pending migrations.
-//! 
+//!
 //! Usage:
 //!   cargo run --example run_migrations
-//! 
+//!
 //! Make sure DATABASE_URL environment variable is set, or it will use the default.
 
 use db::{init_pool, run_migrations};
@@ -44,13 +44,14 @@ async fn main() {
     match run_migrations(&pool).await {
         Ok(_) => {
             println!("✅ Migrations completed successfully");
-            
+
             // Query to check tables
             let result = match sqlx::query_scalar::<_, i64>(
-                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'"
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'",
             )
             .fetch_one(&pool)
-            .await {
+            .await
+            {
                 Ok(count) => count,
                 Err(e) => {
                     eprintln!("Warning: Failed to count tables: {}", e);
@@ -60,13 +61,13 @@ async fn main() {
 
             println!("\n📊 Database Status:");
             println!("   Tables created: {}", result);
-            
+
             // Check for sample data
             let company_count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM companies")
                 .fetch_one(&pool)
                 .await
                 .unwrap_or(0);
-            
+
             let user_count = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users")
                 .fetch_one(&pool)
                 .await
@@ -74,7 +75,7 @@ async fn main() {
 
             println!("   Sample companies: {}", company_count);
             println!("   Test users: {}", user_count);
-            
+
             println!("\n🎉 Database setup complete!");
         }
         Err(e) => {

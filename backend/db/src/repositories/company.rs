@@ -3,8 +3,8 @@ use crate::models::{
     BalanceSheet, CashFlowStatement, Company, DailyPrice, DerivedMetric, IncomeStatement,
 };
 use crate::{DbError, DbResult};
-use chrono::NaiveDate;
 use bigdecimal::BigDecimal;
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -428,7 +428,7 @@ impl CompanyRepository {
         data: IncomeStatementInsert,
     ) -> DbResult<IncomeStatement> {
         let id = Uuid::new_v4();
-        
+
         let statement = sqlx::query_as::<_, IncomeStatement>(
             r#"
             INSERT INTO income_statements (
@@ -497,7 +497,7 @@ impl CompanyRepository {
     /// Upsert balance sheet
     pub async fn upsert_balance_sheet(&self, data: BalanceSheetInsert) -> DbResult<BalanceSheet> {
         let id = Uuid::new_v4();
-        
+
         let sheet = sqlx::query_as::<_, BalanceSheet>(
             r#"
             INSERT INTO balance_sheets (
@@ -577,7 +577,7 @@ impl CompanyRepository {
         data: CashFlowStatementInsert,
     ) -> DbResult<CashFlowStatement> {
         let id = Uuid::new_v4();
-        
+
         let statement = sqlx::query_as::<_, CashFlowStatement>(
             r#"
             INSERT INTO cash_flow_statements (
@@ -640,7 +640,7 @@ impl CompanyRepository {
     /// Upsert daily price
     pub async fn upsert_daily_price(&self, data: DailyPriceInsert) -> DbResult<DailyPrice> {
         let id = Uuid::new_v4();
-        
+
         let price = sqlx::query_as::<_, DailyPrice>(
             r#"
             INSERT INTO daily_prices (

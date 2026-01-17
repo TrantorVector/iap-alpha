@@ -306,10 +306,16 @@ impl UserRepository {
 
         // Set defaults for optional fields
         let document_row_order = update.document_row_order.unwrap_or_else(|| {
-            serde_json::json!(["investor_presentation", "earnings_call_transcript", "earnings_release"])
+            serde_json::json!([
+                "investor_presentation",
+                "earnings_call_transcript",
+                "earnings_release"
+            ])
         });
         let default_period_count = update.default_period_count.unwrap_or(4);
-        let default_period_type = update.default_period_type.unwrap_or_else(|| "quarterly".to_string());
+        let default_period_type = update
+            .default_period_type
+            .unwrap_or_else(|| "quarterly".to_string());
         let theme = update.theme.unwrap_or_else(|| "light".to_string());
 
         let prefs = sqlx::query_as::<_, UserPreferences>(
@@ -353,7 +359,7 @@ mod tests {
     async fn test_create_and_find_user() {
         let database_url = std::env::var("DATABASE_URL")
             .unwrap_or_else(|_| "postgres://postgres:dev@localhost:5432/irp_dev".to_string());
-        
+
         let pool = crate::init_pool(&database_url).await.unwrap();
         let repo = UserRepository::new(pool);
 
