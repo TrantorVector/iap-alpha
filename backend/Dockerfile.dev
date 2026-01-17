@@ -1,4 +1,4 @@
-FROM rust:1.75-slim
+FROM rust:latest
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
@@ -34,6 +34,7 @@ RUN mkdir -p api/src core/src db/src worker/src providers/src && \
     touch providers/src/lib.rs
 
 # Build dependencies (this layer will be cached as long as Cargo.tomls don't change)
+
 RUN cargo build
 
 # Clean up dummy sources
