@@ -1,3 +1,5 @@
+use async_trait::async_trait;
+use bytes::Bytes;
 use domain::domain::{
     BalanceSheet, CashFlowStatement, CompanyOverview, DailyPrice, EarningsEvent, IncomeStatement,
     OutputSize,
@@ -5,8 +7,6 @@ use domain::domain::{
 use domain::error::AppError;
 use domain::ports::market_data::MarketDataProvider;
 use domain::ports::storage::ObjectStorage;
-use async_trait::async_trait;
-use bytes::Bytes;
 use std::time::Duration;
 
 #[derive(Clone, Default)]

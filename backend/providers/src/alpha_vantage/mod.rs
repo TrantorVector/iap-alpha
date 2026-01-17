@@ -1,7 +1,7 @@
+use async_trait::async_trait;
 use domain::domain::*;
 use domain::error::AppError;
 use domain::ports::market_data::MarketDataProvider;
-use async_trait::async_trait;
 
 #[derive(Clone)]
 #[allow(dead_code)]
