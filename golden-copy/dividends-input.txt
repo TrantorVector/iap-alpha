@@ -1,0 +1,15 @@
+API Parameters
+
+❚ Required: function
+
+The function of your choice. In this case, function=DIVIDENDS
+
+❚ Required: symbol
+
+The symbol of the ticker of your choice. For example: symbol=IBM.
+
+❚ Optional: datatype
+
+By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the options data in JSON format; csv returns the data as a CSV (comma separated value) file.
+
+❚ Required: apikey

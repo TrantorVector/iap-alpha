@@ -1,0 +1,50 @@
+FROM rust:1.75-slim
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    libssl-dev \
+    pkg-config \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install cargo-binstall and cargo-watch (binary) for fast, reliable installation
+RUN curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash && \
+    cargo binstall -y cargo-watch
+
+# Set working directory
+WORKDIR /app/api
+
+# --- DEPENDENCY CACHING LAYER ---
+# Copy common files
+COPY Cargo.toml Cargo.lock ./
+
+# Copy all member manifests
+COPY api/Cargo.toml api/
+COPY core/Cargo.toml core/
+COPY db/Cargo.toml db/
+COPY worker/Cargo.toml worker/
+COPY providers/Cargo.toml providers/
+
+# Create dummy source files for all members so cargo build can compile dependencies
+RUN mkdir -p api/src core/src db/src worker/src providers/src && \
+    echo "fn main() {}" > api/src/main.rs && \
+    touch core/src/lib.rs && \
+    touch db/src/lib.rs && \
+    touch worker/src/lib.rs && \
+    touch providers/src/lib.rs
+
+# Build dependencies (this layer will be cached as long as Cargo.tomls don't change)
+RUN cargo build
+
+# Clean up dummy sources
+RUN rm -rf api/src core/src db/src worker/src providers/src
+
+# --- SOURCE CODE LAYER ---
+# Copy actual source code
+COPY . .
+
+# Touch the main file to force a recompile of the app code (but not deps) if needed
+RUN touch api/src/main.rs
+
+# Default command
+CMD ["cargo watch", "-x", "run"]

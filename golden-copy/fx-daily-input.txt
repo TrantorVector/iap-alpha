@@ -1,0 +1,23 @@
+API Parameters
+
+❚ Required: function
+
+The time series of your choice. In this case, function=FX_DAILY
+
+❚ Required: from_symbol
+
+A three-letter symbol from the forex currency list. For example: from_symbol=EUR
+
+❚ Required: to_symbol
+
+A three-letter symbol from the forex currency list. For example: to_symbol=USD
+
+❚ Optional: outputsize
+
+By default, outputsize=compact. Strings compact and full are accepted with the following specifications: compact returns only the latest 100 data points in the daily time series; full returns the full-length daily time series. The "compact" option is recommended if you would like to reduce the data size of each API call.
+
+❚ Optional: datatype
+
+By default, datatype=json. Strings json and csv are accepted with the following specifications: json returns the daily time series in JSON format; csv returns the time series as a CSV (comma separated value) file.
+
+❚ Required: apikey

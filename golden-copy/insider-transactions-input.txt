@@ -1,0 +1,11 @@
+API Parameters
+
+❚ Required: function
+
+The function of your choice. In this case, function=INSIDER_TRANSACTIONS
+
+❚ Required: symbol
+
+The symbol of the ticker of your choice. For example: symbol=IBM.
+
+❚ Required: apikey

@@ -1,0 +1,15 @@
+API Parameters
+
+❚ Required: function
+
+The function of your choice. In this case, function=EARNINGS_CALL_TRANSCRIPT
+
+❚ Required: symbol
+
+The symbol of the ticker of your choice. For example: symbol=IBM.
+
+❚ Required: quarter
+
+Fiscal quarter in YYYYQM format. For example: quarter=2024Q1. Any quarter since 2010Q1 is supported.
+
+❚ Required: apikey
