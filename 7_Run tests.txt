@@ -1,0 +1,211 @@
+﻿2026-01-17T18:35:49.1388063Z ##[group]Run cd backend && cargo test --workspace
+2026-01-17T18:35:49.1388460Z [36;1mcd backend && cargo test --workspace[0m
+2026-01-17T18:35:49.1419097Z shell: /usr/bin/bash -e {0}
+2026-01-17T18:35:49.1419334Z env:
+2026-01-17T18:35:49.1419516Z   CARGO_HOME: /home/runner/.cargo
+2026-01-17T18:35:49.1419764Z   CARGO_INCREMENTAL: 0
+2026-01-17T18:35:49.1420182Z   CARGO_TERM_COLOR: always
+2026-01-17T18:35:49.1420429Z   CACHE_ON_FAILURE: false
+2026-01-17T18:35:49.1421180Z   DATABASE_URL: ***localhost:5432/test
+2026-01-17T18:35:49.1421442Z ##[endgroup]
+2026-01-17T18:35:49.3956963Z [1m[92m   Compiling[0m crypto-common v0.1.7
+2026-01-17T18:35:49.3980661Z [1m[92m   Compiling[0m const-oid v0.9.6
+2026-01-17T18:35:49.4014789Z [1m[92m   Compiling[0m futures-sink v0.3.31
+2026-01-17T18:35:49.4040141Z [1m[92m   Compiling[0m libm v0.2.15
+2026-01-17T18:35:49.4526381Z [1m[92m   Compiling[0m digest v0.10.7
+2026-01-17T18:35:49.4568353Z [1m[92m   Compiling[0m futures-util v0.3.31
+2026-01-17T18:35:49.6089645Z [1m[92m   Compiling[0m futures-channel v0.3.31
+2026-01-17T18:35:49.6910702Z [1m[92m   Compiling[0m sha2 v0.10.9
+2026-01-17T18:35:49.7692083Z [1m[92m   Compiling[0m indexmap v2.13.0
+2026-01-17T18:35:50.0407230Z [1m[92m   Compiling[0m num-integer v0.1.46
+2026-01-17T18:35:50.3488462Z [1m[92m   Compiling[0m num-traits v0.2.19
+2026-01-17T18:35:50.4836318Z [1m[92m   Compiling[0m num-bigint v0.4.6
+2026-01-17T18:35:50.7271562Z [1m[92m   Compiling[0m idna v1.1.0
+2026-01-17T18:35:51.7673039Z [1m[92m   Compiling[0m url v2.5.8
+2026-01-17T18:35:52.0760312Z [1m[92m   Compiling[0m bigdecimal v0.3.1
+2026-01-17T18:35:52.5983349Z [1m[92m   Compiling[0m chrono v0.4.43
+2026-01-17T18:35:52.8749638Z [1m[92m   Compiling[0m atoi v2.0.0
+2026-01-17T18:35:52.9350780Z [1m[92m   Compiling[0m hmac v0.12.1
+2026-01-17T18:35:53.0200867Z [1m[92m   Compiling[0m hkdf v0.12.4
+2026-01-17T18:35:53.6183419Z [1m[92m   Compiling[0m rand v0.8.5
+2026-01-17T18:35:54.0007262Z [1m[92m   Compiling[0m md-5 v0.10.6
+2026-01-17T18:35:54.0817051Z [1m[92m   Compiling[0m base64 v0.21.7
+2026-01-17T18:35:54.8361506Z [1m[92m   Compiling[0m sqlx-core v0.7.4
+2026-01-17T18:35:54.8852396Z [1m[92m   Compiling[0m fnv v1.0.7
+2026-01-17T18:35:54.9257260Z [1m[92m   Compiling[0m foreign-types-shared v0.1.1
+2026-01-17T18:35:54.9611157Z [1m[92m   Compiling[0m foreign-types v0.3.2
+2026-01-17T18:35:54.9921561Z [1m[92m   Compiling[0m http v0.2.12
+2026-01-17T18:35:55.0552161Z [1m[92m   Compiling[0m openssl-sys v0.9.111
+2026-01-17T18:35:56.0827534Z [1m[92m   Compiling[0m openssl v0.10.75
+2026-01-17T18:35:56.1232627Z [1m[92m   Compiling[0m tokio-util v0.7.18
+2026-01-17T18:35:56.7789604Z [1m[92m   Compiling[0m openssl-probe v0.1.6
+2026-01-17T18:35:56.8892485Z [1m[92m   Compiling[0m sqlx-postgres v0.7.4
+2026-01-17T18:35:59.2593071Z [1m[92m   Compiling[0m try-lock v0.2.5
+2026-01-17T18:35:59.3058523Z [1m[92m   Compiling[0m want v0.3.1
+2026-01-17T18:35:59.4009728Z [1m[92m   Compiling[0m native-tls v0.2.14
+2026-01-17T18:35:59.6451656Z [1m[92m   Compiling[0m h2 v0.3.27
+2026-01-17T18:35:59.9415213Z [1m[92m   Compiling[0m sqlx-macros-core v0.7.4
+2026-01-17T18:36:01.5347860Z [1m[92m   Compiling[0m http-body v0.4.6
+2026-01-17T18:36:01.6528256Z [1m[92m   Compiling[0m sqlx-macros v0.7.4
+2026-01-17T18:36:01.7088961Z [1m[92m   Compiling[0m socket2 v0.5.10
+2026-01-17T18:36:02.2023920Z [1m[92m   Compiling[0m tokio-native-tls v0.3.1
+2026-01-17T18:36:02.2951550Z [1m[92m   Compiling[0m base64ct v1.6.0
+2026-01-17T18:36:02.5345669Z [1m[92m   Compiling[0m rustls-pemfile v1.0.4
+2026-01-17T18:36:02.6468240Z [1m[92m   Compiling[0m sqlx v0.7.4
+2026-01-17T18:36:02.7069108Z [1m[92m   Compiling[0m aho-corasick v1.1.4
+2026-01-17T18:36:02.7626444Z [1m[92m   Compiling[0m domain v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/domain)
+2026-01-17T18:36:02.9841831Z [1m[92m   Compiling[0m encoding_rs v0.8.35
+2026-01-17T18:36:04.4871119Z [1m[92m   Compiling[0m hyper v0.14.32
+2026-01-17T18:36:04.5156468Z [1m[92m   Compiling[0m ipnet v2.11.0
+2026-01-17T18:36:04.5452965Z [1m[92m   Compiling[0m sync_wrapper v0.1.2
+2026-01-17T18:36:04.5902860Z [1m[92m   Compiling[0m regex-automata v0.4.13
+2026-01-17T18:36:04.7943266Z [1m[92m   Compiling[0m zeroize v1.8.2
+2026-01-17T18:36:04.9049459Z [1m[92m   Compiling[0m same-file v1.0.6
+2026-01-17T18:36:04.9957498Z [1m[92m   Compiling[0m walkdir v2.5.0
+2026-01-17T18:36:05.0475173Z [1m[92m   Compiling[0m crc32fast v1.5.0
+2026-01-17T18:36:05.1579065Z [1m[92m   Compiling[0m db v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/db)
+2026-01-17T18:36:05.3008850Z [1m[92m   Compiling[0m pem-rfc7468 v0.7.0
+2026-01-17T18:36:05.5965543Z [1m[92m   Compiling[0m spin v0.9.8
+2026-01-17T18:36:05.6644051Z [1m[92m   Compiling[0m lazy_static v1.5.0
+2026-01-17T18:36:05.7012167Z [1m[92m   Compiling[0m der v0.7.10
+2026-01-17T18:36:07.0884242Z [1m[92m   Compiling[0m regex v1.12.2
+2026-01-17T18:36:07.1406705Z [1m[92m   Compiling[0m hyper-tls v0.5.0
+2026-01-17T18:36:07.2574932Z [1m[92m   Compiling[0m reqwest v0.11.27
+2026-01-17T18:36:07.4636602Z [1m[92m   Compiling[0m flate2 v1.1.8
+2026-01-17T18:36:07.7651319Z [1m[92m   Compiling[0m unicase v2.9.0
+2026-01-17T18:36:07.8127434Z [1m[92m   Compiling[0m powerfmt v0.2.0
+2026-01-17T18:36:07.9078622Z [1m[92m   Compiling[0m num-conv v0.1.0
+2026-01-17T18:36:07.9598359Z [1m[92m   Compiling[0m time-core v0.1.7
+2026-01-17T18:36:08.0131307Z [1m[92m   Compiling[0m deranged v0.5.5
+2026-01-17T18:36:08.0694031Z [1m[92m   Compiling[0m time-macros v0.2.25
+2026-01-17T18:36:08.2572116Z [1m[92m   Compiling[0m mime_guess v2.0.5
+2026-01-17T18:36:08.6351196Z [1m[92m   Compiling[0m providers v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/providers)
+2026-01-17T18:36:08.8262703Z [1m[92m   Compiling[0m hyper v1.8.1
+2026-01-17T18:36:09.0865619Z [1m[92m   Compiling[0m zip v0.6.6
+2026-01-17T18:36:09.2791408Z [1m[92m   Compiling[0m spki v0.7.3
+2026-01-17T18:36:09.4172193Z [1m[92m   Compiling[0m rust-embed-utils v8.11.0
+2026-01-17T18:36:09.5658407Z [1m[92m   Compiling[0m thiserror v2.0.17
+2026-01-17T18:36:09.5756286Z [1m[92m   Compiling[0m utoipa-swagger-ui v6.0.0
+2026-01-17T18:36:09.6095360Z [1m[92m   Compiling[0m rust-embed-impl v8.11.0
+2026-01-17T18:36:09.9121476Z [1m[92m   Compiling[0m hyper-util v0.1.19
+2026-01-17T18:36:10.0773995Z [1m[92m   Compiling[0m axum-core v0.4.5
+2026-01-17T18:36:10.1520323Z [1m[92m   Compiling[0m pkcs8 v0.10.2
+2026-01-17T18:36:10.1597853Z [1m[92m   Compiling[0m time v0.3.45
+2026-01-17T18:36:10.3498377Z [1m[92m   Compiling[0m utoipa-gen v4.3.1
+2026-01-17T18:36:12.0105941Z [1m[92m   Compiling[0m tower v0.5.3
+2026-01-17T18:36:12.3710785Z [1m[92m   Compiling[0m num-iter v0.1.45
+2026-01-17T18:36:12.3898216Z [1m[92m   Compiling[0m untrusted v0.9.0
+2026-01-17T18:36:12.4328774Z [1m[92m   Compiling[0m base64 v0.22.1
+2026-01-17T18:36:12.4533837Z [1m[92m   Compiling[0m axum v0.7.9
+2026-01-17T18:36:12.7113887Z [1m[92m   Compiling[0m pem v3.0.6
+2026-01-17T18:36:12.8077748Z [1m[92m   Compiling[0m ring v0.17.14
+2026-01-17T18:36:13.0341517Z [1m[92m   Compiling[0m num-bigint-dig v0.8.6
+2026-01-17T18:36:14.4305465Z [1m[92m   Compiling[0m rust-embed v8.11.0
+2026-01-17T18:36:14.7302261Z [1m[92m   Compiling[0m utoipa v4.2.3
+2026-01-17T18:36:14.8882545Z [1m[92m   Compiling[0m simple_asn1 v0.6.3
+2026-01-17T18:36:15.1108978Z [1m[92m   Compiling[0m pkcs1 v0.7.5
+2026-01-17T18:36:15.5754343Z [1m[92m   Compiling[0m sharded-slab v0.1.7
+2026-01-17T18:36:15.8436023Z [1m[92m   Compiling[0m password-hash v0.5.0
+2026-01-17T18:36:16.1471256Z [1m[92m   Compiling[0m signature v2.2.0
+2026-01-17T18:36:16.2217217Z [1m[92m   Compiling[0m blake2 v0.10.6
+2026-01-17T18:36:16.2561392Z [1m[92m   Compiling[0m tracing-subscriber v0.3.22
+2026-01-17T18:36:17.0481712Z [1m[92m   Compiling[0m argon2 v0.5.3
+2026-01-17T18:36:17.5428814Z [1m[92m   Compiling[0m rsa v0.9.10
+2026-01-17T18:36:17.6224123Z [1m[92m   Compiling[0m jsonwebtoken v9.3.1
+2026-01-17T18:36:18.2126758Z [1m[92m   Compiling[0m tower v0.4.13
+2026-01-17T18:36:18.2654915Z [1m[92m   Compiling[0m worker v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/worker)
+2026-01-17T18:36:18.8991874Z [1m[92m   Compiling[0m api v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/api)
+2026-01-17T18:36:22.5407330Z [1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 33.34s
+2026-01-17T18:36:22.5431125Z [1m[33mwarning[0m: the following packages contain code that will be rejected by a future version of Rust: sqlx-postgres v0.7.4
+2026-01-17T18:36:22.5432219Z [1m[92mnote[0m: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+2026-01-17T18:36:22.5601110Z [1m[92m     Running[0m unittests src/main.rs (target/debug/deps/api-ab9886321a2ef69c)
+2026-01-17T18:36:22.5615456Z 
+2026-01-17T18:36:22.5615768Z running 15 tests
+2026-01-17T18:36:27.5218450Z test auth::password::tests::test_hash_password_success ... ok
+2026-01-17T18:36:31.1515171Z test auth::password::tests::test_verify_password_failure ... ok
+2026-01-17T18:36:34.8395562Z test auth::tests::test_access_token_contains_correct_claims ... ok
+2026-01-17T18:36:35.7520571Z test auth::password::tests::test_verify_password_success ... ok
+2026-01-17T18:36:37.3656924Z test auth::jwt::tests::test_jwt_flow ... ok
+2026-01-17T18:36:37.8995685Z test auth::tests::test_expired_token_is_rejected ... ok
+2026-01-17T18:36:38.8340427Z test auth::jwt::tests::test_refresh_token ... ok
+2026-01-17T18:36:39.1199102Z test auth::tests::test_create_access_token_is_valid ... ok
+2026-01-17T18:36:42.1476962Z test auth::tests::test_hash_password_creates_valid_hash ... ok
+2026-01-17T18:36:45.8183808Z test auth::tests::test_hash_is_not_deterministic ... ok
+2026-01-17T18:36:50.6341029Z test auth::tests::test_verify_correct_password_succeeds ... ok
+2026-01-17T18:36:53.9129764Z test auth::tests::test_token_signed_with_wrong_key_is_rejected ... ok
+2026-01-17T18:36:53.9487813Z test auth::tests::test_wrong_algorithm_is_rejected ... ok
+2026-01-17T18:36:54.1204181Z test auth::tests::test_verify_wrong_password_fails ... ok
+2026-01-17T18:36:55.4848266Z test auth::tests::test_invalid_signature_is_rejected ... ok
+2026-01-17T18:36:55.4848757Z 
+2026-01-17T18:36:55.4850818Z test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 32.92s
+2026-01-17T18:36:55.4851235Z 
+2026-01-17T18:36:55.4855427Z [1m[92m     Running[0m tests/auth_integration.rs (target/debug/deps/auth_integration-2c261b24a879264c)
+2026-01-17T18:36:55.4877161Z 
+2026-01-17T18:36:55.4877327Z running 8 tests
+2026-01-17T18:36:55.6234886Z test test_login_with_invalid_password_returns_401 ... FAILED
+2026-01-17T18:36:55.6240926Z test test_logout_revokes_refresh_token ... FAILED
+2026-01-17T18:36:55.6245026Z test test_login_with_nonexistent_user_returns_401 ... FAILED
+2026-01-17T18:36:55.6249089Z test test_login_with_valid_credentials_returns_tokens ... FAILED
+2026-01-17T18:36:55.7425061Z test test_protected_route_with_valid_token_succeeds ... FAILED
+2026-01-17T18:36:55.7454787Z test test_refresh_with_expired_token_returns_401 ... FAILED
+2026-01-17T18:36:55.7466256Z test test_protected_route_without_token_returns_401 ... FAILED
+2026-01-17T18:36:55.7467061Z test test_refresh_with_valid_token_returns_new_access_token ... FAILED
+2026-01-17T18:36:55.7467532Z 
+2026-01-17T18:36:55.7467644Z failures:
+2026-01-17T18:36:55.7467801Z 
+2026-01-17T18:36:55.7468057Z ---- test_login_with_invalid_password_returns_401 stdout ----
+2026-01-17T18:36:55.7468443Z 
+2026-01-17T18:36:55.7468974Z thread 'test_login_with_invalid_password_returns_401' (5733) panicked at api/tests/auth_integration.rs:68:10:
+2026-01-17T18:36:55.7471948Z called `Result::unwrap()` on an `Err` value: reqwest::Error { kind: Request, url: Url { scheme: "http", cannot_be_a_base: false, username: "", password: None, host: Some(Domain("localhost")), port: Some(8080), path: "/api/v1/auth/login", query: None, fragment: None }, source: hyper::Error(Connect, ConnectError("tcp connect error", Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })) }
+2026-01-17T18:36:55.7474922Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-01-17T18:36:55.7475404Z 
+2026-01-17T18:36:55.7475602Z ---- test_logout_revokes_refresh_token stdout ----
+2026-01-17T18:36:55.7475945Z 
+2026-01-17T18:36:55.7476374Z thread 'test_logout_revokes_refresh_token' (5736) panicked at api/tests/auth_integration.rs:23:10:
+2026-01-17T18:36:55.7479241Z Failed to send login request: reqwest::Error { kind: Request, url: Url { scheme: "http", cannot_be_a_base: false, username: "", password: None, host: Some(Domain("localhost")), port: Some(8080), path: "/api/v1/auth/login", query: None, fragment: None }, source: hyper::Error(Connect, ConnectError("tcp connect error", Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })) }
+2026-01-17T18:36:55.7481830Z 
+2026-01-17T18:36:55.7482085Z ---- test_login_with_nonexistent_user_returns_401 stdout ----
+2026-01-17T18:36:55.7482497Z 
+2026-01-17T18:36:55.7482881Z thread 'test_login_with_nonexistent_user_returns_401' (5734) panicked at api/tests/auth_integration.rs:84:10:
+2026-01-17T18:36:55.7484533Z called `Result::unwrap()` on an `Err` value: reqwest::Error { kind: Request, url: Url { scheme: "http", cannot_be_a_base: false, username: "", password: None, host: Some(Domain("localhost")), port: Some(8080), path: "/api/v1/auth/login", query: None, fragment: None }, source: hyper::Error(Connect, ConnectError("tcp connect error", Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })) }
+2026-01-17T18:36:55.7485844Z 
+2026-01-17T18:36:55.7486016Z ---- test_login_with_valid_credentials_returns_tokens stdout ----
+2026-01-17T18:36:55.7486266Z 
+2026-01-17T18:36:55.7486576Z thread 'test_login_with_valid_credentials_returns_tokens' (5735) panicked at api/tests/auth_integration.rs:47:10:
+2026-01-17T18:36:55.7488164Z called `Result::unwrap()` on an `Err` value: reqwest::Error { kind: Request, url: Url { scheme: "http", cannot_be_a_base: false, username: "", password: None, host: Some(Domain("localhost")), port: Some(8080), path: "/api/v1/auth/login", query: None, fragment: None }, source: hyper::Error(Connect, ConnectError("tcp connect error", Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })) }
+2026-01-17T18:36:55.7489439Z 
+2026-01-17T18:36:55.7489587Z ---- test_protected_route_with_valid_token_succeeds stdout ----
+2026-01-17T18:36:55.7489830Z 
+2026-01-17T18:36:55.7490315Z thread 'test_protected_route_with_valid_token_succeeds' (5741) panicked at api/tests/auth_integration.rs:23:10:
+2026-01-17T18:36:55.7491875Z Failed to send login request: reqwest::Error { kind: Request, url: Url { scheme: "http", cannot_be_a_base: false, username: "", password: None, host: Some(Domain("localhost")), port: Some(8080), path: "/api/v1/auth/login", query: None, fragment: None }, source: hyper::Error(Connect, ConnectError("tcp connect error", Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })) }
+2026-01-17T18:36:55.7493460Z 
+2026-01-17T18:36:55.7493611Z ---- test_refresh_with_expired_token_returns_401 stdout ----
+2026-01-17T18:36:55.7493848Z 
+2026-01-17T18:36:55.7494140Z thread 'test_refresh_with_expired_token_returns_401' (5743) panicked at api/tests/auth_integration.rs:125:10:
+2026-01-17T18:36:55.7495776Z called `Result::unwrap()` on an `Err` value: reqwest::Error { kind: Request, url: Url { scheme: "http", cannot_be_a_base: false, username: "", password: None, host: Some(Domain("localhost")), port: Some(8080), path: "/api/v1/auth/refresh", query: None, fragment: None }, source: hyper::Error(Connect, ConnectError("tcp connect error", Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })) }
+2026-01-17T18:36:55.7497079Z 
+2026-01-17T18:36:55.7497228Z ---- test_protected_route_without_token_returns_401 stdout ----
+2026-01-17T18:36:55.7497473Z 
+2026-01-17T18:36:55.7497920Z [1m[91merror[0m: test failed, to rerun pass `-p api --test auth_integration`
+2026-01-17T18:36:55.7498805Z thread 'test_protected_route_without_token_returns_401' (5742) panicked at api/tests/auth_integration.rs:170:10:
+2026-01-17T18:36:55.7500612Z called `Result::unwrap()` on an `Err` value: reqwest::Error { kind: Request, url: Url { scheme: "http", cannot_be_a_base: false, username: "", password: None, host: Some(Domain("localhost")), port: Some(8080), path: "/api/v1/auth/logout", query: None, fragment: None }, source: hyper::Error(Connect, ConnectError("tcp connect error", Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })) }
+2026-01-17T18:36:55.7501899Z 
+2026-01-17T18:36:55.7502072Z ---- test_refresh_with_valid_token_returns_new_access_token stdout ----
+2026-01-17T18:36:55.7502348Z 
+2026-01-17T18:36:55.7502670Z thread 'test_refresh_with_valid_token_returns_new_access_token' (5744) panicked at api/tests/auth_integration.rs:23:10:
+2026-01-17T18:36:55.7504262Z Failed to send login request: reqwest::Error { kind: Request, url: Url { scheme: "http", cannot_be_a_base: false, username: "", password: None, host: Some(Domain("localhost")), port: Some(8080), path: "/api/v1/auth/login", query: None, fragment: None }, source: hyper::Error(Connect, ConnectError("tcp connect error", Os { code: 111, kind: ConnectionRefused, message: "Connection refused" })) }
+2026-01-17T18:36:55.7505507Z 
+2026-01-17T18:36:55.7505510Z 
+2026-01-17T18:36:55.7505578Z failures:
+2026-01-17T18:36:55.7505775Z     test_login_with_invalid_password_returns_401
+2026-01-17T18:36:55.7506064Z     test_login_with_nonexistent_user_returns_401
+2026-01-17T18:36:55.7506362Z     test_login_with_valid_credentials_returns_tokens
+2026-01-17T18:36:55.7506645Z     test_logout_revokes_refresh_token
+2026-01-17T18:36:55.7506911Z     test_protected_route_with_valid_token_succeeds
+2026-01-17T18:36:55.7507210Z     test_protected_route_without_token_returns_401
+2026-01-17T18:36:55.7507499Z     test_refresh_with_expired_token_returns_401
+2026-01-17T18:36:55.7507809Z     test_refresh_with_valid_token_returns_new_access_token
+2026-01-17T18:36:55.7508030Z 
+2026-01-17T18:36:55.7508268Z test result: FAILED. 0 passed; 8 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.26s
+2026-01-17T18:36:55.7508610Z 
+2026-01-17T18:36:55.7538481Z ##[error]Process completed with exit code 101.
