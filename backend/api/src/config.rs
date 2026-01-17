@@ -52,8 +52,8 @@ impl std::error::Error for ConfigError {}
 #[derive(Clone)]
 pub struct Config {
     pub database_url: String,
-    pub jwt_private_key_path: Option<String>,
-    pub jwt_public_key_path: Option<String>,
+    pub jwt_private_key_file: Option<String>,
+    pub jwt_public_key_file: Option<String>,
     pub jwt_private_key: Option<String>,
     pub jwt_public_key: Option<String>,
     pub server_host: String,
@@ -70,8 +70,8 @@ impl fmt::Debug for Config {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Config")
             .field("database_url", &"[REDACTED]")
-            .field("jwt_private_key_path", &self.jwt_private_key_path)
-            .field("jwt_public_key_path", &self.jwt_public_key_path)
+            .field("jwt_private_key_file", &self.jwt_private_key_file)
+            .field("jwt_public_key_file", &self.jwt_public_key_file)
             .field(
                 "jwt_private_key",
                 &self.jwt_private_key.as_ref().map(|_| "[REDACTED]"),
@@ -105,8 +105,12 @@ impl Config {
         let database_url = env::var("DATABASE_URL")
             .map_err(|_| ConfigError::MissingEnv("DATABASE_URL".to_string()))?;
 
-        let jwt_private_key_path = env::var("JWT_PRIVATE_KEY_PATH").ok();
-        let jwt_public_key_path = env::var("JWT_PUBLIC_KEY_PATH").ok();
+        let jwt_private_key_file = env::var("JWT_PRIVATE_KEY_FILE")
+            .or_else(|_| env::var("JWT_PRIVATE_KEY_PATH"))
+            .ok();
+        let jwt_public_key_file = env::var("JWT_PUBLIC_KEY_FILE")
+            .or_else(|_| env::var("JWT_PUBLIC_KEY_PATH"))
+            .ok();
         let jwt_private_key = env::var("JWT_PRIVATE_KEY").ok();
         let jwt_public_key = env::var("JWT_PUBLIC_KEY").ok();
 
@@ -151,8 +155,8 @@ impl Config {
 
         Ok(Config {
             database_url,
-            jwt_private_key_path,
-            jwt_public_key_path,
+            jwt_private_key_file,
+            jwt_public_key_file,
             jwt_private_key,
             jwt_public_key,
             server_host,

@@ -9,6 +9,20 @@ on:
 jobs:
   check-backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       
@@ -22,16 +36,24 @@ jobs:
         with:
           workspaces: backend
       
+      - name: Install SQLx CLI
+        run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
+      
       - name: Check formatting
         run: cd backend && cargo fmt --all -- --check
       
       - name: Run clippy
         run: cd backend && cargo clippy --all-targets -- -D warnings
       
-      - name: Run tests
-        run: cd backend && cargo test --workspace
+      - name: Run migrations
+        run: cd backend && sqlx migrate run --source db/migrations
         env:
-          DATABASE_URL: postgres://postgres:test@localhost:5432/test
+          DATABASE_URL: postgres://postgres:password@localhost:5432/test_db
+      
+      - name: Run tests
+        run: cd backend && cargo test --workspace -- --test-threads=1
+        env:
+          DATABASE_URL: postgres://postgres:password@localhost:5432/test_db
 
   check-frontend:
     runs-on: ubuntu-latest

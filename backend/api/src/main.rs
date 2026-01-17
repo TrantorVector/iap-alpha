@@ -2,19 +2,25 @@ use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-mod auth;
-mod config;
-mod error;
-mod middleware;
-mod routes;
-mod state;
-
-use config::Config;
-use routes::create_router;
-use state::AppState;
+use api::{create_router, AppState, Config};
+// mod auth; // Moved to lib.rs
+// mod config;
+// mod error;
+// mod middleware;
+// mod routes;
+// mod state;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Load .env file from the project root (../. from backend/)
+    // In production, this will just skip gracefully if .env doesn't exist
+    if let Err(e) = dotenvy::from_path("../.env") {
+        eprintln!(
+            "Warning: Could not load .env file: {}. Using existing environment variables.",
+            e
+        );
+    }
+
     // Initialize tracing
     tracing_subscriber::registry()
         .with(

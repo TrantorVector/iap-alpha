@@ -1,1 +1,1 @@
-// Middleware module placeholder
+pub mod auth;

@@ -18,11 +18,19 @@ pub mod users;
 #[openapi(
     paths(
         health::health_check,
+        auth::login,
+        auth::refresh_token,
+        auth::logout,
         // More paths added as we implement them
     ),
     components(schemas(
         health::HealthResponse,
-        // More schemas added as we implement them
+        auth::LoginRequest,
+        auth::LoginResponse,
+        auth::UserInfo,
+        auth::RefreshRequest,
+        auth::RefreshResponse,
+        auth::LogoutRequest,
     )),
     tags(
         (name = "health", description = "Health check endpoints"),
@@ -50,11 +58,14 @@ pub fn create_router(state: AppState) -> Router {
         .with_state(state)
 }
 
-fn protected_routes(_state: AppState) -> Router<AppState> {
+fn protected_routes(state: AppState) -> Router<AppState> {
     Router::new()
+        .route("/auth/logout", post(auth::logout))
         .nest("/companies", companies::companies_router())
         .nest("/screeners", screeners::screeners_router())
         .nest("/users/me", users::user_router())
-    // TODO: Apply auth middleware
-    // .layer(axum::middleware::from_fn_with_state(state, ...))
+        .layer(axum::middleware::from_fn_with_state(
+            state,
+            crate::middleware::auth::auth_middleware,
+        ))
 }
