@@ -83,8 +83,8 @@ pub async fn login(
     };
 
     // Verify password hash
-    // Verify password hash
-    let verification_result = crate::auth::password::verify_password(&payload.password, &user.password_hash);
+    let verification_result =
+        crate::auth::password::verify_password(&payload.password, &user.password_hash);
 
     match verification_result {
         Ok(true) => {
