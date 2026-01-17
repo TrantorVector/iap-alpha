@@ -1,3 +1,4 @@
+use crate::auth::jwt::Claims;
 use crate::error::ApiError;
 use crate::state::AppState;
 use argon2::{
@@ -6,6 +7,7 @@ use argon2::{
 };
 use axum::{
     extract::State,
+    http::StatusCode,
     Json,
 };
 use db::repositories::user::UserRepository;
@@ -224,4 +226,99 @@ pub async fn refresh_token(
         token_type: "Bearer".to_string(),
         expires_in,
     }))
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct LogoutRequest {
+    #[schema(example = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...")]
+    pub refresh_token: Option<String>,
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/auth/logout",
+    request_body = Option<LogoutRequest>,
+    responses(
+        (status = 204, description = "Logout successful"),
+        (status = 401, description = "Unauthorized"),
+        (status = 500, description = "Internal server error")
+    ),
+    security(
+        ("bearer_auth" = [])
+    ),
+    tag = "auth"
+)]
+pub async fn logout(
+    State(state): State<AppState>,
+    claims: Claims,
+    payload: Option<Json<LogoutRequest>>,
+) -> Result<StatusCode, ApiError> {
+    let user_repo = UserRepository::new(state.db.clone());
+    let user_id = Uuid::parse_str(&claims.sub).map_err(|_| {
+        warn!("Invalid user ID in claims: {}", claims.sub);
+        ApiError(AppError::AuthError("Invalid token payload".into()))
+    })?;
+
+    if let Some(Json(req)) = payload {
+        if let Some(refresh_token) = req.refresh_token {
+            if refresh_token.is_empty() {
+                // If provided but empty, treat as logout all
+                user_repo.revoke_all_user_tokens(user_id).await.map_err(|e| {
+                    warn!("Failed to revoke all refresh tokens for user {}: {}", user_id, e);
+                    ApiError(AppError::InternalError("Database error".into()))
+                })?;
+                info!("All refresh tokens revoked for user {} (empty token provided)", user_id);
+            } else {
+                // Hash the provided refresh token
+                let refresh_token_hash = state
+                    .jwt_service
+                    .hash_token(&refresh_token)
+                    .map_err(|e| {
+                        warn!("Failed to hash refresh token during logout: {}", e);
+                        ApiError(AppError::AuthError("Invalid refresh token".to_string()))
+                    })?;
+
+                // Look up the refresh token
+                match user_repo.find_refresh_token(&refresh_token_hash).await {
+                    Ok(Some(token_record)) => {
+                        // Verify token belongs to the user
+                        if token_record.user_id == user_id {
+                            user_repo.revoke_refresh_token(token_record.id).await.map_err(|e| {
+                                warn!("Failed to revoke specific refresh token for user {}: {}", user_id, e);
+                                ApiError(AppError::InternalError("Database error".into()))
+                            })?;
+                            info!("Specific refresh token revoked for user: {}", user_id);
+                        } else {
+                            warn!("User {} tried to revoke token belonging to user {}", user_id, token_record.user_id);
+                            // For security, don't confirm the token exists for another user
+                            return Err(ApiError(AppError::AuthError("Unauthorized".into())));
+                        }
+                    }
+                    Ok(None) => {
+                        info!("Logout: Refresh token not found in database (likely already revoked or expired)");
+                    }
+                    Err(e) => {
+                        warn!("Database error during refresh token lookup for logout: {}", e);
+                        return Err(ApiError(AppError::InternalError("Database error".into())));
+                    }
+                }
+            }
+        } else {
+            // No specific token, revoke all
+            user_repo.revoke_all_user_tokens(user_id).await.map_err(|e| {
+                warn!("Failed to revoke all refresh tokens for user {}: {}", user_id, e);
+                ApiError(AppError::InternalError("Database error".into()))
+            })?;
+            info!("All refresh tokens revoked for user: {}", user_id);
+        }
+    } else {
+        // No body, revoke all
+        user_repo.revoke_all_user_tokens(user_id).await.map_err(|e| {
+            warn!("Failed to revoke all refresh tokens for user {}: {}", user_id, e);
+            ApiError(AppError::InternalError("Database error".into()))
+        })?;
+        info!("All refresh tokens revoked for user: {}", user_id);
+    }
+
+    Ok(StatusCode::NO_CONTENT)
 }

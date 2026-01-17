@@ -8,15 +8,16 @@ use axum::http::request::Parts;
 
 use crate::state::AppState;
 use crate::auth::jwt::Claims;
+use crate::error::ApiError;
 use domain::error::AppError;
 
 pub async fn auth_middleware(
     State(state): State<AppState>,
     mut req: Request<axum::body::Body>,
     next: Next,
-) -> Result<Response, AppError> {
-    let token = extract_token(&req)?;
-    let claims = state.jwt_service.validate_access_token(token)?;
+) -> Result<Response, ApiError> {
+    let token = extract_token(&req).map_err(ApiError)?;
+    let claims = state.jwt_service.validate_access_token(token).map_err(ApiError)?;
 
     req.extensions_mut().insert(claims);
     Ok(next.run(req).await)
@@ -26,20 +27,20 @@ pub async fn optional_auth_middleware(
     State(state): State<AppState>,
     mut req: Request<axum::body::Body>,
     next: Next,
-) -> Result<Response, AppError> {
+) -> Result<Response, ApiError> {
     let auth_header = req.headers().get(header::AUTHORIZATION);
     
     if let Some(auth_val) = auth_header {
         let auth_str = auth_val
             .to_str()
-            .map_err(|_| AppError::AuthError("Invalid Authorization header".to_string()))?;
+            .map_err(|_| ApiError(AppError::AuthError("Invalid Authorization header".to_string())))?;
 
         if !auth_str.starts_with("Bearer ") {
-            return Err(AppError::AuthError("Invalid token scheme".to_string()));
+            return Err(ApiError(AppError::AuthError("Invalid token scheme".to_string())));
         }
 
         let token = &auth_str[7..];
-        let claims = state.jwt_service.validate_access_token(token)?;
+        let claims = state.jwt_service.validate_access_token(token).map_err(ApiError)?;
         req.extensions_mut().insert(claims);
     }
 
