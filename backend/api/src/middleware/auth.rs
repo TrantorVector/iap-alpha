@@ -1,14 +1,14 @@
+use axum::http::request::Parts;
 use axum::{
     extract::{FromRequestParts, State},
     http::{header, Request},
     middleware::Next,
     response::Response,
 };
-use axum::http::request::Parts;
 
-use crate::state::AppState;
 use crate::auth::jwt::Claims;
 use crate::error::ApiError;
+use crate::state::AppState;
 use domain::error::AppError;
 
 pub async fn auth_middleware(
@@ -17,30 +17,41 @@ pub async fn auth_middleware(
     next: Next,
 ) -> Result<Response, ApiError> {
     let token = extract_token(&req).map_err(ApiError)?;
-    let claims = state.jwt_service.validate_access_token(token).map_err(ApiError)?;
+    let claims = state
+        .jwt_service
+        .validate_access_token(token)
+        .map_err(ApiError)?;
 
     req.extensions_mut().insert(claims);
     Ok(next.run(req).await)
 }
 
+#[allow(dead_code)]
 pub async fn optional_auth_middleware(
     State(state): State<AppState>,
     mut req: Request<axum::body::Body>,
     next: Next,
 ) -> Result<Response, ApiError> {
     let auth_header = req.headers().get(header::AUTHORIZATION);
-    
+
     if let Some(auth_val) = auth_header {
-        let auth_str = auth_val
-            .to_str()
-            .map_err(|_| ApiError(AppError::AuthError("Invalid Authorization header".to_string())))?;
+        let auth_str = auth_val.to_str().map_err(|_| {
+            ApiError(AppError::AuthError(
+                "Invalid Authorization header".to_string(),
+            ))
+        })?;
 
         if !auth_str.starts_with("Bearer ") {
-            return Err(ApiError(AppError::AuthError("Invalid token scheme".to_string())));
+            return Err(ApiError(AppError::AuthError(
+                "Invalid token scheme".to_string(),
+            )));
         }
 
         let token = &auth_str[7..];
-        let claims = state.jwt_service.validate_access_token(token).map_err(ApiError)?;
+        let claims = state
+            .jwt_service
+            .validate_access_token(token)
+            .map_err(ApiError)?;
         req.extensions_mut().insert(claims);
     }
 
@@ -66,13 +77,14 @@ fn extract_token<B>(req: &Request<B>) -> Result<&str, AppError> {
 impl FromRequestParts<AppState> for Claims {
     type Rejection = crate::error::ApiError;
 
-    async fn from_request_parts(parts: &mut Parts, _state: &AppState) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(
+        parts: &mut Parts,
+        _state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
         let claims = parts
             .extensions
             .get::<Claims>()
-            .ok_or_else(|| {
-                AppError::AuthError("Missing request claims".to_string())
-            })
+            .ok_or_else(|| AppError::AuthError("Missing request claims".to_string()))
             .map_err(crate::error::ApiError)?;
 
         Ok(claims.clone())

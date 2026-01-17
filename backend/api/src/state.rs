@@ -67,25 +67,35 @@ impl AppState {
         };
 
         // Init JWT
-        let (jwt_private_key_str, jwt_public_key_str) = if let Some(ref path) = config.jwt_private_key_file {
+        let (jwt_private_key_str, jwt_public_key_str) = if let Some(ref path) =
+            config.jwt_private_key_file
+        {
             let priv_key = fs::read_to_string(path).map_err(|e| {
-                AppError::InternalError(format!("Failed to read JWT private key file from {}: {}", path, e))
+                AppError::InternalError(format!(
+                    "Failed to read JWT private key file from {}: {}",
+                    path, e
+                ))
             })?;
-            
+
             let pub_path = config.jwt_public_key_file.as_ref().ok_or_else(|| {
-                AppError::InternalError("JWT public key file path missing while private key path is set".into())
+                AppError::InternalError(
+                    "JWT public key file path missing while private key path is set".into(),
+                )
             })?;
-            
+
             let pub_key = fs::read_to_string(pub_path).map_err(|e| {
-                AppError::InternalError(format!("Failed to read JWT public key file from {}: {}", pub_path, e))
+                AppError::InternalError(format!(
+                    "Failed to read JWT public key file from {}: {}",
+                    pub_path, e
+                ))
             })?;
-            
+
             (priv_key, pub_key)
         } else if let Some(ref priv_inline) = config.jwt_private_key {
             let pub_inline = config.jwt_public_key.as_ref().ok_or_else(|| {
                 AppError::InternalError("JWT public key missing while private key is set".into())
             })?;
-            
+
             (priv_inline.clone(), pub_inline.clone())
         } else if config.environment == Environment::Development {
             tracing::warn!("JWT keys not configured. Generating temporary keys for development...");

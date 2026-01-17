@@ -63,6 +63,7 @@ dependencies = [
  "providers",
  "rand",
  "rand_core",
+ "reqwest",
  "rsa",
  "serde",
  "serde_json",

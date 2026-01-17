@@ -199,10 +199,7 @@ impl UserRepository {
 
     /// Find a refresh token by hash (regardless of revocation or expiration)
     /// Used for token refresh to provide accurate error messages
-    pub async fn find_refresh_token(
-        &self,
-        token_hash: &str,
-    ) -> DbResult<Option<RefreshToken>> {
+    pub async fn find_refresh_token(&self, token_hash: &str) -> DbResult<Option<RefreshToken>> {
         let token = sqlx::query_as::<_, RefreshToken>(
             r#"
             SELECT id, user_id, token_hash, expires_at, revoked,
