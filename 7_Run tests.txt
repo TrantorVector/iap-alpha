@@ -1,0 +1,158 @@
+﻿2026-01-17T19:06:27.0160486Z ##[group]Run cd backend && cargo test --workspace
+2026-01-17T19:06:27.0161164Z [36;1mcd backend && cargo test --workspace[0m
+2026-01-17T19:06:27.0206362Z shell: /usr/bin/bash -e {0}
+2026-01-17T19:06:27.0206769Z env:
+2026-01-17T19:06:27.0207087Z   CARGO_HOME: /home/runner/.cargo
+2026-01-17T19:06:27.0207527Z   CARGO_INCREMENTAL: 0
+2026-01-17T19:06:27.0207895Z   CARGO_TERM_COLOR: always
+2026-01-17T19:06:27.0208289Z   CACHE_ON_FAILURE: false
+2026-01-17T19:06:27.0209454Z   DATABASE_URL: ***localhost:5432/test
+2026-01-17T19:06:27.0209938Z ##[endgroup]
+2026-01-17T19:06:27.2769512Z [1m[92m   Compiling[0m const-oid v0.9.6
+2026-01-17T19:06:27.2804099Z [1m[92m   Compiling[0m libm v0.2.15
+2026-01-17T19:06:27.2818005Z [1m[92m   Compiling[0m digest v0.10.7
+2026-01-17T19:06:27.2859806Z [1m[92m   Compiling[0m num-integer v0.1.46
+2026-01-17T19:06:27.4457121Z [1m[92m   Compiling[0m sha2 v0.10.9
+2026-01-17T19:06:27.5851672Z [1m[92m   Compiling[0m num-bigint v0.4.6
+2026-01-17T19:06:27.9091182Z [1m[92m   Compiling[0m hmac v0.12.1
+2026-01-17T19:06:27.9340443Z [1m[92m   Compiling[0m chrono v0.4.43
+2026-01-17T19:06:28.0173039Z [1m[92m   Compiling[0m atoi v2.0.0
+2026-01-17T19:06:28.0920564Z [1m[92m   Compiling[0m hkdf v0.12.4
+2026-01-17T19:06:28.1681518Z [1m[92m   Compiling[0m md-5 v0.10.6
+2026-01-17T19:06:28.2460826Z [1m[92m   Compiling[0m num-traits v0.2.19
+2026-01-17T19:06:28.6704424Z [1m[92m   Compiling[0m rand v0.8.5
+2026-01-17T19:06:29.2799680Z [1m[92m   Compiling[0m bigdecimal v0.3.1
+2026-01-17T19:06:29.5378520Z [1m[92m   Compiling[0m sqlx-core v0.7.4
+2026-01-17T19:06:30.2733040Z [1m[92m   Compiling[0m base64ct v1.6.0
+2026-01-17T19:06:30.9185707Z [1m[92m   Compiling[0m zeroize v1.8.2
+2026-01-17T19:06:31.0319319Z [1m[92m   Compiling[0m pem-rfc7468 v0.7.0
+2026-01-17T19:06:31.2284390Z [1m[92m   Compiling[0m spin v0.9.8
+2026-01-17T19:06:31.2990467Z [1m[92m   Compiling[0m lazy_static v1.5.0
+2026-01-17T19:06:31.3187299Z [1m[92m   Compiling[0m der v0.7.10
+2026-01-17T19:06:31.3397672Z [1m[92m   Compiling[0m rust-embed-utils v8.11.0
+2026-01-17T19:06:31.4921891Z [1m[92m   Compiling[0m rust-embed-impl v8.11.0
+2026-01-17T19:06:32.0195374Z [1m[92m   Compiling[0m sqlx-postgres v0.7.4
+2026-01-17T19:06:32.8036504Z [1m[92m   Compiling[0m spki v0.7.3
+2026-01-17T19:06:32.9535184Z [1m[92m   Compiling[0m pkcs8 v0.10.2
+2026-01-17T19:06:33.3215650Z [1m[92m   Compiling[0m num-iter v0.1.45
+2026-01-17T19:06:33.3879449Z [1m[92m   Compiling[0m num-bigint-dig v0.8.6
+2026-01-17T19:06:34.1845275Z [1m[92m   Compiling[0m rust-embed v8.11.0
+2026-01-17T19:06:34.2326120Z [1m[92m   Compiling[0m simple_asn1 v0.6.3
+2026-01-17T19:06:34.8034284Z [1m[92m   Compiling[0m pkcs1 v0.7.5
+2026-01-17T19:06:34.9437477Z [1m[92m   Compiling[0m sharded-slab v0.1.7
+2026-01-17T19:06:35.2122018Z [1m[92m   Compiling[0m sqlx-macros-core v0.7.4
+2026-01-17T19:06:35.5160009Z [1m[92m   Compiling[0m password-hash v0.5.0
+2026-01-17T19:06:35.9308407Z [1m[92m   Compiling[0m signature v2.2.0
+2026-01-17T19:06:36.0038276Z [1m[92m   Compiling[0m blake2 v0.10.6
+2026-01-17T19:06:36.4172301Z [1m[92m   Compiling[0m tracing-subscriber v0.3.22
+2026-01-17T19:06:36.8195818Z [1m[92m   Compiling[0m argon2 v0.5.3
+2026-01-17T19:06:36.9027162Z [1m[92m   Compiling[0m sqlx-macros v0.7.4
+2026-01-17T19:06:37.3382912Z [1m[92m   Compiling[0m rsa v0.9.10
+2026-01-17T19:06:37.9411047Z [1m[92m   Compiling[0m sqlx v0.7.4
+2026-01-17T19:06:38.0511257Z [1m[92m   Compiling[0m domain v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/domain)
+2026-01-17T19:06:38.0645333Z [1m[92m   Compiling[0m db v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/db)
+2026-01-17T19:06:38.2760982Z [1m[92m   Compiling[0m providers v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/providers)
+2026-01-17T19:06:38.4693318Z [1m[92m   Compiling[0m utoipa-swagger-ui v6.0.0
+2026-01-17T19:06:39.1970367Z [1m[92m   Compiling[0m jsonwebtoken v9.3.1
+2026-01-17T19:06:39.9002407Z [1m[92m   Compiling[0m api v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/api)
+2026-01-17T19:06:40.5334454Z [1m[92m   Compiling[0m worker v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/worker)
+2026-01-17T19:06:44.4829665Z [1m[92m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 17.40s
+2026-01-17T19:06:44.4858621Z [1m[33mwarning[0m: the following packages contain code that will be rejected by a future version of Rust: sqlx-postgres v0.7.4
+2026-01-17T19:06:44.4859688Z [1m[92mnote[0m: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+2026-01-17T19:06:44.5020722Z [1m[92m     Running[0m unittests src/lib.rs (target/debug/deps/api-7eeb8f99f80955bb)
+2026-01-17T19:06:44.5037005Z 
+2026-01-17T19:06:44.5037402Z running 15 tests
+2026-01-17T19:06:49.0374518Z test auth::password::tests::test_hash_password_success ... ok
+2026-01-17T19:06:49.9026843Z test auth::jwt::tests::test_jwt_flow ... ok
+2026-01-17T19:06:54.3496158Z test auth::password::tests::test_verify_password_failure ... ok
+2026-01-17T19:06:58.3541138Z test auth::password::tests::test_verify_password_success ... ok
+2026-01-17T19:06:59.3397332Z test auth::jwt::tests::test_refresh_token ... ok
+2026-01-17T19:06:59.6570487Z test auth::tests::test_access_token_contains_correct_claims ... ok
+2026-01-17T19:07:00.2237268Z test auth::tests::test_expired_token_is_rejected ... ok
+2026-01-17T19:07:04.1593779Z test auth::tests::test_hash_password_creates_valid_hash ... ok
+2026-01-17T19:07:04.5793029Z test auth::tests::test_create_access_token_is_valid ... ok
+2026-01-17T19:07:08.3983012Z test auth::tests::test_hash_is_not_deterministic ... ok
+2026-01-17T19:07:13.2361571Z test auth::tests::test_verify_correct_password_succeeds ... ok
+2026-01-17T19:07:16.2696002Z test auth::tests::test_invalid_signature_is_rejected ... ok
+2026-01-17T19:07:17.0688452Z test auth::tests::test_verify_wrong_password_fails ... ok
+2026-01-17T19:07:17.1047112Z test auth::tests::test_wrong_algorithm_is_rejected ... ok
+2026-01-17T19:07:17.7839460Z test auth::tests::test_token_signed_with_wrong_key_is_rejected ... ok
+2026-01-17T19:07:17.7840058Z 
+2026-01-17T19:07:17.7840507Z test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 33.28s
+2026-01-17T19:07:17.7841141Z 
+2026-01-17T19:07:17.7844785Z [1m[92m     Running[0m unittests src/main.rs (target/debug/deps/api-b2648f0c6eac3e9f)
+2026-01-17T19:07:17.7856038Z 
+2026-01-17T19:07:17.7856231Z running 0 tests
+2026-01-17T19:07:17.7856474Z 
+2026-01-17T19:07:17.7856896Z test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+2026-01-17T19:07:17.7857554Z 
+2026-01-17T19:07:17.7859454Z [1m[92m     Running[0m tests/auth_integration.rs (target/debug/deps/auth_integration-c5b5bfa133def3b0)
+2026-01-17T19:07:17.7883371Z 
+2026-01-17T19:07:17.7883687Z running 8 tests
+2026-01-17T19:07:47.7910450Z test test_login_with_invalid_password_returns_401 ... FAILED
+2026-01-17T19:07:47.7911266Z test test_login_with_valid_credentials_returns_tokens ... FAILED
+2026-01-17T19:07:47.7912851Z test test_login_with_nonexistent_user_returns_401 ... FAILED
+2026-01-17T19:07:47.7914236Z test test_logout_revokes_refresh_token ... FAILED
+2026-01-17T19:08:17.7931794Z test test_protected_route_with_valid_token_succeeds ... FAILED
+2026-01-17T19:08:17.7934215Z test test_refresh_with_valid_token_returns_new_access_token ... FAILED
+2026-01-17T19:08:17.7936962Z test test_protected_route_without_token_returns_401 ... FAILED
+2026-01-17T19:08:17.7937827Z test test_refresh_with_expired_token_returns_401 ... FAILED
+2026-01-17T19:08:17.7938322Z 
+2026-01-17T19:08:17.7938466Z failures:
+2026-01-17T19:08:17.7938668Z 
+2026-01-17T19:08:17.7938976Z ---- test_login_with_invalid_password_returns_401 stdout ----
+2026-01-17T19:08:17.7939450Z 
+2026-01-17T19:08:17.7940036Z thread 'test_login_with_invalid_password_returns_401' (3915) panicked at api/tests/auth_integration.rs:42:10:
+2026-01-17T19:08:17.7941711Z Failed to create AppState: InternalError("Database init failed: Database connection error: pool timed out while waiting for an open connection")
+2026-01-17T19:08:17.7943753Z note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+2026-01-17T19:08:17.7944614Z 
+2026-01-17T19:08:17.7944898Z ---- test_login_with_valid_credentials_returns_tokens stdout ----
+2026-01-17T19:08:17.7945335Z 
+2026-01-17T19:08:17.7945757Z thread 'test_login_with_valid_credentials_returns_tokens' (3917) panicked at api/tests/auth_integration.rs:42:10:
+2026-01-17T19:08:17.7947062Z Failed to create AppState: InternalError("Database init failed: Database connection error: pool timed out while waiting for an open connection")
+2026-01-17T19:08:17.7947734Z 
+2026-01-17T19:08:17.7947904Z ---- test_login_with_nonexistent_user_returns_401 stdout ----
+2026-01-17T19:08:17.7948166Z 
+2026-01-17T19:08:17.7948453Z thread 'test_login_with_nonexistent_user_returns_401' (3916) panicked at api/tests/auth_integration.rs:42:10:
+2026-01-17T19:08:17.7949272Z Failed to create AppState: InternalError("Database init failed: Database connection error: pool timed out while waiting for an open connection")
+2026-01-17T19:08:17.7949799Z 
+2026-01-17T19:08:17.7949919Z ---- test_logout_revokes_refresh_token stdout ----
+2026-01-17T19:08:17.7950127Z 
+2026-01-17T19:08:17.7950387Z thread 'test_logout_revokes_refresh_token' (3918) panicked at api/tests/auth_integration.rs:42:10:
+2026-01-17T19:08:17.7951152Z Failed to create AppState: InternalError("Database init failed: Database connection error: pool timed out while waiting for an open connection")
+2026-01-17T19:08:17.7951683Z 
+2026-01-17T19:08:17.7951840Z ---- test_protected_route_with_valid_token_succeeds stdout ----
+2026-01-17T19:08:17.7952085Z 
+2026-01-17T19:08:17.7952396Z thread 'test_protected_route_with_valid_token_succeeds' (3929) panicked at api/tests/auth_integration.rs:42:10:
+2026-01-17T19:08:17.7953203Z Failed to create AppState: InternalError("Database init failed: Database connection error: pool timed out while waiting for an open connection")
+2026-01-17T19:08:17.7953712Z 
+2026-01-17T19:08:17.7954091Z ---- test_refresh_with_valid_token_returns_new_access_token stdout ----
+2026-01-17T19:08:17.7954374Z 
+2026-01-17T19:08:17.7954701Z thread 'test_refresh_with_valid_token_returns_new_access_token' (3932) panicked at api/tests/auth_integration.rs:42:10:
+2026-01-17T19:08:17.7955535Z Failed to create AppState: InternalError("Database init failed: Database connection error: pool timed out while waiting for an open connection")
+2026-01-17T19:08:17.7956046Z 
+2026-01-17T19:08:17.7956198Z ---- test_protected_route_without_token_returns_401 stdout ----
+2026-01-17T19:08:17.7956435Z 
+2026-01-17T19:08:17.7956731Z thread 'test_protected_route_without_token_returns_401' (3930) panicked at api/tests/auth_integration.rs:42:10:
+2026-01-17T19:08:17.7957540Z Failed to create AppState: InternalError("Database init failed: Database connection error: pool timed out while waiting for an open connection")
+2026-01-17T19:08:17.7958051Z 
+2026-01-17T19:08:17.7958187Z ---- test_refresh_with_expired_token_returns_401 stdout ----
+2026-01-17T19:08:17.7958415Z 
+2026-01-17T19:08:17.7958700Z thread 'test_refresh_with_expired_token_returns_401' (3931) panicked at api/tests/auth_integration.rs:42:10:
+2026-01-17T19:08:17.7959696Z Failed to create AppState: InternalError("Database init failed: Database connection error: pool timed out while waiting for an open connection")
+2026-01-17T19:08:17.7960205Z 
+2026-01-17T19:08:17.7960209Z 
+2026-01-17T19:08:17.7960275Z failures:
+2026-01-17T19:08:17.7960475Z     test_login_with_invalid_password_returns_401
+2026-01-17T19:08:17.7960770Z     test_login_with_nonexistent_user_returns_401
+2026-01-17T19:08:17.7961061Z     test_login_with_valid_credentials_returns_tokens
+2026-01-17T19:08:17.7961347Z     test_logout_revokes_refresh_token
+2026-01-17T19:08:17.7961626Z     test_protected_route_with_valid_token_succeeds
+2026-01-17T19:08:17.7961915Z     test_protected_route_without_token_returns_401
+2026-01-17T19:08:17.7962210Z     test_refresh_with_expired_token_returns_401
+2026-01-17T19:08:17.7962640Z     test_refresh_with_valid_token_returns_new_access_token
+2026-01-17T19:08:17.7962862Z 
+2026-01-17T19:08:17.7963112Z test result: FAILED. 0 passed; 8 failed; 0 ignored; 0 measured; 0 filtered out; finished in 60.01s
+2026-01-17T19:08:17.7964128Z [1m[91merror[0m: test failed, to rerun pass `-p api --test auth_integration`
+2026-01-17T19:08:17.7964421Z 
+2026-01-17T19:08:17.7992075Z ##[error]Process completed with exit code 101.
