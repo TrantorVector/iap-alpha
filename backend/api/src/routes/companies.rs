@@ -14,12 +14,14 @@ use serde::{Deserialize, Serialize};
 use utoipa::{ToSchema, IntoParams};
 use uuid::Uuid;
 use chrono::Datelike;
+use std::time::Duration;
 
 pub fn companies_router() -> Router<AppState> {
     Router::new()
         .route("/:id", get(get_company_details))
         .route("/:id/metrics", get(get_company_metrics))
         .route("/:id/documents", get(get_company_documents))
+        .route("/:id/documents/:doc_id/download", get(get_document_download_url))
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
@@ -438,6 +440,69 @@ pub async fn get_company_documents(
             is_stale,
             refresh_requested,
         },
+    };
+
+    Ok(Json(response))
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct DownloadResponse {
+    pub download_url: String,
+    pub expires_in: i64,
+    pub filename: String,
+    pub content_type: String,
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/companies/{id}/documents/{doc_id}/download",
+    params(
+        ("id" = Uuid, Path, description = "Company ID"),
+        ("doc_id" = Uuid, Path, description = "Document ID")
+    ),
+    responses(
+        (status = 200, description = "Document download URL", body = DownloadResponse),
+        (status = 404, description = "Document not found"),
+        (status = 400, description = "Document not available"),
+        (status = 403, description = "Access denied")
+    ),
+    tag = "companies"
+)]
+pub async fn get_document_download_url(
+    State(state): State<AppState>,
+    Path((id, doc_id)): Path<(Uuid, Uuid)>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let doc_repo = DocumentRepository::new(state.db.clone());
+
+    // 1. Fetch document
+    let doc = doc_repo.find_by_id(doc_id).await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::NOT_FOUND, "Document not found".to_string()))?;
+
+    // 2. Verify document belongs to company
+    if doc.company_id != id {
+        return Err((StatusCode::FORBIDDEN, "Document does not belong to this company".to_string()));
+    }
+
+    // 3. Verify document has storage_key
+    let storage_key = doc.storage_key.ok_or((
+        StatusCode::BAD_REQUEST,
+        "Document is not yet available for download".to_string(),
+    ))?;
+
+    // 4. Generate presigned URL
+    let expires_in = Duration::from_secs(15 * 60);
+    let download_url = state.storage.get_presigned_url(&storage_key, expires_in).await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // 5. Response
+    let filename = format!("{}_{}.pdf", doc.document_type, doc.period_end_date.map(|d| d.to_string()).unwrap_or_else(|| "unknown".into()));
+    
+    let response = DownloadResponse {
+        download_url,
+        expires_in: 900,
+        filename,
+        content_type: doc.mime_type.unwrap_or_else(|| "application/pdf".to_string()),
     };
 
     Ok(Json(response))

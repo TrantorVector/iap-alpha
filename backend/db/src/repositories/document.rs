@@ -15,6 +15,24 @@ impl DocumentRepository {
         Self { pool }
     }
 
+    /// Find document by ID
+    pub async fn find_by_id(&self, id: Uuid) -> DbResult<Option<Document>> {
+        let document = sqlx::query_as::<_, Document>(
+            r#"
+            SELECT id, company_id, document_type, period_end_date, fiscal_year, fiscal_quarter,
+                   title, storage_key, source_url, file_size, mime_type, created_at, updated_at
+            FROM documents
+            WHERE id = $1
+            "#,
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(DbError::from)?;
+
+        Ok(document)
+    }
+
     /// Find documents by company ID with optional type filter
     pub async fn find_by_company_id(
         &self,
