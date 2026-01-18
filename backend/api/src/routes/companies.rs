@@ -29,6 +29,7 @@ pub fn companies_router() -> Router<AppState> {
         .route("/:id/documents", get(get_company_documents).post(upload_company_document))
         .route("/:id/documents/:doc_id/download", get(get_document_download_url))
         .route("/:id/verdict", get(get_verdict).put(update_verdict))
+        .route("/:id/verdict/history", get(get_verdict_history))
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
@@ -953,6 +954,21 @@ pub async fn update_verdict(
 
     let verdict = match existing_verdict {
         Some(current) => {
+            // Create History Snapshot of the CURRENT state (before update)
+            match verdict_repo.create_history_snapshot(current.id).await {
+                Ok(history) => {
+                    // Link reports currently linked to this verdict to the new history snapshot
+                    if let Err(e) = verdict_repo.link_reports_to_history(current.id, history.id).await {
+                        tracing::error!("Failed to link reports to history snapshot: {}", e);
+                    }
+                },
+                Err(e) => {
+                     tracing::error!("Failed to create history snapshot: {}", e);
+                     // Proceed with update even if snapshot fails? 
+                     // Ideally we should fail, but for now log and proceed to avoid blocking user.
+                }
+            }
+
             // Update existing
             let update_dto = VerdictUpdate {
                 final_verdict: mapped_verdict,
@@ -1073,4 +1089,111 @@ async fn update_linked_reports(pool: &PgPool, verdict_id: Uuid, report_ids: &[Uu
 
     tx.commit().await?;
     Ok(())
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct VerdictHistoryResponse {
+    pub company_id: Uuid,
+    pub history: Vec<VerdictHistoryEntry>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct VerdictHistoryEntry {
+    pub history_id: Uuid,
+    pub version: i32,
+    pub final_verdict: Option<String>,
+    pub summary_text: Option<String>,
+    pub recorded_at: DateTime<Utc>,
+    pub linked_report: Option<LinkedReport>,
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/companies/{id}/verdict/history",
+    params(
+        ("id" = Uuid, Path, description = "Company ID")
+    ),
+    responses(
+        (status = 200, description = "Verdict history", body = VerdictHistoryResponse),
+        (status = 404, description = "Company not found")
+    ),
+    tag = "companies"
+)]
+pub async fn get_verdict_history(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    use db::repositories::VerdictRepository;
+
+    let company_repo = CompanyRepository::new(state.db.clone());
+    let verdict_repo = VerdictRepository::new(state.db.clone());
+
+    // 1. Verify company exists
+    company_repo
+        .find_by_id(id)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::NOT_FOUND, "Company not found".to_string()))?;
+
+    // 2. Fetch verdict to get ID (needed for history)
+    // We need user_id again.
+    let test_user_id = get_test_user_id(&state.db).await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let verdict = verdict_repo
+        .find_by_company(id, test_user_id)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let history_entries = if let Some(verdict) = verdict {
+        // 3. Fetch history
+        let mut history = verdict_repo.get_history(verdict.id)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        // 4. Order descending (repo is ASC) and limit to 50
+        history.reverse();
+        history.truncate(50);
+
+        // 5. Map to Response Entry
+        let mut entries = Vec::new();
+        for h in history {
+            // Fetch linked report for this history version
+            // Assuming 1 report per history version based on schema usage or prompt implication
+            let linked_report = sqlx::query_as::<_, (Uuid, String, DateTime<Utc>)>(
+                r#"
+                SELECT id, filename, uploaded_at
+                FROM analysis_reports
+                WHERE verdict_history_id = $1
+                LIMIT 1
+                "#
+            )
+            .bind(h.id)
+            .fetch_optional(&state.db)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+            .map(|(id, filename, uploaded_at)| LinkedReport {
+                report_id: id,
+                filename,
+                uploaded_at,
+            });
+
+            entries.push(VerdictHistoryEntry {
+                history_id: h.id,
+                version: h.version,
+                final_verdict: h.final_verdict,
+                summary_text: h.summary_text,
+                recorded_at: h.recorded_at,
+                linked_report,
+            });
+        }
+        entries
+    } else {
+        Vec::new()
+    };
+
+    Ok(Json(VerdictHistoryResponse {
+        company_id: id,
+        history: history_entries,
+    }))
 }
