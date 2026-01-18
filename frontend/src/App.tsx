@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import AnalyzerPage from "@/pages/AnalyzerPage";
+import { Toaster } from "@/components/ui/toaster";
 
-function App() {
+function HomePage() {
   const [health, setHealth] = useState<string>("Connecting...");
 
   useEffect(() => {
@@ -11,19 +16,51 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-4 text-blue-600">
-          Investment Research Platform
-        </h1>
-        <div className="flex items-center space-x-2">
-          <div
-            className={`w-3 h-3 rounded-full ${health.includes("Connected") ? "bg-green-500" : "bg-red-500"}`}
-          ></div>
-          <p className="text-gray-600">{health}</p>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-xl border-2">
+        <CardHeader>
+          <CardTitle className="text-3xl font-extrabold text-primary tracking-tight">
+            IAP Alpha
+          </CardTitle>
+          <p className="text-muted-foreground text-sm uppercase tracking-widest font-semibold">
+            Investment Research Platform
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col space-y-6">
+            <div className="flex items-center space-x-3 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border">
+              <div
+                className={`w-3 h-3 rounded-full animate-pulse ${health.includes("Connected") ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" : health.includes("Error") ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]" : "bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]"}`}
+              ></div>
+              <p className="text-sm font-medium">{health}</p>
+            </div>
+
+            <div className="grid gap-2">
+              <Button onClick={() => window.location.href = '/analyzer/AAPL'} className="w-full">
+                Open AAPL Analyzer
+              </Button>
+              <Button variant="outline" onClick={() => window.location.reload()} className="w-full">
+                Refresh Connection
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/analyzer/:companyId" element={<AnalyzerPage />} />
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <Toaster />
+    </BrowserRouter>
   );
 }
 
