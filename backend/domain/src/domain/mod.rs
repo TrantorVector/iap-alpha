@@ -9,22 +9,43 @@ pub struct CompanyOverview {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct IncomeStatement {
-    // Add fields
+    pub period_end_date: chrono::NaiveDate,
+    pub revenue: Option<bigdecimal::BigDecimal>,
+    pub gross_profit: Option<bigdecimal::BigDecimal>,
+    pub operating_income: Option<bigdecimal::BigDecimal>,
+    pub net_income: Option<bigdecimal::BigDecimal>,
+    pub eps: Option<bigdecimal::BigDecimal>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct BalanceSheet {
-    // Add fields
+    pub period_end_date: chrono::NaiveDate,
+    pub total_assets: Option<bigdecimal::BigDecimal>,
+    pub total_liabilities: Option<bigdecimal::BigDecimal>,
+    pub total_equity: Option<bigdecimal::BigDecimal>,
+    pub cash_and_equivalents: Option<bigdecimal::BigDecimal>,
+    pub short_term_investments: Option<bigdecimal::BigDecimal>,
+    pub short_term_debt: Option<bigdecimal::BigDecimal>,
+    pub long_term_debt: Option<bigdecimal::BigDecimal>,
+    pub net_debt: Option<bigdecimal::BigDecimal>,
+    pub common_stock_shares_outstanding: Option<i64>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CashFlowStatement {
-    // Add fields
+    pub period_end_date: chrono::NaiveDate,
+    pub operating_cash_flow: Option<bigdecimal::BigDecimal>,
+    pub capital_expenditures: Option<bigdecimal::BigDecimal>,
+    pub free_cash_flow: Option<bigdecimal::BigDecimal>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DailyPrice {
-    // Add fields
+    pub date: chrono::NaiveDate,
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

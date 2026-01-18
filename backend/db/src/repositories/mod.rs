@@ -1,4 +1,5 @@
 pub mod company;
+pub mod document;
 /// Database repositories
 ///
 /// This module contains repository pattern implementations for data access.
@@ -11,5 +12,6 @@ pub use company::{
     BalanceSheetInsert, CashFlowStatementInsert, CompanyFilters, CompanyRepository,
     DailyPriceInsert, IncomeStatementInsert, Pagination,
 };
+pub use document::{CreateDocumentParams, DocumentRepository};
 pub use user::{CreateUserRequest, UserPreferencesUpdate, UserRepository};
 pub use verdict::{VerdictCreate, VerdictRepository, VerdictUpdate};

@@ -39,11 +39,14 @@ impl AppState {
         };
 
         let storage: Arc<dyn ObjectStorage> = match config.environment {
-            Environment::Production | Environment::Staging => Arc::new(S3Storage::new(
-                config.s3_endpoint.clone(),
-                config.s3_access_key.clone(),
-                config.s3_secret_key.clone(),
-            )),
+            Environment::Production | Environment::Staging => Arc::new(
+                S3Storage::new(
+                    config.s3_endpoint.clone(),
+                    config.s3_access_key.clone(),
+                    config.s3_secret_key.clone(),
+                )
+                .await,
+            ),
             Environment::Development => {
                 // For development, we can also use S3Storage if configured, or Mock.
                 // The config logic defaults S3 endpoint for development, so maybe we SHOULD use S3Storage even in dev?

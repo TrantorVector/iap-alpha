@@ -243,6 +243,31 @@ impl VerdictRepository {
         Ok(history)
     }
 
+    /// Link reports to a history snapshot
+    ///
+    /// Updates analysis_reports to point to the history snapshot
+    /// Only updates reports currently linked to the verdict that don't have a history link yet
+    pub async fn link_reports_to_history(
+        &self,
+        verdict_id: Uuid,
+        history_id: Uuid,
+    ) -> DbResult<()> {
+        sqlx::query(
+            r#"
+            UPDATE analysis_reports
+            SET verdict_history_id = $1
+            WHERE verdict_id = $2 AND verdict_history_id IS NULL
+            "#,
+        )
+        .bind(history_id)
+        .bind(verdict_id)
+        .execute(&self.pool)
+        .await
+        .map_err(DbError::from)?;
+
+        Ok(())
+    }
+
     /// Get all history snapshots for a verdict
     ///
     /// Returns snapshots ordered by version (oldest to newest)
