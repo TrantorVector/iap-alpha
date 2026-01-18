@@ -17,6 +17,7 @@ use multer::Multipart;
 use serde::{Deserialize, Serialize};
 use sqlx;
 use utoipa::{ToSchema, IntoParams};
+use serde_json::json;
 use uuid::Uuid;
 use chrono::Datelike;
 use std::time::Duration;
@@ -27,7 +28,7 @@ pub fn companies_router() -> Router<AppState> {
         .route("/:id/metrics", get(get_company_metrics))
         .route("/:id/documents", get(get_company_documents).post(upload_company_document))
         .route("/:id/documents/:doc_id/download", get(get_document_download_url))
-        .route("/:id/verdict", get(get_verdict))
+        .route("/:id/verdict", get(get_verdict).put(update_verdict))
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
@@ -877,4 +878,199 @@ fn parse_json_to_strings(json_value: Option<serde_json::Value>) -> Vec<String> {
         .into_iter()
         .filter_map(|v| v.as_str().map(|s| s.to_string()))
         .collect()
+}
+
+#[derive(Deserialize, ToSchema)]
+pub struct VerdictUpdateRequest {
+    pub lock_version: i32,
+    pub final_verdict: Option<String>,
+    pub summary_text: Option<String>,
+    #[serde(default)]
+    pub strengths: Vec<String>,
+    #[serde(default)]
+    pub weaknesses: Vec<String>,
+    pub guidance_summary: Option<String>,
+    #[serde(default)]
+    pub linked_report_ids: Vec<Uuid>,
+}
+
+#[utoipa::path(
+    put,
+    path = "/api/v1/companies/{id}/verdict",
+    params(
+        ("id" = Uuid, Path, description = "Company ID")
+    ),
+    request_body = VerdictUpdateRequest,
+    responses(
+        (status = 200, description = "Verdict updated successfully", body = VerdictResponse),
+        (status = 404, description = "Company not found"),
+        (status = 409, description = "Conflict - Optimistic lock version mismatch")
+    ),
+    tag = "companies"
+)]
+pub async fn update_verdict(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+    Json(payload): Json<VerdictUpdateRequest>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    use db::repositories::{VerdictRepository, VerdictCreate, VerdictUpdate};
+    use db::DbError;
+
+    let company_repo = CompanyRepository::new(state.db.clone());
+    let verdict_repo = VerdictRepository::new(state.db.clone());
+
+    // 1. Verify company exists
+    match company_repo.find_by_id(id).await {
+        Ok(Some(_)) => {},
+        Ok(None) => return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Company not found"})))),
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()})))),
+    }
+
+    // 2. Validate and map final_verdict
+    let mapped_verdict = if let Some(ref v) = payload.final_verdict {
+        match v.as_str() {
+            "INVEST" => Some("invest".to_string()),
+            "PASS" => Some("pass".to_string()),
+            "WATCHLIST" => Some("watchlist".to_string()),
+            "NO_THESIS" => None,
+            _ => return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "Invalid final_verdict value"})))),
+        }
+    } else {
+        None
+    };
+
+    // 3. Get User ID (Test User for now)
+    let user_id = match get_test_user_id(&state.db).await {
+        Ok(uid) => uid,
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()})))),
+    };
+
+    // 4. Check if verdict exists
+    let existing_verdict = verdict_repo
+        .find_by_company(id, user_id)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+
+    let verdict = match existing_verdict {
+        Some(current) => {
+            // Update existing
+            let update_dto = VerdictUpdate {
+                final_verdict: mapped_verdict,
+                summary_text: payload.summary_text,
+                strengths: Some(json!(payload.strengths)),
+                weaknesses: Some(json!(payload.weaknesses)),
+                guidance_summary: payload.guidance_summary,
+            };
+
+            match verdict_repo.update_with_lock(current.id, update_dto, payload.lock_version).await {
+                Ok(v) => v,
+                Err(DbError::OptimisticLockError(_)) => {
+                    // Fetch fresh state for 409 details
+                    let fresh_state = verdict_repo.find_by_id(current.id).await
+                        .ok().flatten();
+                    
+                    let current_response = if let Some(fresh) = fresh_state {
+                         let v_strengths = parse_json_to_strings(fresh.strengths);
+                         let v_weaknesses = parse_json_to_strings(fresh.weaknesses);
+                         let linked = fetch_linked_reports(&state.db, fresh.id).await.unwrap_or_default();
+                         
+                         Some(VerdictResponse {
+                            verdict_id: Some(fresh.id),
+                            company_id: fresh.company_id,
+                            final_verdict: fresh.final_verdict.map(|s| s.to_uppercase()), // Map back to UPPERCASE for response?
+                            summary_text: fresh.summary_text,
+                            strengths: v_strengths,
+                            weaknesses: v_weaknesses,
+                            guidance_summary: fresh.guidance_summary,
+                            lock_version: fresh.lock_version,
+                            created_at: Some(fresh.created_at),
+                            updated_at: Some(fresh.updated_at),
+                            linked_reports: linked,
+                         })
+                    } else {
+                        None
+                    };
+
+                    return Err((
+                        StatusCode::CONFLICT,
+                        Json(json!({
+                            "error": {
+                                "code": "CONFLICT",
+                                "details": {
+                                    "message": "Resource modified by another request",
+                                    "current_version": current.lock_version,
+                                    "current_state": current_response
+                                }
+                            }
+                        }))
+                    ));
+                },
+                Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))
+            }
+        },
+        None => {
+            let create_dto = VerdictCreate {
+                final_verdict: mapped_verdict,
+                summary_text: payload.summary_text,
+                strengths: Some(json!(payload.strengths)),
+                weaknesses: Some(json!(payload.weaknesses)),
+                guidance_summary: payload.guidance_summary,
+            };
+
+            verdict_repo.create(id, user_id, create_dto)
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?
+        }
+    };
+
+    // 5. Update Linked Reports
+    if let Err(e) = update_linked_reports(&state.db, verdict.id, &payload.linked_report_ids).await {
+        return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": format!("Failed to update linked reports: {}", e)}))));
+    }
+
+    // 6. Build Response
+    let linked_reports = fetch_linked_reports(&state.db, verdict.id)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+
+    let strengths = parse_json_to_strings(verdict.strengths);
+    let weaknesses = parse_json_to_strings(verdict.weaknesses);
+
+    let response = VerdictResponse {
+        verdict_id: Some(verdict.id),
+        company_id: verdict.company_id,
+        final_verdict: verdict.final_verdict.map(|s| s.to_uppercase()),
+        summary_text: verdict.summary_text,
+        strengths,
+        weaknesses,
+        guidance_summary: verdict.guidance_summary,
+        lock_version: verdict.lock_version,
+        created_at: Some(verdict.created_at),
+        updated_at: Some(verdict.updated_at),
+        linked_reports,
+    };
+
+    Ok(Json(response))
+}
+
+async fn update_linked_reports(pool: &PgPool, verdict_id: Uuid, report_ids: &[Uuid]) -> Result<(), sqlx::Error> {
+    let mut tx = pool.begin().await?;
+
+    // Clear existing links
+    sqlx::query("UPDATE analysis_reports SET verdict_id = NULL WHERE verdict_id = $1")
+        .bind(verdict_id)
+        .execute(&mut *tx)
+        .await?;
+
+    if !report_ids.is_empty() {
+        // Link new list
+        sqlx::query("UPDATE analysis_reports SET verdict_id = $1 WHERE id = ANY($2)")
+            .bind(verdict_id)
+            .bind(report_ids)
+            .execute(&mut *tx)
+            .await?;
+    }
+
+    tx.commit().await?;
+    Ok(())
 }
