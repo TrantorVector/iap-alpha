@@ -26,6 +26,7 @@ pub mod users;
         companies::get_company_documents,
         companies::upload_company_document,
         companies::get_document_download_url,
+        companies::get_verdict,
         // More paths added as we implement them
     ),
     components(schemas(
@@ -46,6 +47,8 @@ pub mod users;
         companies::FreshnessMetadata,
         companies::DocumentUploadResponse,
         companies::DownloadResponse,
+        companies::VerdictResponse,
+        companies::LinkedReport,
         domain::periods::FiscalPeriod,
         domain::periods::PeriodType,
     )),

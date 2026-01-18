@@ -10,10 +10,12 @@ use axum::{
 use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, Utc};
 use db::repositories::{CompanyRepository, DocumentRepository};
+use db::PgPool;
 use domain::metrics::calculator::MetricsCalculator;
 use domain::periods::{PeriodWindowGenerator, PeriodType};
 use multer::Multipart;
 use serde::{Deserialize, Serialize};
+use sqlx;
 use utoipa::{ToSchema, IntoParams};
 use uuid::Uuid;
 use chrono::Datelike;
@@ -25,6 +27,7 @@ pub fn companies_router() -> Router<AppState> {
         .route("/:id/metrics", get(get_company_metrics))
         .route("/:id/documents", get(get_company_documents).post(upload_company_document))
         .route("/:id/documents/:doc_id/download", get(get_document_download_url))
+        .route("/:id/verdict", get(get_verdict))
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
@@ -712,4 +715,166 @@ fn format_market_cap(market_cap: Option<f64>, currency: Option<&str>) -> String 
         }
         None => "N/A".to_string(),
     }
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct VerdictResponse {
+    pub verdict_id: Option<Uuid>,
+    pub company_id: Uuid,
+    pub final_verdict: Option<String>,
+    pub summary_text: Option<String>,
+    #[serde(default)]
+    pub strengths: Vec<String>,
+    #[serde(default)]
+    pub weaknesses: Vec<String>,
+    pub guidance_summary: Option<String>,
+    pub lock_version: i32,
+    pub created_at: Option<DateTime<Utc>>,
+    pub updated_at: Option<DateTime<Utc>>,
+    #[serde(default)]
+    pub linked_reports: Vec<LinkedReport>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct LinkedReport {
+    pub report_id: Uuid,
+    pub filename: String,
+    pub uploaded_at: DateTime<Utc>,
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/companies/{id}/verdict",
+    params(
+        ("id" = Uuid, Path, description = "Company ID")
+    ),
+    responses(
+        (status = 200, description = "Current verdict for the company", body = VerdictResponse),
+        (status = 404, description = "Company not found")
+    ),
+    tag = "companies"
+)]
+pub async fn get_verdict(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    use db::repositories::VerdictRepository;
+    
+    let company_repo = CompanyRepository::new(state.db.clone());
+    let verdict_repo = VerdictRepository::new(state.db.clone());
+
+    // 1. Verify company exists
+    company_repo
+        .find_by_id(id)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::NOT_FOUND, "Company not found".to_string()))?;
+
+    // 2. For now, we need a user_id. In production this would come from JWT auth.
+    // For testing purposes, we'll fetch the first user or use a test user.
+    // TODO: Replace with actual user ID from authentication middleware
+    let test_user_id = get_test_user_id(&state.db).await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // 3. Fetch current verdict for company and user
+    let verdict_opt = verdict_repo
+        .find_by_company(id, test_user_id)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let response = match verdict_opt {
+        Some(verdict) => {
+            // Fetch linked analysis reports
+            let linked_reports = fetch_linked_reports(&state.db, verdict.id)
+                .await
+                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+            // Parse JSON arrays for strengths and weaknesses
+            let strengths = parse_json_to_strings(verdict.strengths);
+            let weaknesses = parse_json_to_strings(verdict.weaknesses);
+
+            VerdictResponse {
+                verdict_id: Some(verdict.id),
+                company_id: verdict.company_id,
+                final_verdict: verdict.final_verdict,
+                summary_text: verdict.summary_text,
+                strengths,
+                weaknesses,
+                guidance_summary: verdict.guidance_summary,
+                lock_version: verdict.lock_version,
+                created_at: Some(verdict.created_at),
+                updated_at: Some(verdict.updated_at),
+                linked_reports,
+            }
+        }
+        None => {
+            // Return empty response for companies with no verdict
+            VerdictResponse {
+                verdict_id: None,
+                company_id: id,
+                final_verdict: None,
+                summary_text: None,
+                strengths: Vec::new(),
+                weaknesses: Vec::new(),
+                guidance_summary: None,
+                lock_version: 0,
+                created_at: None,
+                updated_at: None,
+                linked_reports: Vec::new(),
+            }
+        }
+    };
+
+    Ok(Json(response))
+}
+
+// Helper function to get test user ID
+// TODO: Remove this when authentication middleware is fully integrated
+async fn get_test_user_id(pool: &PgPool) -> Result<Uuid, sqlx::Error> {
+    let result: (Uuid,) = sqlx::query_as(
+        "SELECT id FROM users WHERE username = 'testuser' LIMIT 1"
+    )
+    .fetch_optional(pool)
+    .await?
+    .unwrap_or_else(|| {
+        // Return a default UUID if no test user exists
+        // This should never happen in a properly seeded database
+        (Uuid::nil(),)
+    });
+
+    Ok(result.0)
+}
+
+// Helper function to fetch linked analysis reports
+async fn fetch_linked_reports(pool: &PgPool, verdict_id: Uuid) -> Result<Vec<LinkedReport>, sqlx::Error> {
+    let reports = sqlx::query_as::<_, (Uuid, String, DateTime<Utc>)>(
+        r#"
+        SELECT id, filename, uploaded_at
+        FROM analysis_reports
+        WHERE verdict_id = $1
+        ORDER BY uploaded_at DESC
+        "#
+    )
+    .bind(verdict_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(reports
+        .into_iter()
+        .map(|(id, filename, uploaded_at)| LinkedReport {
+            report_id: id,
+            filename,
+            uploaded_at,
+        })
+        .collect())
+}
+
+// Helper function to parse JSON value to Vec<String>
+fn parse_json_to_strings(json_value: Option<serde_json::Value>) -> Vec<String> {
+    json_value
+        .and_then(|v| v.as_array().cloned())
+        .unwrap_or_default()
+        .into_iter()
+        .filter_map(|v| v.as_str().map(|s| s.to_string()))
+        .collect()
 }

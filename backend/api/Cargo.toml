@@ -28,6 +28,7 @@ rsa = "0.9"
 domain = { workspace = true }
 db = { workspace = true }
 providers = { workspace = true }
+sqlx = { workspace = true }
 rand = "0.8"
 uuid.workspace = true
 dotenvy = { workspace = true }
