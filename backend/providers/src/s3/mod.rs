@@ -20,7 +20,7 @@ impl S3Storage {
         let credentials = Credentials::new(access_key, secret_key, None, None, "static");
         let region = Region::new("us-east-1"); // Standard default for MinIO/S3
 
-        let config = aws_config::from_env()
+        let config = aws_config::defaults(aws_config::BehaviorVersion::latest())
             .credentials_provider(credentials)
             .region(region)
             .endpoint_url(endpoint)

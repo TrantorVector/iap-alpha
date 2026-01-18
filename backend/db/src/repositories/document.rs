@@ -48,10 +48,10 @@ impl DocumentRepository {
             "#,
         );
 
-        let mut param_index = 2;
+        let param_index = 2;
         if document_type.is_some() {
             query.push_str(&format!(" AND document_type = ${}", param_index));
-            param_index += 1;
+
         }
 
         query.push_str(" ORDER BY document_type ASC, period_end_date DESC");
