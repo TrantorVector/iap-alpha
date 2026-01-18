@@ -1,6 +1,7 @@
 import { RefreshResponse } from './types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
+// Always use /api/v1 - the Vite proxy will forward to the API server
+const BASE_URL = '/api/v1';
 
 class ApiError extends Error {
     status: number;

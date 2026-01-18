@@ -36,8 +36,39 @@ function HomePage() {
             </div>
 
             <div className="grid gap-2">
-              <Button onClick={() => window.location.href = '/analyzer/AAPL'} className="w-full">
-                Open AAPL Analyzer
+              <Button
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/v1/auth/login', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ username: 'testuser', password: 'TestPass123!' })
+                    });
+
+                    if (!response.ok) {
+                      const errorText = await response.text();
+                      alert(`Login failed: ${response.status} - ${errorText}`);
+                      return;
+                    }
+
+                    const data = await response.json();
+
+                    if (data.access_token) {
+                      localStorage.setItem('access_token', data.access_token);
+                      localStorage.setItem('refresh_token', data.refresh_token);
+                      localStorage.setItem('user', JSON.stringify(data.user));
+                      // Redirect to AAPL analyzer with correct UUID
+                      window.location.href = '/analyzer/10000000-0000-0000-0000-000000000001';
+                    } else {
+                      alert('Login failed: No access token received');
+                    }
+                  } catch (err) {
+                    alert('Login failed: ' + err);
+                  }
+                }}
+                className="w-full"
+              >
+                Open AAPL Analyzer (Auto-Login)
               </Button>
               <Button variant="outline" onClick={() => window.location.reload()} className="w-full">
                 Refresh Connection

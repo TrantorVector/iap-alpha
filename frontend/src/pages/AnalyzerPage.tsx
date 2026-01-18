@@ -8,6 +8,7 @@ import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQueryClient } from '@tanstack/react-query';
 import { ControlsBar } from '@/components/analyzer/ControlsBar';
+import { MetricsDashboard } from '@/components/analyzer/MetricsDashboard';
 
 export default function AnalyzerPage() {
     const { companyId } = useParams<{ companyId: string }>();
@@ -43,7 +44,6 @@ export default function AnalyzerPage() {
     // const _isLoading = isLoadingCompany || isLoadingMetrics || isLoadingDocs || isLoadingVerdict;
     const anyError = companyError || metricsError || docsError || verdictError;
 
-
     return (
         <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans">
             <ControlsBar
@@ -69,7 +69,7 @@ export default function AnalyzerPage() {
                                 <AlertCircle className="h-5 w-5" />
                                 <AlertTitle className="text-lg font-bold">Error Loading Data</AlertTitle>
                                 <AlertDescription className="mt-2 text-sm opacity-90">
-                                    We encountered a problem fetching the financial data for this company ({companyId}).
+                                    We encountered a problem fetching the financial data for this company.
                                     Please check your connection or try again later.
                                 </AlertDescription>
                                 <Button
@@ -107,13 +107,7 @@ export default function AnalyzerPage() {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="min-h-[400px] flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-slate-50/30 dark:bg-slate-900/30 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-800">
-                                        <div className="w-16 h-16 mb-4 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                            <span className="text-2xl opacity-50">📊</span>
-                                        </div>
-                                        <p className="font-medium">Metrics Dashboard Visualizer</p>
-                                        <p className="text-sm opacity-70">Implementation pending Step 8.5</p>
-                                    </div>
+                                    <MetricsDashboard data={_metrics} isLoading={_isLoadingMetrics} />
                                 )}
                             </div>
                         </section>
