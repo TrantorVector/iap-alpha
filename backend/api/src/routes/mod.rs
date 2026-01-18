@@ -69,7 +69,7 @@ pub fn create_router(state: AppState) -> Router {
         // OpenAPI documentation
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         // Public routes (no auth)
-        .route("/health", get(health::health_check))
+        .route("/api/health", get(health::health_check))
         .route("/api/v1/auth/login", post(auth::login))
         .route("/api/v1/auth/refresh", post(auth::refresh_token))
         // Protected routes (require auth)

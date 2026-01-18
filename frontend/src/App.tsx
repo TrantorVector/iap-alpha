@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { createBrowserRouter, RouterProvider, Navigate, Outlet, useNavigate } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Navigate,
+  Outlet,
+  useNavigate,
+} from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AnalyzerPage from "@/pages/AnalyzerPage";
@@ -40,10 +46,13 @@ function HomePage() {
               <Button
                 onClick={async () => {
                   try {
-                    const response = await fetch('/api/v1/auth/login', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ username: 'testuser', password: 'TestPass123!' })
+                    const response = await fetch("/api/v1/auth/login", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        username: "testuser",
+                        password: "TestPass123!",
+                      }),
                     });
 
                     if (!response.ok) {
@@ -55,23 +64,29 @@ function HomePage() {
                     const data = await response.json();
 
                     if (data.access_token) {
-                      localStorage.setItem('access_token', data.access_token);
-                      localStorage.setItem('refresh_token', data.refresh_token);
-                      localStorage.setItem('user', JSON.stringify(data.user));
+                      localStorage.setItem("access_token", data.access_token);
+                      localStorage.setItem("refresh_token", data.refresh_token);
+                      localStorage.setItem("user", JSON.stringify(data.user));
                       // Navigate to AAPL analyzer with correct UUID
-                      navigate('/analyzer/10000000-0000-0000-0000-000000000001');
+                      navigate(
+                        "/analyzer/10000000-0000-0000-0000-000000000001",
+                      );
                     } else {
-                      alert('Login failed: No access token received');
+                      alert("Login failed: No access token received");
                     }
                   } catch (err) {
-                    alert('Login failed: ' + err);
+                    alert("Login failed: " + err);
                   }
                 }}
                 className="w-full"
               >
                 Open AAPL Analyzer (Auto-Login)
               </Button>
-              <Button variant="outline" onClick={() => window.location.reload()} className="w-full">
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+                className="w-full"
+              >
                 Refresh Connection
               </Button>
             </div>
