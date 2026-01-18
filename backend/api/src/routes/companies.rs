@@ -1,15 +1,18 @@
 use crate::state::AppState;
 use axum::{
+    body::Body,
     extract::{Path, State, Query},
-    http::StatusCode,
+    http::{StatusCode, Request},
     response::IntoResponse,
     routing::get,
     Json, Router,
 };
+use bytes::Bytes;
 use chrono::{DateTime, NaiveDate, Utc};
 use db::repositories::{CompanyRepository, DocumentRepository};
 use domain::metrics::calculator::MetricsCalculator;
 use domain::periods::{PeriodWindowGenerator, PeriodType};
+use multer::Multipart;
 use serde::{Deserialize, Serialize};
 use utoipa::{ToSchema, IntoParams};
 use uuid::Uuid;
@@ -20,7 +23,7 @@ pub fn companies_router() -> Router<AppState> {
     Router::new()
         .route("/:id", get(get_company_details))
         .route("/:id/metrics", get(get_company_metrics))
-        .route("/:id/documents", get(get_company_documents))
+        .route("/:id/documents", get(get_company_documents).post(upload_company_document))
         .route("/:id/documents/:doc_id/download", get(get_document_download_url))
 }
 
@@ -506,6 +509,182 @@ pub async fn get_document_download_url(
     };
 
     Ok(Json(response))
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct DocumentUploadResponse {
+    pub id: Uuid,
+    pub document_type: String,
+    pub period_end_date: Option<NaiveDate>,
+    pub title: String,
+    pub storage_key: String,
+    pub file_size: i64,
+    pub mime_type: String,
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/companies/{id}/documents",
+    params(
+        ("id" = Uuid, Path, description = "Company ID")
+    ),
+    responses(
+        (status = 201, description = "Document uploaded successfully", body = DocumentUploadResponse),
+        (status = 400, description = "Invalid file or parameters"),
+        (status = 404, description = "Company not found"),
+        (status = 413, description = "File too large")
+    ),
+    tag = "companies"
+)]
+pub async fn upload_company_document(
+    State(state): State<AppState>,
+    Path(company_id): Path<Uuid>,
+    request: Request<Body>,
+) -> Result<impl IntoResponse, (StatusCode, String)> {
+    let company_repo = CompanyRepository::new(state.db.clone());
+    let doc_repo = DocumentRepository::new(state.db.clone());
+
+    // 1. Verify company exists
+    company_repo
+        .find_by_id(company_id)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+        .ok_or((StatusCode::NOT_FOUND, "Company not found".to_string()))?;
+
+    // 2. Parse multipart form
+    let boundary = request
+        .headers()
+        .get("content-type")
+        .and_then(|ct| ct.to_str().ok())
+        .and_then(|ct| multer::parse_boundary(ct).ok())
+        .ok_or((StatusCode::BAD_REQUEST, "Invalid content-type".to_string()))?;
+
+    // Use the body stream directly with multer
+    let stream = request.into_body().into_data_stream();
+    let mut multipart = Multipart::new(stream, boundary);
+
+    // 3. Extract form fields
+    let mut file_data: Option<Bytes> = None;
+    let mut file_name: Option<String> = None;
+    let mut document_type: Option<String> = None;
+    let mut period_end_date: Option<NaiveDate> = None;
+
+    while let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Multipart error: {}", e)))?
+    {
+        let field_name = field.name().unwrap_or("").to_string();
+
+        match field_name.as_str() {
+            "file" => {
+                file_name = field.file_name().map(|s| s.to_string());
+                file_data = Some(
+                    field
+                        .bytes()
+                        .await
+                        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Failed to read file: {}", e)))?,
+                );
+            }
+            "document_type" => {
+                document_type = Some(
+                    field
+                        .text()
+                        .await
+                        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Failed to read document_type: {}", e)))?,
+                );
+            }
+            "period_end_date" => {
+                let date_str = field
+                    .text()
+                    .await
+                    .map_err(|e| (StatusCode::BAD_REQUEST, format!("Failed to read period_end_date: {}", e)))?;
+                if !date_str.is_empty() {
+                    period_end_date = Some(NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")
+                        .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid date format (use YYYY-MM-DD)".to_string()))?);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // 4. Validate required fields
+    let file_data = file_data.ok_or((StatusCode::BAD_REQUEST, "File is required".to_string()))?;
+    let file_name = file_name.ok_or((StatusCode::BAD_REQUEST, "File name is required".to_string()))?;
+    let document_type = document_type.ok_or((StatusCode::BAD_REQUEST, "document_type is required".to_string()))?;
+
+    // 5. Validate file size (already checked during read, but double-check)
+    let file_size = file_data.len() as i64;
+    if file_size > 52_428_800 {
+        return Err((StatusCode::PAYLOAD_TOO_LARGE, "File too large (max 50MB)".to_string()));
+    }
+
+    // 6. Validate file type based on extension
+    let extension = file_name
+        .rsplit('.')
+        .next()
+        .unwrap_or("")
+        .to_lowercase();
+    
+    let mime_type = match extension.as_str() {
+        "pdf" => "application/pdf",
+        "ppt" => "application/vnd.ms-powerpoint",
+        "pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "doc" => "application/msword",
+        "docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        _ => {
+            return Err((
+                StatusCode::BAD_REQUEST,
+                "Invalid file type. Allowed: PDF, PPT, PPTX, DOC, DOCX".to_string(),
+            ))
+        }
+    };
+
+    // 7. Generate storage key
+    let file_uuid = Uuid::new_v4();
+    let storage_key = format!("documents/{}/{}/{}", company_id, file_uuid, file_name);
+
+    // 8. Upload to S3
+    state
+        .storage
+        .put_object(&storage_key, file_data, mime_type)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Storage error: {}", e)))?;
+
+    // 9. Determine fiscal year and quarter from period_end_date if provided
+    let fiscal_year = period_end_date.map(|d| d.year());
+    let fiscal_quarter = None; // Could calculate this based on company fiscal year end month
+
+    // 10. Create document record
+    let title = format!("{} - {}", document_type, file_name);
+    let document = doc_repo
+        .create(
+            company_id,
+            document_type.clone(),
+            period_end_date,
+            fiscal_year,
+            fiscal_quarter,
+            title,
+            storage_key.clone(),
+            None, // source_url (not applicable for uploads)
+            file_size,
+            mime_type.to_string(),
+        )
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    // 11. Return response
+    let response = DocumentUploadResponse {
+        id: document.id,
+        document_type: document.document_type,
+        period_end_date: document.period_end_date,
+        title: document.title,
+        storage_key: document.storage_key.unwrap_or_default(),
+        file_size: document.file_size.unwrap_or(0),
+        mime_type: document.mime_type.unwrap_or_default(),
+    };
+
+    Ok((StatusCode::CREATED, Json(response)))
 }
 
 fn format_market_cap(market_cap: Option<f64>, currency: Option<&str>) -> String {

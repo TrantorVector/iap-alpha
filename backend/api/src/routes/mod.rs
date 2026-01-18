@@ -24,6 +24,7 @@ pub mod users;
         companies::get_company_details,
         companies::get_company_metrics,
         companies::get_company_documents,
+        companies::upload_company_document,
         companies::get_document_download_url,
         // More paths added as we implement them
     ),
@@ -43,6 +44,7 @@ pub mod users;
         companies::DocumentsResponse,
         companies::DocumentOut,
         companies::FreshnessMetadata,
+        companies::DocumentUploadResponse,
         companies::DownloadResponse,
         domain::periods::FiscalPeriod,
         domain::periods::PeriodType,
