@@ -1,33 +1,39 @@
 use crate::state::AppState;
 use axum::{
     body::Body,
-    extract::{Path, State, Query},
-    http::{StatusCode, Request},
+    extract::{Path, Query, State},
+    http::{Request, StatusCode},
     response::IntoResponse,
     routing::get,
     Json, Router,
 };
 use bytes::Bytes;
+use chrono::Datelike;
 use chrono::{DateTime, NaiveDate, Utc};
-use db::repositories::{CompanyRepository, DocumentRepository};
+use db::repositories::{CompanyRepository, CreateDocumentParams, DocumentRepository};
 use db::PgPool;
-use domain::metrics::calculator::MetricsCalculator;
-use domain::periods::{PeriodWindowGenerator, PeriodType};
+use domain::metrics::calculator::{MetricsCalculator, ValuationMetrics};
+use domain::periods::{PeriodType, PeriodWindowGenerator};
 use multer::Multipart;
 use serde::{Deserialize, Serialize};
-use sqlx;
-use utoipa::{ToSchema, IntoParams};
 use serde_json::json;
-use uuid::Uuid;
-use chrono::Datelike;
+use sqlx;
 use std::time::Duration;
+use utoipa::{IntoParams, ToSchema};
+use uuid::Uuid;
 
 pub fn companies_router() -> Router<AppState> {
     Router::new()
         .route("/:id", get(get_company_details))
         .route("/:id/metrics", get(get_company_metrics))
-        .route("/:id/documents", get(get_company_documents).post(upload_company_document))
-        .route("/:id/documents/:doc_id/download", get(get_document_download_url))
+        .route(
+            "/:id/documents",
+            get(get_company_documents).post(upload_company_document),
+        )
+        .route(
+            "/:id/documents/:doc_id/download",
+            get(get_document_download_url),
+        )
         .route("/:id/verdict", get(get_verdict).put(update_verdict))
         .route("/:id/verdict/history", get(get_verdict_history))
 }
@@ -92,7 +98,6 @@ pub async fn get_company_details(
         Err((StatusCode::NOT_FOUND, "Company not found".to_string()))
     }
 }
-
 
 #[derive(Deserialize, IntoParams)]
 pub struct MetricsQueryParams {
@@ -160,7 +165,7 @@ pub async fn get_company_metrics(
     Query(params): Query<MetricsQueryParams>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let repo = CompanyRepository::new(state.db.clone());
-    
+
     // 1. Fetch company
     let company = repo
         .find_by_id(id)
@@ -172,23 +177,30 @@ pub async fn get_company_metrics(
     let period_type_str = params.period_type.to_lowercase();
     let is_quarterly = period_type_str == "quarterly";
     let db_period_type = if is_quarterly { "quarterly" } else { "annual" };
-    let domain_period_type = if is_quarterly { PeriodType::Quarterly } else { PeriodType::Annual };
+    let domain_period_type = if is_quarterly {
+        PeriodType::Quarterly
+    } else {
+        PeriodType::Annual
+    };
 
     // 3. Fetch financial data
     // Fetch a bit more than requested to have prior year data for YoY calculations
     // If quarterly, we need 4 quarters back for YoY
     // If annual, we need 1 year back for YoY
     let limit = params.period_count + if is_quarterly { 4 } else { 1 };
-    
-    let db_incomes = repo.get_income_statements(id, db_period_type, limit as i32)
+
+    let db_incomes = repo
+        .get_income_statements(id, db_period_type, limit as i32)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    
-    let db_balances = repo.get_balance_sheets(id, db_period_type, limit as i32)
+
+    let db_balances = repo
+        .get_balance_sheets(id, db_period_type, limit as i32)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
-    
-    let db_cashflows = repo.get_cash_flow_statements(id, db_period_type, limit as i32)
+
+    let db_cashflows = repo
+        .get_cash_flow_statements(id, db_period_type, limit as i32)
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -205,27 +217,27 @@ pub async fn get_company_metrics(
     // We need to reverse the db results because they are likely ordered by date DESC
     let mut db_incomes = db_incomes;
     db_incomes.sort_by_key(|i| i.period_end_date);
-    
+
     let mut db_balances = db_balances;
     db_balances.sort_by_key(|b| b.period_end_date);
-    
+
     let mut db_cashflows = db_cashflows;
     db_cashflows.sort_by_key(|c| c.period_end_date);
 
-    // Filter to match the periods we generated as closely as possible, 
+    // Filter to match the periods we generated as closely as possible,
     // or just take the most recent available.
     // Fixed: The calculator expects the main 'incomes' to be the periods we want to display.
     // And 'prior_year_incomes' to be the income statement from 1 year prior for each period.
-    
+
     let mut domain_incomes = Vec::new();
     let mut prior_year_incomes = Vec::new();
     let mut domain_balances = Vec::new();
     let mut domain_cashflows = Vec::new();
-    
+
     // Take the last 'params.period_count' statements as the current ones
     let start_idx = db_incomes.len().saturating_sub(params.period_count);
     let current_db_incomes = &db_incomes[start_idx..];
-    
+
     for (i, db_inc) in current_db_incomes.iter().enumerate() {
         let domain_inc = domain::domain::IncomeStatement {
             period_end_date: db_inc.period_end_date,
@@ -236,14 +248,14 @@ pub async fn get_company_metrics(
             eps: db_inc.basic_eps.clone(),
         };
         domain_incomes.push(domain_inc);
-        
+
         // Prior year income for YoY
         let prior_idx = if is_quarterly {
             (start_idx + i).checked_sub(4)
         } else {
             (start_idx + i).checked_sub(1)
         };
-        
+
         let prior_inc = prior_idx.and_then(|idx| db_incomes.get(idx)).map(|db_inc| {
             domain::domain::IncomeStatement {
                 period_end_date: db_inc.period_end_date,
@@ -255,10 +267,12 @@ pub async fn get_company_metrics(
             }
         });
         prior_year_incomes.push(prior_inc);
-        
+
         // Match balance sheet and cash flow by date
-        let bal = db_balances.iter().find(|b| b.period_end_date == db_inc.period_end_date).map(|b| {
-            domain::domain::BalanceSheet {
+        let bal = db_balances
+            .iter()
+            .find(|b| b.period_end_date == db_inc.period_end_date)
+            .map(|b| domain::domain::BalanceSheet {
                 period_end_date: b.period_end_date,
                 total_assets: b.total_assets.clone(),
                 total_liabilities: b.total_liabilities.clone(),
@@ -268,33 +282,48 @@ pub async fn get_company_metrics(
                 short_term_debt: b.short_term_debt.clone(),
                 long_term_debt: b.long_term_debt.clone(),
                 net_debt: b.net_debt.clone(),
-                common_stock_shares_outstanding: db_inc.shares_outstanding, 
-            }
-        });
+                common_stock_shares_outstanding: db_inc.shares_outstanding,
+            });
         domain_balances.push(bal);
 
-        let cf = db_cashflows.iter().find(|c| c.period_end_date == db_inc.period_end_date).map(|c| {
-            domain::domain::CashFlowStatement {
+        let cf = db_cashflows
+            .iter()
+            .find(|c| c.period_end_date == db_inc.period_end_date)
+            .map(|c| domain::domain::CashFlowStatement {
                 period_end_date: c.period_end_date,
                 operating_cash_flow: c.operating_cash_flow.clone(),
                 capital_expenditures: c.capital_expenditures.clone(),
                 free_cash_flow: c.free_cash_flow.clone(),
-            }
-        });
+            });
         domain_cashflows.push(cf);
     }
 
     let currency = company.currency.as_deref().unwrap_or("$");
 
     // 6. Calculate Metrics
-    let (revs, yoy, qoq) = MetricsCalculator::calculate_revenue_metrics(&domain_incomes, &prior_year_incomes, currency);
+    let (revs, yoy, qoq) = MetricsCalculator::calculate_revenue_metrics(
+        &domain_incomes,
+        &prior_year_incomes,
+        currency,
+    );
     let (gm, om, nm) = MetricsCalculator::calculate_margin_metrics(&domain_incomes);
-    let (ocf_r, fcf_r) = MetricsCalculator::calculate_cash_metrics(&domain_incomes, &domain_cashflows);
-    let (lev_r, shares) = MetricsCalculator::calculate_leverage_metrics(&domain_incomes, &domain_balances);
-    
+    let (ocf_r, fcf_r) =
+        MetricsCalculator::calculate_cash_metrics(&domain_incomes, &domain_cashflows);
+    let (lev_r, shares) =
+        MetricsCalculator::calculate_leverage_metrics(&domain_incomes, &domain_balances);
+
     // For valuation, we need prices. For now, we'll return empty/mock or fetch if possible.
     // The prompt says "compute all metrics".
-    let (open_r, high_r, low_r, close_r, pe_r) = MetricsCalculator::calculate_valuation_metrics(&domain_incomes, &vec![None; domain_incomes.len()]);
+    let ValuationMetrics {
+        open_ratios: open_r,
+        high_ratios: high_r,
+        low_ratios: low_r,
+        close_ratios: close_r,
+        pe_ratios: pe_r,
+    } = MetricsCalculator::calculate_valuation_metrics(
+        &domain_incomes,
+        &vec![None; domain_incomes.len()],
+    );
 
     // 7. Format Response
     let mut sections = MetricsSections {
@@ -304,33 +333,78 @@ pub async fn get_company_metrics(
     };
 
     // Helper to map domain MetricValue to output
-    let to_row = |name: &str, display: &str, values: Vec<domain::metrics::MetricValue>, labels: &[String]| -> MetricRow {
+    let to_row = |name: &str,
+                  display: &str,
+                  values: Vec<domain::metrics::MetricValue>,
+                  labels: &[String]|
+     -> MetricRow {
         MetricRow {
             metric_name: name.to_string(),
             display_name: display.to_string(),
-            values: values.into_iter().enumerate().map(|(i, v)| MetricValueOut {
-                period: labels.get(i).cloned().unwrap_or_default(),
-                value: v.value,
-                formatted: v.formatted_value,
-                heat_map_quartile: v.heat_map_quartile,
-            }).collect(),
+            values: values
+                .into_iter()
+                .enumerate()
+                .map(|(i, v)| MetricValueOut {
+                    period: labels.get(i).cloned().unwrap_or_default(),
+                    value: v.value,
+                    formatted: v.formatted_value,
+                    heat_map_quartile: v.heat_map_quartile,
+                })
+                .collect(),
             heat_map_enabled: true,
         }
     };
 
-    sections.growth_and_margins.push(to_row("revenue", "Revenue", revs, &period_labels));
-    sections.growth_and_margins.push(to_row("revenue_growth_yoy", "Revenue Growth (YoY)", yoy, &period_labels));
-    sections.growth_and_margins.push(to_row("revenue_growth_qoq", "Revenue Growth (QoQ)", qoq, &period_labels));
-    sections.growth_and_margins.push(to_row("gross_margin", "Gross Margin", gm, &period_labels));
-    sections.growth_and_margins.push(to_row("operating_margin", "Operating Margin", om, &period_labels));
-    sections.growth_and_margins.push(to_row("net_margin", "Net Margin", nm, &period_labels));
+    sections
+        .growth_and_margins
+        .push(to_row("revenue", "Revenue", revs, &period_labels));
+    sections.growth_and_margins.push(to_row(
+        "revenue_growth_yoy",
+        "Revenue Growth (YoY)",
+        yoy,
+        &period_labels,
+    ));
+    sections.growth_and_margins.push(to_row(
+        "revenue_growth_qoq",
+        "Revenue Growth (QoQ)",
+        qoq,
+        &period_labels,
+    ));
+    sections
+        .growth_and_margins
+        .push(to_row("gross_margin", "Gross Margin", gm, &period_labels));
+    sections.growth_and_margins.push(to_row(
+        "operating_margin",
+        "Operating Margin",
+        om,
+        &period_labels,
+    ));
+    sections
+        .growth_and_margins
+        .push(to_row("net_margin", "Net Margin", nm, &period_labels));
 
-    sections.cash_and_leverage.push(to_row("ocf_margin", "OCF Margin", ocf_r, &period_labels));
-    sections.cash_and_leverage.push(to_row("fcf_margin", "FCF Margin", fcf_r, &period_labels));
-    sections.cash_and_leverage.push(to_row("leverage_ratio", "Leverage Ratio", lev_r, &period_labels));
-    sections.cash_and_leverage.push(to_row("shares_outstanding", "Shares Outstanding", shares, &period_labels));
+    sections
+        .cash_and_leverage
+        .push(to_row("ocf_margin", "OCF Margin", ocf_r, &period_labels));
+    sections
+        .cash_and_leverage
+        .push(to_row("fcf_margin", "FCF Margin", fcf_r, &period_labels));
+    sections.cash_and_leverage.push(to_row(
+        "leverage_ratio",
+        "Leverage Ratio",
+        lev_r,
+        &period_labels,
+    ));
+    sections.cash_and_leverage.push(to_row(
+        "shares_outstanding",
+        "Shares Outstanding",
+        shares,
+        &period_labels,
+    ));
 
-    sections.valuation.push(to_row("pe_ratio", "P/E Ratio", pe_r, &period_labels));
+    sections
+        .valuation
+        .push(to_row("pe_ratio", "P/E Ratio", pe_r, &period_labels));
     // Prefix unused price metrics with underscore for now as they are empty
     let _ = (open_r, high_r, low_r, close_r);
 
@@ -413,7 +487,10 @@ pub async fn get_company_documents(
 
     // 3. Determine freshness
     let last_refreshed_at = Some(company.updated_at);
-    let is_stale = Utc::now().signed_duration_since(company.updated_at).num_hours() > 24;
+    let is_stale = Utc::now()
+        .signed_duration_since(company.updated_at)
+        .num_hours()
+        > 24;
     let refresh_requested = false; // Could check background_jobs table for pending refreshes
 
     if is_stale {
@@ -422,24 +499,27 @@ pub async fn get_company_documents(
     }
 
     // 4. Map to response (grouped by type and sorted by date via DB)
-    let documents = docs.into_iter().map(|d| {
-        let available = d.is_available();
-        DocumentOut {
-            id: d.id,
-            document_type: d.document_type,
-            period_end_date: d.period_end_date,
-            fiscal_year: d.fiscal_year.unwrap_or_else(|| {
-                d.period_end_date.map(|dt| dt.year()).unwrap_or(0)
-            }),
-            fiscal_quarter: d.fiscal_quarter,
-            title: d.title,
-            source_url: d.source_url,
-            storage_key: d.storage_key,
-            file_size: d.file_size,
-            mime_type: d.mime_type,
-            available,
-        }
-    }).collect();
+    let documents = docs
+        .into_iter()
+        .map(|d| {
+            let available = d.is_available();
+            DocumentOut {
+                id: d.id,
+                document_type: d.document_type,
+                period_end_date: d.period_end_date,
+                fiscal_year: d
+                    .fiscal_year
+                    .unwrap_or_else(|| d.period_end_date.map(|dt| dt.year()).unwrap_or(0)),
+                fiscal_quarter: d.fiscal_quarter,
+                title: d.title,
+                source_url: d.source_url,
+                storage_key: d.storage_key,
+                file_size: d.file_size,
+                mime_type: d.mime_type,
+                available,
+            }
+        })
+        .collect();
 
     let response = DocumentsResponse {
         documents,
@@ -483,13 +563,18 @@ pub async fn get_document_download_url(
     let doc_repo = DocumentRepository::new(state.db.clone());
 
     // 1. Fetch document
-    let doc = doc_repo.find_by_id(doc_id).await
+    let doc = doc_repo
+        .find_by_id(doc_id)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
         .ok_or((StatusCode::NOT_FOUND, "Document not found".to_string()))?;
 
     // 2. Verify document belongs to company
     if doc.company_id != id {
-        return Err((StatusCode::FORBIDDEN, "Document does not belong to this company".to_string()));
+        return Err((
+            StatusCode::FORBIDDEN,
+            "Document does not belong to this company".to_string(),
+        ));
     }
 
     // 3. Verify document has storage_key
@@ -500,17 +585,28 @@ pub async fn get_document_download_url(
 
     // 4. Generate presigned URL
     let expires_in = Duration::from_secs(15 * 60);
-    let download_url = state.storage.get_presigned_url(&storage_key, expires_in).await
+    let download_url = state
+        .storage
+        .get_presigned_url(&storage_key, expires_in)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // 5. Response
-    let filename = format!("{}_{}.pdf", doc.document_type, doc.period_end_date.map(|d| d.to_string()).unwrap_or_else(|| "unknown".into()));
-    
+    let filename = format!(
+        "{}_{}.pdf",
+        doc.document_type,
+        doc.period_end_date
+            .map(|d| d.to_string())
+            .unwrap_or_else(|| "unknown".into())
+    );
+
     let response = DownloadResponse {
         download_url,
         expires_in: 900,
         filename,
-        content_type: doc.mime_type.unwrap_or_else(|| "application/pdf".to_string()),
+        content_type: doc
+            .mime_type
+            .unwrap_or_else(|| "application/pdf".to_string()),
     };
 
     Ok(Json(response))
@@ -584,29 +680,37 @@ pub async fn upload_company_document(
         match field_name.as_str() {
             "file" => {
                 file_name = field.file_name().map(|s| s.to_string());
-                file_data = Some(
-                    field
-                        .bytes()
-                        .await
-                        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Failed to read file: {}", e)))?,
-                );
+                file_data = Some(field.bytes().await.map_err(|e| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        format!("Failed to read file: {}", e),
+                    )
+                })?);
             }
             "document_type" => {
-                document_type = Some(
-                    field
-                        .text()
-                        .await
-                        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Failed to read document_type: {}", e)))?,
-                );
+                document_type = Some(field.text().await.map_err(|e| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        format!("Failed to read document_type: {}", e),
+                    )
+                })?);
             }
             "period_end_date" => {
-                let date_str = field
-                    .text()
-                    .await
-                    .map_err(|e| (StatusCode::BAD_REQUEST, format!("Failed to read period_end_date: {}", e)))?;
+                let date_str = field.text().await.map_err(|e| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        format!("Failed to read period_end_date: {}", e),
+                    )
+                })?;
                 if !date_str.is_empty() {
-                    period_end_date = Some(NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")
-                        .map_err(|_| (StatusCode::BAD_REQUEST, "Invalid date format (use YYYY-MM-DD)".to_string()))?);
+                    period_end_date = Some(
+                        NaiveDate::parse_from_str(&date_str, "%Y-%m-%d").map_err(|_| {
+                            (
+                                StatusCode::BAD_REQUEST,
+                                "Invalid date format (use YYYY-MM-DD)".to_string(),
+                            )
+                        })?,
+                    );
                 }
             }
             _ => {}
@@ -615,22 +719,25 @@ pub async fn upload_company_document(
 
     // 4. Validate required fields
     let file_data = file_data.ok_or((StatusCode::BAD_REQUEST, "File is required".to_string()))?;
-    let file_name = file_name.ok_or((StatusCode::BAD_REQUEST, "File name is required".to_string()))?;
-    let document_type = document_type.ok_or((StatusCode::BAD_REQUEST, "document_type is required".to_string()))?;
+    let file_name =
+        file_name.ok_or((StatusCode::BAD_REQUEST, "File name is required".to_string()))?;
+    let document_type = document_type.ok_or((
+        StatusCode::BAD_REQUEST,
+        "document_type is required".to_string(),
+    ))?;
 
     // 5. Validate file size (already checked during read, but double-check)
     let file_size = file_data.len() as i64;
     if file_size > 52_428_800 {
-        return Err((StatusCode::PAYLOAD_TOO_LARGE, "File too large (max 50MB)".to_string()));
+        return Err((
+            StatusCode::PAYLOAD_TOO_LARGE,
+            "File too large (max 50MB)".to_string(),
+        ));
     }
 
     // 6. Validate file type based on extension
-    let extension = file_name
-        .rsplit('.')
-        .next()
-        .unwrap_or("")
-        .to_lowercase();
-    
+    let extension = file_name.rsplit('.').next().unwrap_or("").to_lowercase();
+
     let mime_type = match extension.as_str() {
         "pdf" => "application/pdf",
         "ppt" => "application/vnd.ms-powerpoint",
@@ -654,7 +761,12 @@ pub async fn upload_company_document(
         .storage
         .put_object(&storage_key, file_data, mime_type)
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Storage error: {}", e)))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Storage error: {}", e),
+            )
+        })?;
 
     // 9. Determine fiscal year and quarter from period_end_date if provided
     let fiscal_year = period_end_date.map(|d| d.year());
@@ -663,18 +775,18 @@ pub async fn upload_company_document(
     // 10. Create document record
     let title = format!("{} - {}", document_type, file_name);
     let document = doc_repo
-        .create(
+        .create(CreateDocumentParams {
             company_id,
-            document_type.clone(),
+            document_type: document_type.clone(),
             period_end_date,
             fiscal_year,
             fiscal_quarter,
             title,
-            storage_key.clone(),
-            None, // source_url (not applicable for uploads)
+            storage_key: storage_key.clone(),
+            source_url: None, // source_url (not applicable for uploads)
             file_size,
-            mime_type.to_string(),
-        )
+            mime_type: mime_type.to_string(),
+        })
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -761,7 +873,7 @@ pub async fn get_verdict(
     Path(id): Path<Uuid>,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     use db::repositories::VerdictRepository;
-    
+
     let company_repo = CompanyRepository::new(state.db.clone());
     let verdict_repo = VerdictRepository::new(state.db.clone());
 
@@ -775,7 +887,8 @@ pub async fn get_verdict(
     // 2. For now, we need a user_id. In production this would come from JWT auth.
     // For testing purposes, we'll fetch the first user or use a test user.
     // TODO: Replace with actual user ID from authentication middleware
-    let test_user_id = get_test_user_id(&state.db).await
+    let test_user_id = get_test_user_id(&state.db)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // 3. Fetch current verdict for company and user
@@ -833,29 +946,31 @@ pub async fn get_verdict(
 // Helper function to get test user ID
 // TODO: Remove this when authentication middleware is fully integrated
 async fn get_test_user_id(pool: &PgPool) -> Result<Uuid, sqlx::Error> {
-    let result: (Uuid,) = sqlx::query_as(
-        "SELECT id FROM users WHERE username = 'testuser' LIMIT 1"
-    )
-    .fetch_optional(pool)
-    .await?
-    .unwrap_or_else(|| {
-        // Return a default UUID if no test user exists
-        // This should never happen in a properly seeded database
-        (Uuid::nil(),)
-    });
+    let result: (Uuid,) =
+        sqlx::query_as("SELECT id FROM users WHERE username = 'testuser' LIMIT 1")
+            .fetch_optional(pool)
+            .await?
+            .unwrap_or_else(|| {
+                // Return a default UUID if no test user exists
+                // This should never happen in a properly seeded database
+                (Uuid::nil(),)
+            });
 
     Ok(result.0)
 }
 
 // Helper function to fetch linked analysis reports
-async fn fetch_linked_reports(pool: &PgPool, verdict_id: Uuid) -> Result<Vec<LinkedReport>, sqlx::Error> {
+async fn fetch_linked_reports(
+    pool: &PgPool,
+    verdict_id: Uuid,
+) -> Result<Vec<LinkedReport>, sqlx::Error> {
     let reports = sqlx::query_as::<_, (Uuid, String, DateTime<Utc>)>(
         r#"
         SELECT id, filename, uploaded_at
         FROM analysis_reports
         WHERE verdict_id = $1
         ORDER BY uploaded_at DESC
-        "#
+        "#,
     )
     .bind(verdict_id)
     .fetch_all(pool)
@@ -914,7 +1029,7 @@ pub async fn update_verdict(
     Path(id): Path<Uuid>,
     Json(payload): Json<VerdictUpdateRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    use db::repositories::{VerdictRepository, VerdictCreate, VerdictUpdate};
+    use db::repositories::{VerdictCreate, VerdictRepository, VerdictUpdate};
     use db::DbError;
 
     let company_repo = CompanyRepository::new(state.db.clone());
@@ -922,9 +1037,19 @@ pub async fn update_verdict(
 
     // 1. Verify company exists
     match company_repo.find_by_id(id).await {
-        Ok(Some(_)) => {},
-        Ok(None) => return Err((StatusCode::NOT_FOUND, Json(json!({"error": "Company not found"})))),
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()})))),
+        Ok(Some(_)) => {}
+        Ok(None) => {
+            return Err((
+                StatusCode::NOT_FOUND,
+                Json(json!({"error": "Company not found"})),
+            ))
+        }
+        Err(e) => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            ))
+        }
     }
 
     // 2. Validate and map final_verdict
@@ -934,7 +1059,12 @@ pub async fn update_verdict(
             "PASS" => Some("pass".to_string()),
             "WATCHLIST" => Some("watchlist".to_string()),
             "NO_THESIS" => None,
-            _ => return Err((StatusCode::BAD_REQUEST, Json(json!({"error": "Invalid final_verdict value"})))),
+            _ => {
+                return Err((
+                    StatusCode::BAD_REQUEST,
+                    Json(json!({"error": "Invalid final_verdict value"})),
+                ))
+            }
         }
     } else {
         None
@@ -943,14 +1073,24 @@ pub async fn update_verdict(
     // 3. Get User ID (Test User for now)
     let user_id = match get_test_user_id(&state.db).await {
         Ok(uid) => uid,
-        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()})))),
+        Err(e) => {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            ))
+        }
     };
 
     // 4. Check if verdict exists
     let existing_verdict = verdict_repo
         .find_by_company(id, user_id)
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            )
+        })?;
 
     let verdict = match existing_verdict {
         Some(current) => {
@@ -958,14 +1098,17 @@ pub async fn update_verdict(
             match verdict_repo.create_history_snapshot(current.id).await {
                 Ok(history) => {
                     // Link reports currently linked to this verdict to the new history snapshot
-                    if let Err(e) = verdict_repo.link_reports_to_history(current.id, history.id).await {
+                    if let Err(e) = verdict_repo
+                        .link_reports_to_history(current.id, history.id)
+                        .await
+                    {
                         tracing::error!("Failed to link reports to history snapshot: {}", e);
                     }
-                },
+                }
                 Err(e) => {
-                     tracing::error!("Failed to create history snapshot: {}", e);
-                     // Proceed with update even if snapshot fails? 
-                     // Ideally we should fail, but for now log and proceed to avoid blocking user.
+                    tracing::error!("Failed to create history snapshot: {}", e);
+                    // Proceed with update even if snapshot fails?
+                    // Ideally we should fail, but for now log and proceed to avoid blocking user.
                 }
             }
 
@@ -978,19 +1121,23 @@ pub async fn update_verdict(
                 guidance_summary: payload.guidance_summary,
             };
 
-            match verdict_repo.update_with_lock(current.id, update_dto, payload.lock_version).await {
+            match verdict_repo
+                .update_with_lock(current.id, update_dto, payload.lock_version)
+                .await
+            {
                 Ok(v) => v,
                 Err(DbError::OptimisticLockError(_)) => {
                     // Fetch fresh state for 409 details
-                    let fresh_state = verdict_repo.find_by_id(current.id).await
-                        .ok().flatten();
-                    
+                    let fresh_state = verdict_repo.find_by_id(current.id).await.ok().flatten();
+
                     let current_response = if let Some(fresh) = fresh_state {
-                         let v_strengths = parse_json_to_strings(fresh.strengths);
-                         let v_weaknesses = parse_json_to_strings(fresh.weaknesses);
-                         let linked = fetch_linked_reports(&state.db, fresh.id).await.unwrap_or_default();
-                         
-                         Some(VerdictResponse {
+                        let v_strengths = parse_json_to_strings(fresh.strengths);
+                        let v_weaknesses = parse_json_to_strings(fresh.weaknesses);
+                        let linked = fetch_linked_reports(&state.db, fresh.id)
+                            .await
+                            .unwrap_or_default();
+
+                        Some(VerdictResponse {
                             verdict_id: Some(fresh.id),
                             company_id: fresh.company_id,
                             final_verdict: fresh.final_verdict.map(|s| s.to_uppercase()), // Map back to UPPERCASE for response?
@@ -1002,7 +1149,7 @@ pub async fn update_verdict(
                             created_at: Some(fresh.created_at),
                             updated_at: Some(fresh.updated_at),
                             linked_reports: linked,
-                         })
+                        })
                     } else {
                         None
                     };
@@ -1018,12 +1165,17 @@ pub async fn update_verdict(
                                     "current_state": current_response
                                 }
                             }
-                        }))
+                        })),
                     ));
-                },
-                Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))
+                }
+                Err(e) => {
+                    return Err((
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(json!({"error": e.to_string()})),
+                    ))
+                }
             }
-        },
+        }
         None => {
             let create_dto = VerdictCreate {
                 final_verdict: mapped_verdict,
@@ -1033,21 +1185,35 @@ pub async fn update_verdict(
                 guidance_summary: payload.guidance_summary,
             };
 
-            verdict_repo.create(id, user_id, create_dto)
+            verdict_repo
+                .create(id, user_id, create_dto)
                 .await
-                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?
+                .map_err(|e| {
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        Json(json!({"error": e.to_string()})),
+                    )
+                })?
         }
     };
 
     // 5. Update Linked Reports
     if let Err(e) = update_linked_reports(&state.db, verdict.id, &payload.linked_report_ids).await {
-        return Err((StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": format!("Failed to update linked reports: {}", e)}))));
+        return Err((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(json!({"error": format!("Failed to update linked reports: {}", e)})),
+        ));
     }
 
     // 6. Build Response
     let linked_reports = fetch_linked_reports(&state.db, verdict.id)
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, Json(json!({"error": e.to_string()}))))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"error": e.to_string()})),
+            )
+        })?;
 
     let strengths = parse_json_to_strings(verdict.strengths);
     let weaknesses = parse_json_to_strings(verdict.weaknesses);
@@ -1069,7 +1235,11 @@ pub async fn update_verdict(
     Ok(Json(response))
 }
 
-async fn update_linked_reports(pool: &PgPool, verdict_id: Uuid, report_ids: &[Uuid]) -> Result<(), sqlx::Error> {
+async fn update_linked_reports(
+    pool: &PgPool,
+    verdict_id: Uuid,
+    report_ids: &[Uuid],
+) -> Result<(), sqlx::Error> {
     let mut tx = pool.begin().await?;
 
     // Clear existing links
@@ -1137,7 +1307,8 @@ pub async fn get_verdict_history(
 
     // 2. Fetch verdict to get ID (needed for history)
     // We need user_id again.
-    let test_user_id = get_test_user_id(&state.db).await
+    let test_user_id = get_test_user_id(&state.db)
+        .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let verdict = verdict_repo
@@ -1147,7 +1318,8 @@ pub async fn get_verdict_history(
 
     let history_entries = if let Some(verdict) = verdict {
         // 3. Fetch history
-        let mut history = verdict_repo.get_history(verdict.id)
+        let mut history = verdict_repo
+            .get_history(verdict.id)
             .await
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
@@ -1166,7 +1338,7 @@ pub async fn get_verdict_history(
                 FROM analysis_reports
                 WHERE verdict_history_id = $1
                 LIMIT 1
-                "#
+                "#,
             )
             .bind(h.id)
             .fetch_optional(&state.db)

@@ -9,6 +9,20 @@ pub struct DocumentRepository {
     pool: PgPool,
 }
 
+/// Parameters for creating a document
+pub struct CreateDocumentParams {
+    pub company_id: Uuid,
+    pub document_type: String,
+    pub period_end_date: Option<chrono::NaiveDate>,
+    pub fiscal_year: Option<i32>,
+    pub fiscal_quarter: Option<i32>,
+    pub title: String,
+    pub storage_key: String,
+    pub source_url: Option<String>,
+    pub file_size: i64,
+    pub mime_type: String,
+}
+
 impl DocumentRepository {
     /// Create a new document repository
     pub fn new(pool: PgPool) -> Self {
@@ -51,7 +65,6 @@ impl DocumentRepository {
         let param_index = 2;
         if document_type.is_some() {
             query.push_str(&format!(" AND document_type = ${}", param_index));
-
         }
 
         query.push_str(" ORDER BY document_type ASC, period_end_date DESC");
@@ -67,19 +80,7 @@ impl DocumentRepository {
     }
 
     /// Create a new document
-    pub async fn create(
-        &self,
-        company_id: Uuid,
-        document_type: String,
-        period_end_date: Option<chrono::NaiveDate>,
-        fiscal_year: Option<i32>,
-        fiscal_quarter: Option<i32>,
-        title: String,
-        storage_key: String,
-        source_url: Option<String>,
-        file_size: i64,
-        mime_type: String,
-    ) -> DbResult<Document> {
+    pub async fn create(&self, params: CreateDocumentParams) -> DbResult<Document> {
         let document = sqlx::query_as::<_, Document>(
             r#"
             INSERT INTO documents (
@@ -92,16 +93,16 @@ impl DocumentRepository {
             "#,
         )
         .bind(Uuid::new_v4())
-        .bind(company_id)
-        .bind(document_type)
-        .bind(period_end_date)
-        .bind(fiscal_year)
-        .bind(fiscal_quarter)
-        .bind(title)
-        .bind(storage_key)
-        .bind(source_url)
-        .bind(file_size)
-        .bind(mime_type)
+        .bind(params.company_id)
+        .bind(params.document_type)
+        .bind(params.period_end_date)
+        .bind(params.fiscal_year)
+        .bind(params.fiscal_quarter)
+        .bind(params.title)
+        .bind(params.storage_key)
+        .bind(params.source_url)
+        .bind(params.file_size)
+        .bind(params.mime_type)
         .fetch_one(&self.pool)
         .await
         .map_err(DbError::from)?;

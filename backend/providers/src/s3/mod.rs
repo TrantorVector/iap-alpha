@@ -28,8 +28,8 @@ impl S3Storage {
             .await;
 
         let client = Client::new(&config);
-        
-        // In a real app, this would come from config. 
+
+        // In a real app, this would come from config.
         // For development/alpha we'll use a standard bucket name.
         let bucket = std::env::var("S3_BUCKET").unwrap_or_else(|_| "iap-documents".to_string());
 
@@ -39,12 +39,7 @@ impl S3Storage {
 
 #[async_trait]
 impl ObjectStorage for S3Storage {
-    async fn put_object(
-        &self,
-        key: &str,
-        data: Bytes,
-        content_type: &str,
-    ) -> Result<(), AppError> {
+    async fn put_object(&self, key: &str, data: Bytes, content_type: &str) -> Result<(), AppError> {
         self.client
             .put_object()
             .bucket(&self.bucket)
@@ -58,7 +53,8 @@ impl ObjectStorage for S3Storage {
     }
 
     async fn get_object(&self, key: &str) -> Result<Bytes, AppError> {
-        let output = self.client
+        let output = self
+            .client
             .get_object()
             .bucket(&self.bucket)
             .key(key)
@@ -66,24 +62,24 @@ impl ObjectStorage for S3Storage {
             .await
             .map_err(|e| AppError::InternalError(format!("S3 get error: {}", e)))?;
 
-        let data = output.body.collect().await
+        let data = output
+            .body
+            .collect()
+            .await
             .map_err(|e| AppError::InternalError(format!("S3 body collect error: {}", e)))?
             .into_bytes();
-            
+
         Ok(data)
     }
 
-    async fn get_presigned_url(
-        &self,
-        key: &str,
-        expires_in: Duration,
-    ) -> Result<String, AppError> {
+    async fn get_presigned_url(&self, key: &str, expires_in: Duration) -> Result<String, AppError> {
         let presigning_config = PresigningConfig::builder()
             .expires_in(expires_in)
             .build()
             .map_err(|e| AppError::InternalError(format!("Presigning config error: {}", e)))?;
 
-        let presigned_request = self.client
+        let presigned_request = self
+            .client
             .get_object()
             .bucket(&self.bucket)
             .key(key)

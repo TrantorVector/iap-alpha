@@ -4,6 +4,14 @@ use bigdecimal::ToPrimitive;
 
 pub struct MetricsCalculator;
 
+pub struct ValuationMetrics {
+    pub open_ratios: Vec<MetricValue>,
+    pub high_ratios: Vec<MetricValue>,
+    pub low_ratios: Vec<MetricValue>,
+    pub close_ratios: Vec<MetricValue>,
+    pub pe_ratios: Vec<MetricValue>,
+}
+
 impl MetricsCalculator {
     pub fn format_currency_value(value: f64, currency: &str) -> String {
         let abs_val = value.abs();
@@ -90,31 +98,39 @@ impl MetricsCalculator {
 
         for (i, income) in incomes.iter().enumerate() {
             let rev_f64 = income.revenue.as_ref().and_then(|v| v.to_f64());
-            
+
             // Revenue
             revenues.push(MetricValue {
                 value: rev_f64,
-                formatted_value: rev_f64.map(|v| Self::format_currency_value(v, currency)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: rev_f64
+                    .map(|v| Self::format_currency_value(v, currency))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: currency.to_string(),
                 heat_map_quartile: None,
             });
 
             // YoY Growth
-            let prior_year_rev = prior_year_incomes.get(i).and_then(|opt| opt.as_ref()).and_then(|inc| inc.revenue.as_ref()).and_then(|v| v.to_f64());
+            let prior_year_rev = prior_year_incomes
+                .get(i)
+                .and_then(|opt| opt.as_ref())
+                .and_then(|inc| inc.revenue.as_ref())
+                .and_then(|v| v.to_f64());
             let yoy = match (rev_f64, prior_year_rev) {
                 (Some(curr), Some(prior)) => Self::calculate_yoy_change(curr, prior),
                 _ => None,
             };
             yoy_growths.push(MetricValue {
                 value: yoy,
-                formatted_value: yoy.map(|v| format!("{:.2}%", v)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: yoy
+                    .map(|v| format!("{:.2}%", v))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: "%".to_string(),
                 heat_map_quartile: None,
             });
 
             // QoQ Growth
             let prior_period_rev = if i > 0 {
-                incomes[i-1].revenue.as_ref().and_then(|v| v.to_f64())
+                incomes[i - 1].revenue.as_ref().and_then(|v| v.to_f64())
             } else {
                 None
             };
@@ -124,7 +140,9 @@ impl MetricsCalculator {
             };
             qoq_growths.push(MetricValue {
                 value: qoq,
-                formatted_value: qoq.map(|v| format!("{:.2}%", v)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: qoq
+                    .map(|v| format!("{:.2}%", v))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: "%".to_string(),
                 heat_map_quartile: None,
             });
@@ -153,7 +171,9 @@ impl MetricsCalculator {
             };
             gross_margins.push(MetricValue {
                 value: gm,
-                formatted_value: gm.map(|v| format!("{:.2}%", v)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: gm
+                    .map(|v| format!("{:.2}%", v))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: "%".to_string(),
                 heat_map_quartile: None,
             });
@@ -164,7 +184,9 @@ impl MetricsCalculator {
             };
             operating_margins.push(MetricValue {
                 value: om,
-                formatted_value: om.map(|v| format!("{:.2}%", v)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: om
+                    .map(|v| format!("{:.2}%", v))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: "%".to_string(),
                 heat_map_quartile: None,
             });
@@ -175,7 +197,9 @@ impl MetricsCalculator {
             };
             net_margins.push(MetricValue {
                 value: nm,
-                formatted_value: nm.map(|v| format!("{:.2}%", v)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: nm
+                    .map(|v| format!("{:.2}%", v))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: "%".to_string(),
                 heat_map_quartile: None,
             });
@@ -184,9 +208,7 @@ impl MetricsCalculator {
         (gross_margins, operating_margins, net_margins)
     }
 
-    pub fn calculate_expansion_metrics(
-        margins: &[MetricValue],
-    ) -> Vec<MetricValue> {
+    pub fn calculate_expansion_metrics(margins: &[MetricValue]) -> Vec<MetricValue> {
         let mut expansions = Vec::new();
         expansions.push(MetricValue {
             value: None,
@@ -202,7 +224,9 @@ impl MetricsCalculator {
             };
             expansions.push(MetricValue {
                 value: expansion,
-                formatted_value: expansion.map(|v| format!("{:.0} bps", v)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: expansion
+                    .map(|v| format!("{:.0} bps", v))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: "bps".to_string(),
                 heat_map_quartile: None,
             });
@@ -211,9 +235,7 @@ impl MetricsCalculator {
         expansions
     }
 
-    pub fn calculate_revenue_acceleration(
-        yoy_growths: &[MetricValue],
-    ) -> Vec<MetricValue> {
+    pub fn calculate_revenue_acceleration(yoy_growths: &[MetricValue]) -> Vec<MetricValue> {
         let mut accelerations = Vec::new();
         accelerations.push(MetricValue {
             value: None,
@@ -229,7 +251,9 @@ impl MetricsCalculator {
             };
             accelerations.push(MetricValue {
                 value: accel,
-                formatted_value: accel.map(|v| format!("{:.0} bps", v)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: accel
+                    .map(|v| format!("{:.0} bps", v))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: "bps".to_string(),
                 heat_map_quartile: None,
             });
@@ -248,8 +272,12 @@ impl MetricsCalculator {
         for (i, income) in incomes.iter().enumerate() {
             let rev = income.revenue.as_ref().and_then(|v| v.to_f64());
             let cf = cash_flows.get(i).and_then(|opt| opt.as_ref());
-            let ocf = cf.and_then(|c| c.operating_cash_flow.as_ref()).and_then(|v| v.to_f64());
-            let fcf = cf.and_then(|c| c.free_cash_flow.as_ref()).and_then(|v| v.to_f64());
+            let ocf = cf
+                .and_then(|c| c.operating_cash_flow.as_ref())
+                .and_then(|v| v.to_f64());
+            let fcf = cf
+                .and_then(|c| c.free_cash_flow.as_ref())
+                .and_then(|v| v.to_f64());
 
             let ocf_p = match (ocf, rev) {
                 (Some(n), Some(d)) => Self::calculate_margin(n, d),
@@ -257,7 +285,9 @@ impl MetricsCalculator {
             };
             ocf_ratios.push(MetricValue {
                 value: ocf_p,
-                formatted_value: ocf_p.map(|v| format!("{:.2}%", v)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: ocf_p
+                    .map(|v| format!("{:.2}%", v))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: "%".to_string(),
                 heat_map_quartile: None,
             });
@@ -268,7 +298,9 @@ impl MetricsCalculator {
             };
             fcf_ratios.push(MetricValue {
                 value: fcf_p,
-                formatted_value: fcf_p.map(|v| format!("{:.2}%", v)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: fcf_p
+                    .map(|v| format!("{:.2}%", v))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: "%".to_string(),
                 heat_map_quartile: None,
             });
@@ -280,7 +312,7 @@ impl MetricsCalculator {
     pub fn calculate_valuation_metrics(
         incomes: &[IncomeStatement],
         prices: &[Option<DailyPrice>],
-    ) -> (Vec<MetricValue>, Vec<MetricValue>, Vec<MetricValue>, Vec<MetricValue>, Vec<MetricValue>) {
+    ) -> ValuationMetrics {
         let mut open_ratios = Vec::new();
         let mut high_ratios = Vec::new();
         let mut low_ratios = Vec::new();
@@ -306,7 +338,9 @@ impl MetricsCalculator {
                 };
                 vec.push(MetricValue {
                     value: p_rev,
-                    formatted_value: p_rev.map(|v| format!("{:.2}%", v)).unwrap_or_else(|| "N/A".to_string()),
+                    formatted_value: p_rev
+                        .map(|v| format!("{:.2}%", v))
+                        .unwrap_or_else(|| "N/A".to_string()),
                     unit: "%".to_string(),
                     heat_map_quartile: None,
                 });
@@ -320,13 +354,21 @@ impl MetricsCalculator {
             };
             pe_ratios.push(MetricValue {
                 value: pe,
-                formatted_value: pe.map(|v| format!("{:.2}x", v)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: pe
+                    .map(|v| format!("{:.2}x", v))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: "x".to_string(),
                 heat_map_quartile: None,
             });
         }
 
-        (open_ratios, high_ratios, low_ratios, close_ratios, pe_ratios)
+        ValuationMetrics {
+            open_ratios,
+            high_ratios,
+            low_ratios,
+            close_ratios,
+            pe_ratios,
+        }
     }
 
     pub fn calculate_leverage_metrics(
@@ -339,7 +381,9 @@ impl MetricsCalculator {
         for (i, income) in incomes.iter().enumerate() {
             let rev = income.revenue.as_ref().and_then(|v| v.to_f64());
             let balance = balances.get(i).and_then(|opt| opt.as_ref());
-            let net_debt = balance.and_then(|b| b.net_debt.as_ref()).and_then(|v| v.to_f64());
+            let net_debt = balance
+                .and_then(|b| b.net_debt.as_ref())
+                .and_then(|v| v.to_f64());
             let shares = balance.and_then(|b| b.common_stock_shares_outstanding);
 
             // (Revenue - Net Debt) / Revenue %
@@ -349,7 +393,9 @@ impl MetricsCalculator {
             };
             revenue_minus_net_debt_ratios.push(MetricValue {
                 value: ratio,
-                formatted_value: ratio.map(|v| format!("{:.2}%", v)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: ratio
+                    .map(|v| format!("{:.2}%", v))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: "%".to_string(),
                 heat_map_quartile: None,
             });
@@ -357,7 +403,9 @@ impl MetricsCalculator {
             // Total Shares Outstanding
             shares_outstanding.push(MetricValue {
                 value: shares.map(|s| s as f64),
-                formatted_value: shares.map(|s| format!("{:.2}M", s as f64 / 1_000_000.0)).unwrap_or_else(|| "N/A".to_string()),
+                formatted_value: shares
+                    .map(|s| format!("{:.2}M", s as f64 / 1_000_000.0))
+                    .unwrap_or_else(|| "N/A".to_string()),
                 unit: "shares".to_string(),
                 heat_map_quartile: None,
             });
@@ -365,7 +413,7 @@ impl MetricsCalculator {
 
         (revenue_minus_net_debt_ratios, shares_outstanding)
     }
-    
+
     // Additional methods will be added here
 }
 
@@ -375,15 +423,30 @@ mod tests {
 
     #[test]
     fn test_format_currency_value() {
-        assert_eq!(MetricsCalculator::format_currency_value(1_500_000_000.0, "$"), "$1.50B");
-        assert_eq!(MetricsCalculator::format_currency_value(950_000.0, "$"), "$950.00K");
-        assert_eq!(MetricsCalculator::format_currency_value(1_200_000_000_000.0, "$"), "$1.20T");
+        assert_eq!(
+            MetricsCalculator::format_currency_value(1_500_000_000.0, "$"),
+            "$1.50B"
+        );
+        assert_eq!(
+            MetricsCalculator::format_currency_value(950_000.0, "$"),
+            "$950.00K"
+        );
+        assert_eq!(
+            MetricsCalculator::format_currency_value(1_200_000_000_000.0, "$"),
+            "$1.20T"
+        );
     }
 
     #[test]
     fn test_calculate_yoy_change() {
-        assert_eq!(MetricsCalculator::calculate_yoy_change(120.0, 100.0), Some(20.0));
-        assert_eq!(MetricsCalculator::calculate_yoy_change(80.0, 100.0), Some(-20.0));
+        assert_eq!(
+            MetricsCalculator::calculate_yoy_change(120.0, 100.0),
+            Some(20.0)
+        );
+        assert_eq!(
+            MetricsCalculator::calculate_yoy_change(80.0, 100.0),
+            Some(-20.0)
+        );
         assert_eq!(MetricsCalculator::calculate_yoy_change(100.0, 0.0), None);
     }
 
@@ -398,16 +461,14 @@ mod tests {
     fn test_calculate_margin_metrics() {
         use bigdecimal::BigDecimal;
         use std::str::FromStr;
-        let incomes = vec![
-            IncomeStatement {
-                period_end_date: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
-                revenue: Some(BigDecimal::from_str("1000").unwrap()),
-                gross_profit: Some(BigDecimal::from_str("400").unwrap()),
-                operating_income: Some(BigDecimal::from_str("200").unwrap()),
-                net_income: Some(BigDecimal::from_str("100").unwrap()),
-                eps: Some(BigDecimal::from_str("1.0").unwrap()),
-            }
-        ];
+        let incomes = vec![IncomeStatement {
+            period_end_date: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
+            revenue: Some(BigDecimal::from_str("1000").unwrap()),
+            gross_profit: Some(BigDecimal::from_str("400").unwrap()),
+            operating_income: Some(BigDecimal::from_str("200").unwrap()),
+            net_income: Some(BigDecimal::from_str("100").unwrap()),
+            eps: Some(BigDecimal::from_str("1.0").unwrap()),
+        }];
         let (gm, om, nm) = MetricsCalculator::calculate_margin_metrics(&incomes);
         assert_eq!(gm[0].value, Some(40.0));
         assert_eq!(om[0].value, Some(20.0));
@@ -418,32 +479,28 @@ mod tests {
     fn test_calculate_valuation_metrics() {
         use bigdecimal::BigDecimal;
         use std::str::FromStr;
-        let incomes = vec![
-            IncomeStatement {
-                period_end_date: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
-                revenue: Some(BigDecimal::from_str("1000").unwrap()),
-                gross_profit: None,
-                operating_income: None,
-                net_income: None,
-                eps: Some(BigDecimal::from_str("5.0").unwrap()),
-            }
-        ];
-        let prices = vec![
-            Some(DailyPrice {
-                date: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
-                open: 140.0,
-                high: 155.0,
-                low: 135.0,
-                close: 150.0,
-            })
-        ];
-        let (open, high, low, close, pe) = MetricsCalculator::calculate_valuation_metrics(&incomes, &prices);
-        
+        let incomes = vec![IncomeStatement {
+            period_end_date: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
+            revenue: Some(BigDecimal::from_str("1000").unwrap()),
+            gross_profit: None,
+            operating_income: None,
+            net_income: None,
+            eps: Some(BigDecimal::from_str("5.0").unwrap()),
+        }];
+        let prices = vec![Some(DailyPrice {
+            date: chrono::NaiveDate::from_ymd_opt(2023, 1, 1).unwrap(),
+            open: 140.0,
+            high: 155.0,
+            low: 135.0,
+            close: 150.0,
+        })];
+        let metrics = MetricsCalculator::calculate_valuation_metrics(&incomes, &prices);
+
         let eps = 1e-10;
-        assert!((open[0].value.unwrap() - 14.0).abs() < eps);
-        assert!((high[0].value.unwrap() - 15.5).abs() < eps);
-        assert!((low[0].value.unwrap() - 13.5).abs() < eps);
-        assert!((close[0].value.unwrap() - 15.0).abs() < eps);
-        assert!((pe[0].value.unwrap() - 30.0).abs() < eps);
+        assert!((metrics.open_ratios[0].value.unwrap() - 14.0).abs() < eps);
+        assert!((metrics.high_ratios[0].value.unwrap() - 15.5).abs() < eps);
+        assert!((metrics.low_ratios[0].value.unwrap() - 13.5).abs() < eps);
+        assert!((metrics.close_ratios[0].value.unwrap() - 15.0).abs() < eps);
+        assert!((metrics.pe_ratios[0].value.unwrap() - 30.0).abs() < eps);
     }
 }

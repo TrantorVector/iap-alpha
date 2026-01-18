@@ -247,7 +247,11 @@ impl VerdictRepository {
     ///
     /// Updates analysis_reports to point to the history snapshot
     /// Only updates reports currently linked to the verdict that don't have a history link yet
-    pub async fn link_reports_to_history(&self, verdict_id: Uuid, history_id: Uuid) -> DbResult<()> {
+    pub async fn link_reports_to_history(
+        &self,
+        verdict_id: Uuid,
+        history_id: Uuid,
+    ) -> DbResult<()> {
         sqlx::query(
             r#"
             UPDATE analysis_reports
