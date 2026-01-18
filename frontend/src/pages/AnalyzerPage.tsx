@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ControlsBar } from '@/components/analyzer/ControlsBar';
 import { MetricsDashboard } from '@/components/analyzer/MetricsDashboard';
 import { DocumentGrid } from '@/components/analyzer/DocumentGrid';
+import { VerdictForm } from '@/components/analyzer/VerdictForm';
 
 export default function AnalyzerPage() {
     const { companyId } = useParams<{ companyId: string }>();
@@ -62,7 +63,7 @@ export default function AnalyzerPage() {
                 onClose={() => navigate('/')}
             />
 
-            <main className="flex-1 flex flex-col overflow-hidden container max-w-[1600px] mx-auto px-6 py-4 gap-4">
+            <main className="flex-1 flex flex-col overflow-y-auto container max-w-[1600px] mx-auto px-6 py-4 gap-6 scroll-smooth">
                 {anyError ? (
                     <div className="flex-1 flex items-center justify-center p-8">
                         <div className="max-w-md w-full">
@@ -86,7 +87,7 @@ export default function AnalyzerPage() {
                 ) : (
                     <>
                         {/* Pane 1: Key Metrics Dashboard */}
-                        <section className="flex-[6] min-h-0 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+                        <section className="min-h-[500px] bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
                             <div className="p-4 border-b bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
                                 <h2 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                     <span className="w-1 h-4 bg-blue-600 rounded-full" />
@@ -114,7 +115,7 @@ export default function AnalyzerPage() {
                         </section>
 
                         {/* Pane 2: Document Grid */}
-                        <section className="flex-[3] min-h-0 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+                        <section className="min-h-[400px] bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
                             <div className="p-4 border-b bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
                                 <h2 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                     <span className="w-1 h-4 bg-emerald-600 rounded-full" />
@@ -133,29 +134,35 @@ export default function AnalyzerPage() {
                         </section>
 
                         {/* Pane 3: Verdict Recording */}
-                        <section className="h-32 shrink-0 bg-white dark:bg-slate-900 rounded-xl border-t-4 border-t-indigo-600 border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden flex flex-col">
+                        <section className="min-h-[600px] bg-white dark:bg-slate-900 rounded-xl border-t-4 border-t-indigo-600 border border-slate-200 dark:border-slate-800 shadow-lg overflow-hidden flex flex-col mb-8">
                             <div className="p-3 border-b bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
                                 <h2 className="font-bold text-sm uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
                                     Analysis Verdict
                                 </h2>
                             </div>
-                            <div className="flex-1 p-4 flex items-center justify-center">
+                            <div className="flex-1 p-4 flex flex-col">
                                 {_isLoadingVerdict ? (
-                                    <div className="flex gap-4 w-full">
-                                        <Skeleton className="h-10 w-32" />
-                                        <Skeleton className="h-10 flex-1" />
-                                        <Skeleton className="h-10 w-24" />
+                                    <div className="space-y-4 max-w-2xl mx-auto w-full pt-8">
+                                        <div className="flex gap-4">
+                                            <Skeleton className="h-12 w-32 rounded-full" />
+                                            <Skeleton className="h-12 w-32 rounded-full" />
+                                            <Skeleton className="h-12 w-32 rounded-full" />
+                                        </div>
+                                        <Skeleton className="h-32 w-full" />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <Skeleton className="h-40 w-full" />
+                                            <Skeleton className="h-40 w-full" />
+                                        </div>
                                     </div>
                                 ) : (
-                                    <div className="w-full flex items-center justify-between text-slate-400 dark:text-slate-500">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                                <span className="opacity-50">⚖️</span>
-                                            </div>
-                                            <p className="text-sm font-medium">Verdict Recording Module</p>
-                                        </div>
-                                        <p className="text-xs italic opacity-60">Pending Step 8.7 implementation</p>
-                                    </div>
+                                    <VerdictForm
+                                        companyId={companyId!}
+                                        initialData={_verdict!}
+                                        onSaved={() => {
+                                            queryClient.invalidateQueries({ queryKey: ['verdict', companyId] });
+                                            // Also refresh history if we had that pane
+                                        }}
+                                    />
                                 )}
                             </div>
                         </section>
