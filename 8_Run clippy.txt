@@ -1,0 +1,455 @@
+﻿2026-01-18T05:00:02.7614734Z ##[group]Run cd backend && cargo clippy --all-targets -- -D warnings
+2026-01-18T05:00:02.7615270Z [36;1mcd backend && cargo clippy --all-targets -- -D warnings[0m
+2026-01-18T05:00:02.7645707Z shell: /usr/bin/bash -e {0}
+2026-01-18T05:00:02.7645932Z env:
+2026-01-18T05:00:02.7646107Z   CARGO_HOME: /home/runner/.cargo
+2026-01-18T05:00:02.7646347Z   CARGO_INCREMENTAL: 0
+2026-01-18T05:00:02.7646551Z   CARGO_TERM_COLOR: always
+2026-01-18T05:00:02.7646760Z   CACHE_ON_FAILURE: false
+2026-01-18T05:00:02.7646961Z ##[endgroup]
+2026-01-18T05:00:03.4277721Z [1m[92m    Updating[0m crates.io index
+2026-01-18T05:00:03.7479082Z [1m[92m Downloading[0m crates ...
+2026-01-18T05:00:04.7054291Z [1m[92m  Downloaded[0m aws-smithy-query v0.60.9
+2026-01-18T05:00:04.7075437Z [1m[92m  Downloaded[0m ecdsa v0.14.8
+2026-01-18T05:00:04.7094269Z [1m[92m  Downloaded[0m aws-types v1.3.11
+2026-01-18T05:00:04.7121157Z [1m[92m  Downloaded[0m tokio-rustls v0.26.4
+2026-01-18T05:00:04.7141637Z [1m[92m  Downloaded[0m p256 v0.11.1
+2026-01-18T05:00:04.7171819Z [1m[92m  Downloaded[0m aws-lc-rs v1.15.3
+2026-01-18T05:00:04.7281850Z [1m[92m  Downloaded[0m sec1 v0.3.0
+2026-01-18T05:00:04.7302267Z [1m[92m  Downloaded[0m ff v0.12.1
+2026-01-18T05:00:04.7317959Z [1m[92m  Downloaded[0m aws-smithy-runtime-api v1.10.0
+2026-01-18T05:00:04.7363500Z [1m[92m  Downloaded[0m der v0.6.1
+2026-01-18T05:00:04.7415979Z [1m[92m  Downloaded[0m aws-sdk-sts v1.96.0
+2026-01-18T05:00:04.7542054Z [1m[92m  Downloaded[0m semver v1.0.27
+2026-01-18T05:00:04.7567295Z [1m[92m  Downloaded[0m foldhash v0.1.5
+2026-01-18T05:00:04.7579300Z [1m[92m  Downloaded[0m bytes-utils v0.1.4
+2026-01-18T05:00:04.7595116Z [1m[92m  Downloaded[0m aws-sdk-ssooidc v1.94.0
+2026-01-18T05:00:04.7678160Z [1m[92m  Downloaded[0m spki v0.6.0
+2026-01-18T05:00:04.7697134Z [1m[92m  Downloaded[0m xmlparser v0.13.6
+2026-01-18T05:00:04.7720183Z [1m[92m  Downloaded[0m fs_extra v1.3.0
+2026-01-18T05:00:04.7739396Z [1m[92m  Downloaded[0m aws-smithy-runtime v1.9.8
+2026-01-18T05:00:04.7798969Z [1m[92m  Downloaded[0m tokio-rustls v0.24.1
+2026-01-18T05:00:04.7825471Z [1m[92m  Downloaded[0m hyper-rustls v0.27.7
+2026-01-18T05:00:04.7850578Z [1m[92m  Downloaded[0m rustls-webpki v0.103.9
+2026-01-18T05:00:04.7881256Z [1m[92m  Downloaded[0m rand v0.9.2
+2026-01-18T05:00:04.7921853Z [1m[92m  Downloaded[0m aws-smithy-http-client v1.1.5
+2026-01-18T05:00:04.7961983Z [1m[92m  Downloaded[0m rustls-webpki v0.101.7
+2026-01-18T05:00:04.8117753Z [1m[92m  Downloaded[0m hashbrown v0.15.5
+2026-01-18T05:00:04.8166106Z [1m[92m  Downloaded[0m h2 v0.4.13
+2026-01-18T05:00:04.8229335Z [1m[92m  Downloaded[0m crypto-bigint v0.5.5
+2026-01-18T05:00:04.8299690Z [1m[92m  Downloaded[0m rand_core v0.9.5
+2026-01-18T05:00:04.8312943Z [1m[92m  Downloaded[0m pkcs8 v0.9.0
+2026-01-18T05:00:04.8342577Z [1m[92m  Downloaded[0m aws-smithy-async v1.2.7
+2026-01-18T05:00:04.8362652Z [1m[92m  Downloaded[0m vsimd v0.8.0
+2026-01-18T05:00:04.8383006Z [1m[92m  Downloaded[0m rustls v0.21.12
+2026-01-18T05:00:04.8491134Z [1m[92m  Downloaded[0m signature v1.6.4
+2026-01-18T05:00:04.8504960Z [1m[92m  Downloaded[0m rand_chacha v0.9.0
+2026-01-18T05:00:04.8517083Z [1m[92m  Downloaded[0m multer v3.1.0
+2026-01-18T05:00:04.8539848Z [1m[92m  Downloaded[0m rustls v0.23.36
+2026-01-18T05:00:04.8655806Z [1m[92m  Downloaded[0m lru v0.12.5
+2026-01-18T05:00:04.8666909Z [1m[92m  Downloaded[0m sct v0.7.1
+2026-01-18T05:00:04.8703179Z [1m[92m  Downloaded[0m rfc6979 v0.3.1
+2026-01-18T05:00:04.8713043Z [1m[92m  Downloaded[0m openssl-probe v0.2.0
+2026-01-18T05:00:04.8723697Z [1m[92m  Downloaded[0m hyper-rustls v0.24.2
+2026-01-18T05:00:04.8748223Z [1m[92m  Downloaded[0m rustls-pki-types v1.14.0
+2026-01-18T05:00:04.8772367Z [1m[92m  Downloaded[0m rustc_version v0.4.1
+2026-01-18T05:00:04.8784937Z [1m[92m  Downloaded[0m outref v0.5.2
+2026-01-18T05:00:04.8797913Z [1m[92m  Downloaded[0m dunce v1.0.5
+2026-01-18T05:00:04.8806610Z [1m[92m  Downloaded[0m base64-simd v0.8.0
+2026-01-18T05:00:04.8820272Z [1m[92m  Downloaded[0m aws-smithy-xml v0.60.13
+2026-01-18T05:00:04.8833309Z [1m[92m  Downloaded[0m aws-smithy-observability v0.2.0
+2026-01-18T05:00:04.8849705Z [1m[92m  Downloaded[0m aws-config v1.8.12
+2026-01-18T05:00:04.8913688Z [1m[92m  Downloaded[0m aws-smithy-types v1.3.6
+2026-01-18T05:00:04.8956920Z [1m[92m  Downloaded[0m aws-sigv4 v1.3.7
+2026-01-18T05:00:04.9439190Z [1m[92m  Downloaded[0m aws-sdk-sso v1.92.0
+2026-01-18T05:00:04.9503354Z [1m[92m  Downloaded[0m aws-runtime v1.5.18
+2026-01-18T05:00:04.9538402Z [1m[92m  Downloaded[0m aws-smithy-checksums v0.63.12
+2026-01-18T05:00:04.9551061Z [1m[92m  Downloaded[0m elliptic-curve v0.12.3
+2026-01-18T05:00:04.9586068Z [1m[92m  Downloaded[0m aws-smithy-http v0.62.6
+2026-01-18T05:00:04.9606156Z [1m[92m  Downloaded[0m group v0.12.1
+2026-01-18T05:00:04.9621256Z [1m[92m  Downloaded[0m cmake v0.1.57
+2026-01-18T05:00:04.9634793Z [1m[92m  Downloaded[0m base16ct v0.1.1
+2026-01-18T05:00:04.9647787Z [1m[92m  Downloaded[0m aws-smithy-json v0.61.9
+2026-01-18T05:00:04.9663212Z [1m[92m  Downloaded[0m jobserver v0.1.34
+2026-01-18T05:00:04.9683100Z [1m[92m  Downloaded[0m crc-fast v1.6.0
+2026-01-18T05:00:04.9758597Z [1m[92m  Downloaded[0m aws-credential-types v1.2.11
+2026-01-18T05:00:04.9774711Z [1m[92m  Downloaded[0m rustls-native-certs v0.8.3
+2026-01-18T05:00:04.9798160Z [1m[92m  Downloaded[0m regex-lite v0.1.8
+2026-01-18T05:00:04.9825555Z [1m[92m  Downloaded[0m crypto-bigint v0.4.9
+2026-01-18T05:00:04.9868747Z [1m[92m  Downloaded[0m aws-smithy-eventstream v0.60.14
+2026-01-18T05:00:04.9912054Z [1m[92m  Downloaded[0m aws-sdk-s3 v1.119.0
+2026-01-18T05:00:05.1102352Z [1m[92m  Downloaded[0m aws-lc-sys v0.36.0
+2026-01-18T05:00:05.4911520Z [1m[92m    Checking[0m subtle v2.6.1
+2026-01-18T05:00:05.4933943Z [1m[92m   Compiling[0m jobserver v0.1.34
+2026-01-18T05:00:05.4978531Z [1m[92m   Compiling[0m getrandom v0.3.4
+2026-01-18T05:00:05.5025182Z [1m[92m    Checking[0m time v0.3.45
+2026-01-18T05:00:08.1635966Z [1m[92m    Checking[0m digest v0.10.7
+2026-01-18T05:00:08.3036140Z [1m[92m    Checking[0m sha2 v0.10.9
+2026-01-18T05:00:08.5586216Z [1m[92m   Compiling[0m cc v1.2.53
+2026-01-18T05:00:08.9149583Z [1m[92m    Checking[0m vsimd v0.8.0
+2026-01-18T05:00:08.9790321Z [1m[92m    Checking[0m outref v0.5.2
+2026-01-18T05:00:09.0096969Z [1m[92m    Checking[0m hmac v0.12.1
+2026-01-18T05:00:09.0780734Z [1m[92m    Checking[0m bytes-utils v0.1.4
+2026-01-18T05:00:09.1840191Z [1m[92m   Compiling[0m crc32fast v1.5.0
+2026-01-18T05:00:09.2022111Z [1m[92m   Compiling[0m fs_extra v1.3.0
+2026-01-18T05:00:09.3025203Z [1m[92m    Checking[0m base64-simd v0.8.0
+2026-01-18T05:00:09.4040303Z [1m[92m   Compiling[0m cmake v0.1.57
+2026-01-18T05:00:09.4614560Z [1m[92m    Checking[0m aws-smithy-types v1.3.6
+2026-01-18T05:00:09.6442247Z [1m[92m   Compiling[0m dunce v1.0.5
+2026-01-18T05:00:09.8199678Z [1m[92m    Checking[0m aws-smithy-async v1.2.7
+2026-01-18T05:00:09.8766494Z [1m[92m   Compiling[0m ring v0.17.14
+2026-01-18T05:00:10.0671593Z [1m[92m   Compiling[0m aws-lc-sys v0.36.0
+2026-01-18T05:00:10.1796986Z [1m[92m   Compiling[0m aws-lc-rs v1.15.3
+2026-01-18T05:00:10.7556317Z [1m[92m    Checking[0m aws-smithy-runtime-api v1.10.0
+2026-01-18T05:00:10.8399573Z [1m[92m    Checking[0m uuid v1.19.0
+2026-01-18T05:00:11.0817677Z [1m[92m    Checking[0m h2 v0.4.13
+2026-01-18T05:00:11.4496099Z [1m[92m   Compiling[0m ahash v0.8.12
+2026-01-18T05:00:11.5871709Z [1m[92m    Checking[0m rustls-pki-types v1.14.0
+2026-01-18T05:00:11.7978878Z [1m[92m    Checking[0m der v0.6.1
+2026-01-18T05:00:12.1851926Z [1m[92m   Compiling[0m hashbrown v0.14.5
+2026-01-18T05:00:12.6193458Z [1m[92m    Checking[0m spki v0.6.0
+2026-01-18T05:00:12.6924284Z [1m[92m   Compiling[0m rustls v0.23.36
+2026-01-18T05:00:12.7600133Z [1m[92m   Compiling[0m rustls v0.21.12
+2026-01-18T05:00:12.8301340Z [1m[92m    Checking[0m hyper v0.14.32
+2026-01-18T05:00:13.5246862Z [1m[92m    Checking[0m hyper v1.8.1
+2026-01-18T05:00:14.1861455Z [1m[92m    Checking[0m hyper-util v0.1.19
+2026-01-18T05:00:15.0849580Z [1m[92m    Checking[0m pkcs8 v0.9.0
+2026-01-18T05:00:15.1119868Z [1m[92m   Compiling[0m hashlink v0.8.4
+2026-01-18T05:00:15.3018433Z [1m[92m    Checking[0m ff v0.12.1
+2026-01-18T05:00:15.3432950Z [1m[92m    Checking[0m crypto-bigint v0.4.9
+2026-01-18T05:00:15.3584961Z [1m[92m    Checking[0m base16ct v0.1.1
+2026-01-18T05:00:15.4121120Z [1m[92m    Checking[0m sec1 v0.3.0
+2026-01-18T05:00:15.5128297Z [1m[92m   Compiling[0m sqlx-core v0.7.4
+2026-01-18T05:00:15.7081928Z [1m[92m    Checking[0m aws-smithy-eventstream v0.60.14
+2026-01-18T05:00:15.8203413Z [1m[92m    Checking[0m group v0.12.1
+2026-01-18T05:00:16.2614696Z [1m[92m    Checking[0m md-5 v0.10.6
+2026-01-18T05:00:16.3322279Z [1m[92m   Compiling[0m semver v1.0.27
+2026-01-18T05:00:16.5750632Z [1m[92m    Checking[0m openssl-probe v0.2.0
+2026-01-18T05:00:16.6249054Z [1m[92m   Compiling[0m tempfile v3.24.0
+2026-01-18T05:00:16.9033468Z [1m[92m    Checking[0m sct v0.7.1
+2026-01-18T05:00:16.9681707Z [1m[92m    Checking[0m rustls-webpki v0.101.7
+2026-01-18T05:00:17.1121317Z [1m[92m    Checking[0m rustls-native-certs v0.8.3
+2026-01-18T05:00:17.1726792Z [1m[92m   Compiling[0m rustc_version v0.4.1
+2026-01-18T05:00:17.3869480Z [1m[92m   Compiling[0m sqlx-postgres v0.7.4
+2026-01-18T05:00:18.0475063Z [1m[92m   Compiling[0m openssl-sys v0.9.111
+2026-01-18T05:00:18.4333133Z [1m[92m    Checking[0m tokio-rustls v0.24.1
+2026-01-18T05:00:18.5704729Z [1m[92m    Checking[0m elliptic-curve v0.12.3
+2026-01-18T05:00:18.6079221Z [1m[92m    Checking[0m aws-smithy-http v0.62.6
+2026-01-18T05:00:18.7753720Z [1m[92m    Checking[0m rfc6979 v0.3.1
+2026-01-18T05:00:18.8200808Z [1m[92m    Checking[0m signature v1.6.4
+2026-01-18T05:00:18.8765412Z [1m[92m    Checking[0m ecdsa v0.14.8
+2026-01-18T05:00:19.0971905Z [1m[92m    Checking[0m hyper-rustls v0.24.2
+2026-01-18T05:00:19.2848523Z [1m[92m   Compiling[0m aws-types v1.3.11
+2026-01-18T05:00:19.3812698Z [1m[92m    Checking[0m aws-credential-types v1.2.11
+2026-01-18T05:00:19.5270227Z [1m[92m    Checking[0m hkdf v0.12.4
+2026-01-18T05:00:19.6204043Z [1m[92m    Checking[0m p256 v0.11.1
+2026-01-18T05:00:19.8468715Z [1m[92m    Checking[0m aws-smithy-observability v0.2.0
+2026-01-18T05:00:19.9471375Z [1m[92m    Checking[0m crypto-bigint v0.5.5
+2026-01-18T05:00:20.4271683Z [1m[92m   Compiling[0m sqlx-macros-core v0.7.4
+2026-01-18T05:00:21.9547203Z [1m[92m    Checking[0m aho-corasick v1.1.4
+2026-01-18T05:00:22.0424668Z [1m[92m   Compiling[0m sqlx-macros v0.7.4
+2026-01-18T05:00:22.7361860Z [1m[92m    Checking[0m regex-syntax v0.8.8
+2026-01-18T05:00:22.8115166Z [1m[92m    Checking[0m fastrand v2.3.0
+2026-01-18T05:00:22.8997687Z [1m[92m    Checking[0m aws-sigv4 v1.3.7
+2026-01-18T05:00:23.3268017Z [1m[92m   Compiling[0m openssl v0.10.75
+2026-01-18T05:00:23.7146203Z [1m[92m    Checking[0m sqlx v0.7.4
+2026-01-18T05:00:23.7780355Z [1m[92m    Checking[0m rand_core v0.9.5
+2026-01-18T05:00:23.8233843Z [1m[92m    Checking[0m regex-automata v0.4.13
+2026-01-18T05:00:23.9043352Z [1m[92m    Checking[0m aws-smithy-json v0.61.9
+2026-01-18T05:00:24.1008499Z [1m[92m    Checking[0m regex-lite v0.1.8
+2026-01-18T05:00:24.1269525Z [1m[92m   Compiling[0m native-tls v0.2.14
+2026-01-18T05:00:24.4880515Z [1m[92m    Checking[0m rand_chacha v0.9.0
+2026-01-18T05:00:24.6286191Z [1m[92m    Checking[0m xmlparser v0.13.6
+2026-01-18T05:00:24.8390004Z [1m[92m    Checking[0m aws-smithy-xml v0.60.13
+2026-01-18T05:00:24.9373097Z [1m[92m    Checking[0m rand v0.9.2
+2026-01-18T05:00:25.3716848Z [1m[92m    Checking[0m foldhash v0.1.5
+2026-01-18T05:00:25.4476080Z [1m[92m    Checking[0m urlencoding v2.1.3
+2026-01-18T05:00:25.5185457Z [1m[92m    Checking[0m aws-smithy-query v0.60.9
+2026-01-18T05:00:25.5747234Z [1m[92m    Checking[0m hashbrown v0.15.5
+2026-01-18T05:00:25.8127332Z [1m[92m    Checking[0m regex v1.12.2
+2026-01-18T05:00:25.9684539Z [1m[92m    Checking[0m sha1 v0.10.6
+2026-01-18T05:00:26.0552463Z [1m[92m    Checking[0m crc-fast v1.6.0
+2026-01-18T05:00:26.0590309Z [1m[92m    Checking[0m spin v0.9.8
+2026-01-18T05:00:26.1117044Z [1m[92m    Checking[0m lru v0.12.5
+2026-01-18T05:00:26.2672839Z [1m[92m   Compiling[0m flate2 v1.1.8
+2026-01-18T05:00:26.3023580Z [1m[92m    Checking[0m tokio-native-tls v0.3.1
+2026-01-18T05:00:26.3885716Z [1m[92m    Checking[0m hyper-tls v0.5.0
+2026-01-18T05:00:26.4625216Z [1m[92m    Checking[0m reqwest v0.11.27
+2026-01-18T05:00:26.5983533Z [1m[92m    Checking[0m lazy_static v1.5.0
+2026-01-18T05:00:26.6327256Z [1m[92m    Checking[0m domain v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/domain)
+2026-01-18T05:00:26.6822742Z [1m[92m    Checking[0m aws-smithy-checksums v0.63.12
+2026-01-18T05:00:26.7913049Z [1m[92m    Checking[0m db v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/db)
+2026-01-18T05:00:26.9365000Z [1m[92m   Compiling[0m zip v0.6.6
+2026-01-18T05:00:27.3527395Z [1m[92m   Compiling[0m utoipa-swagger-ui v6.0.0
+2026-01-18T05:00:27.6799013Z [1m[92m    Checking[0m rust-embed-utils v8.11.0
+2026-01-18T05:00:27.7403230Z [1m[92m   Compiling[0m multer v3.1.0
+2026-01-18T05:00:27.8017268Z [1m[92m    Checking[0m axum v0.7.9
+2026-01-18T05:00:27.8738747Z [1m[92m    Checking[0m num-bigint-dig v0.8.6
+2026-01-18T05:00:28.6415760Z [1m[92m    Checking[0m rust-embed v8.11.0
+2026-01-18T05:00:28.7750429Z [1m[92m    Checking[0m simple_asn1 v0.6.3
+2026-01-18T05:00:28.9167945Z [1m[92m    Checking[0m sharded-slab v0.1.7
+2026-01-18T05:00:28.9819392Z [1m[92m    Checking[0m matchers v0.2.0
+2026-01-18T05:00:29.0430614Z [1m[92m    Checking[0m password-hash v0.5.0
+2026-01-18T05:00:29.2211918Z [1m[92m    Checking[0m signature v2.2.0
+2026-01-18T05:00:29.2825368Z [1m[92m    Checking[0m blake2 v0.10.6
+2026-01-18T05:00:29.3256681Z [1m[92m    Checking[0m tracing-subscriber v0.3.22
+2026-01-18T05:00:29.4485352Z [1m[92m    Checking[0m argon2 v0.5.3
+2026-01-18T05:00:29.7067059Z [1m[92m    Checking[0m rsa v0.9.10
+2026-01-18T05:00:30.0426643Z [1m[92m    Checking[0m jsonwebtoken v9.3.1
+2026-01-18T05:00:42.3363579Z [1m[92m    Checking[0m rustls-webpki v0.103.9
+2026-01-18T05:00:44.1011651Z [1m[92m    Checking[0m tokio-rustls v0.26.4
+2026-01-18T05:00:44.2106719Z [1m[92m    Checking[0m hyper-rustls v0.27.7
+2026-01-18T05:00:44.2941941Z [1m[92m    Checking[0m aws-smithy-http-client v1.1.5
+2026-01-18T05:00:44.6172074Z [1m[92m    Checking[0m aws-smithy-runtime v1.9.8
+2026-01-18T05:00:45.8580169Z [1m[92m    Checking[0m aws-runtime v1.5.18
+2026-01-18T05:00:46.3501620Z [1m[92m    Checking[0m aws-sdk-ssooidc v1.94.0
+2026-01-18T05:00:46.3502527Z [1m[92m    Checking[0m aws-sdk-sts v1.96.0
+2026-01-18T05:00:46.3503222Z [1m[92m    Checking[0m aws-sdk-sso v1.92.0
+2026-01-18T05:00:46.3503771Z [1m[92m    Checking[0m aws-sdk-s3 v1.119.0
+2026-01-18T05:00:47.7059213Z [1m[92m    Checking[0m aws-config v1.8.12
+2026-01-18T05:00:56.9217918Z [1m[92m    Checking[0m providers v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/providers)
+2026-01-18T05:00:57.1595710Z [1m[92m    Checking[0m api v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/api)
+2026-01-18T05:00:57.1597448Z [1m[92m    Checking[0m worker v0.1.0 (/home/runner/work/iap-alpha/iap-alpha/backend/worker)
+2026-01-18T05:00:58.3326448Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3327931Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:101:13
+2026-01-18T05:00:58.3328725Z     [1m[94m|[0m
+2026-01-18T05:00:58.3336809Z [1m[94m101[0m [1m[94m|[0m     let _ = sqlx::query!("DELETE FROM daily_prices WHERE company_id = $1", company_id)
+2026-01-18T05:00:58.3338363Z     [1m[94m|[0m             [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+2026-01-18T05:00:58.3339076Z     [1m[94m|[0m
+2026-01-18T05:00:58.3340689Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3342246Z 
+2026-01-18T05:00:58.3343037Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3344058Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:104:13
+2026-01-18T05:00:58.3344759Z     [1m[94m|[0m
+2026-01-18T05:00:58.3345347Z [1m[94m104[0m [1m[94m|[0m       let _ = sqlx::query!(
+2026-01-18T05:00:58.3345914Z     [1m[94m|[0m [1m[91m _____________^[0m
+2026-01-18T05:00:58.3346759Z [1m[94m105[0m [1m[94m|[0m [1m[91m|[0m         "DELETE FROM income_statements WHERE company_id = $1",
+2026-01-18T05:00:58.3347652Z [1m[94m106[0m [1m[94m|[0m [1m[91m|[0m         company_id
+2026-01-18T05:00:58.3348267Z [1m[94m107[0m [1m[94m|[0m [1m[91m|[0m     )
+2026-01-18T05:00:58.3348776Z     [1m[94m|[0m [1m[91m|_____^[0m
+2026-01-18T05:00:58.3349199Z     [1m[94m|[0m
+2026-01-18T05:00:58.3350848Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3352171Z 
+2026-01-18T05:00:58.3352919Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3353981Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:110:13
+2026-01-18T05:00:58.3354996Z     [1m[94m|[0m
+2026-01-18T05:00:58.3355538Z [1m[94m110[0m [1m[94m|[0m       let _ = sqlx::query!(
+2026-01-18T05:00:58.3356186Z     [1m[94m|[0m [1m[91m _____________^[0m
+2026-01-18T05:00:58.3357018Z [1m[94m111[0m [1m[94m|[0m [1m[91m|[0m         "DELETE FROM balance_sheets WHERE company_id = $1",
+2026-01-18T05:00:58.3357830Z [1m[94m112[0m [1m[94m|[0m [1m[91m|[0m         company_id
+2026-01-18T05:00:58.3358406Z [1m[94m113[0m [1m[94m|[0m [1m[91m|[0m     )
+2026-01-18T05:00:58.3358910Z     [1m[94m|[0m [1m[91m|_____^[0m
+2026-01-18T05:00:58.3359317Z     [1m[94m|[0m
+2026-01-18T05:00:58.3360926Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3362193Z 
+2026-01-18T05:00:58.3362964Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3364006Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:116:13
+2026-01-18T05:00:58.3364799Z     [1m[94m|[0m
+2026-01-18T05:00:58.3365383Z [1m[94m116[0m [1m[94m|[0m       let _ = sqlx::query!(
+2026-01-18T05:00:58.3365969Z     [1m[94m|[0m [1m[91m _____________^[0m
+2026-01-18T05:00:58.3366845Z [1m[94m117[0m [1m[94m|[0m [1m[91m|[0m         "DELETE FROM cash_flow_statements WHERE company_id = $1",
+2026-01-18T05:00:58.3367792Z [1m[94m118[0m [1m[94m|[0m [1m[91m|[0m         company_id
+2026-01-18T05:00:58.3368434Z [1m[94m119[0m [1m[94m|[0m [1m[91m|[0m     )
+2026-01-18T05:00:58.3368961Z     [1m[94m|[0m [1m[91m|_____^[0m
+2026-01-18T05:00:58.3369411Z     [1m[94m|[0m
+2026-01-18T05:00:58.3371048Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3372334Z 
+2026-01-18T05:00:58.3373099Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3374549Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:122:13
+2026-01-18T05:00:58.3375049Z     [1m[94m|[0m
+2026-01-18T05:00:58.3375888Z [1m[94m122[0m [1m[94m|[0m     let _ = sqlx::query!("DELETE FROM documents WHERE company_id = $1", company_id)
+2026-01-18T05:00:58.3377125Z     [1m[94m|[0m             [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+2026-01-18T05:00:58.3377778Z     [1m[94m|[0m
+2026-01-18T05:00:58.3379424Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3380777Z 
+2026-01-18T05:00:58.3381550Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3382568Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:125:13
+2026-01-18T05:00:58.3383075Z     [1m[94m|[0m
+2026-01-18T05:00:58.3383631Z [1m[94m125[0m [1m[94m|[0m       let _ = sqlx::query!(
+2026-01-18T05:00:58.3384212Z     [1m[94m|[0m [1m[91m _____________^[0m
+2026-01-18T05:00:58.3385242Z [1m[94m126[0m [1m[94m|[0m [1m[91m|[0m         "DELETE FROM derived_metrics WHERE company_id = $1",
+2026-01-18T05:00:58.3386133Z [1m[94m127[0m [1m[94m|[0m [1m[91m|[0m         company_id
+2026-01-18T05:00:58.3386766Z [1m[94m128[0m [1m[94m|[0m [1m[91m|[0m     )
+2026-01-18T05:00:58.3387295Z     [1m[94m|[0m [1m[91m|_____^[0m
+2026-01-18T05:00:58.3387728Z     [1m[94m|[0m
+2026-01-18T05:00:58.3389387Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3390707Z 
+2026-01-18T05:00:58.3391474Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3392515Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:134:20
+2026-01-18T05:00:58.3393018Z     [1m[94m|[0m
+2026-01-18T05:00:58.3393949Z [1m[94m134[0m [1m[94m|[0m     let verdicts = sqlx::query!("SELECT id FROM verdicts WHERE company_id = $1", company_id)
+2026-01-18T05:00:58.3395327Z     [1m[94m|[0m                    [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+2026-01-18T05:00:58.3395999Z     [1m[94m|[0m
+2026-01-18T05:00:58.3397638Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3398945Z 
+2026-01-18T05:00:58.3399703Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3400774Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:140:17
+2026-01-18T05:00:58.3401292Z     [1m[94m|[0m
+2026-01-18T05:00:58.3402158Z [1m[94m140[0m [1m[94m|[0m         let _ = sqlx::query!("DELETE FROM verdict_history WHERE verdict_id = $1", v.id)
+2026-01-18T05:00:58.3403256Z     [1m[94m|[0m                 [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+2026-01-18T05:00:58.3403898Z     [1m[94m|[0m
+2026-01-18T05:00:58.3405701Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3407027Z 
+2026-01-18T05:00:58.3407796Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3408835Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:145:17
+2026-01-18T05:00:58.3409571Z     [1m[94m|[0m
+2026-01-18T05:00:58.3410332Z [1m[94m145[0m [1m[94m|[0m         let _ = sqlx::query!("DELETE FROM verdicts WHERE id = $1", v.id)
+2026-01-18T05:00:58.3411309Z     [1m[94m|[0m                 [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+2026-01-18T05:00:58.3412104Z     [1m[94m|[0m
+2026-01-18T05:00:58.3413739Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3415220Z 
+2026-01-18T05:00:58.3415995Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3417036Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:150:13
+2026-01-18T05:00:58.3417554Z     [1m[94m|[0m
+2026-01-18T05:00:58.3418349Z [1m[94m150[0m [1m[94m|[0m     let _ = sqlx::query!("DELETE FROM companies WHERE id = $1", company_id)
+2026-01-18T05:00:58.3419368Z     [1m[94m|[0m             [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+2026-01-18T05:00:58.3419995Z     [1m[94m|[0m
+2026-01-18T05:00:58.3421617Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3422896Z 
+2026-01-18T05:00:58.3423649Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3424871Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:157:20
+2026-01-18T05:00:58.3425411Z     [1m[94m|[0m
+2026-01-18T05:00:58.3426294Z [1m[94m157[0m [1m[94m|[0m     let existing = sqlx::query!("SELECT id FROM companies WHERE symbol = 'AAPL'")
+2026-01-18T05:00:58.3427396Z     [1m[94m|[0m                    [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+2026-01-18T05:00:58.3428040Z     [1m[94m|[0m
+2026-01-18T05:00:58.3429676Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3430970Z 
+2026-01-18T05:00:58.3431716Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3432764Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:169:5
+2026-01-18T05:00:58.3433268Z     [1m[94m|[0m
+2026-01-18T05:00:58.3433843Z [1m[94m169[0m [1m[94m|[0m [1m[91m/[0m     sqlx::query!(
+2026-01-18T05:00:58.3434673Z [1m[94m170[0m [1m[94m|[0m [1m[91m|[0m         r#"
+2026-01-18T05:00:58.3436068Z [1m[94m171[0m [1m[94m|[0m [1m[91m|[0m         INSERT INTO companies (id, symbol, exchange, name, sector_id, industry, country, market_cap, is_active, created_at, updated_at)
+2026-01-18T05:00:58.3437914Z [1m[94m172[0m [1m[94m|[0m [1m[91m|[0m         VALUES ($1, 'AAPL', 'NASDAQ', 'Apple Inc.', NULL, 'Consumer Electronics', 'USA', 0, true, NOW(), NOW())
+2026-01-18T05:00:58.3438997Z [1m[94m173[0m [1m[94m|[0m [1m[91m|[0m         "#,
+2026-01-18T05:00:58.3439677Z [1m[94m174[0m [1m[94m|[0m [1m[91m|[0m         company_id
+2026-01-18T05:00:58.3440338Z [1m[94m175[0m [1m[94m|[0m [1m[91m|[0m     )
+2026-01-18T05:00:58.3440883Z     [1m[94m|[0m [1m[91m|_____^[0m
+2026-01-18T05:00:58.3441330Z     [1m[94m|[0m
+2026-01-18T05:00:58.3442985Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3444292Z 
+2026-01-18T05:00:58.3445251Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3446511Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:181:5
+2026-01-18T05:00:58.3447037Z     [1m[94m|[0m
+2026-01-18T05:00:58.3447622Z [1m[94m181[0m [1m[94m|[0m [1m[91m/[0m     sqlx::query!(
+2026-01-18T05:00:58.3448481Z [1m[94m182[0m [1m[94m|[0m [1m[91m|[0m         r#"
+2026-01-18T05:00:58.3449255Z [1m[94m183[0m [1m[94m|[0m [1m[91m|[0m         INSERT INTO income_statements (
+2026-01-18T05:00:58.3450417Z [1m[94m184[0m [1m[94m|[0m [1m[91m|[0m             id, company_id, period_end_date, period_type, fiscal_year, fiscal_quarter,
+2026-01-18T05:00:58.3451301Z [1m[94m...[0m   [1m[91m|[0m
+2026-01-18T05:00:58.3451980Z [1m[94m195[0m [1m[94m|[0m [1m[91m|[0m         Uuid::new_v4()
+2026-01-18T05:00:58.3452637Z [1m[94m196[0m [1m[94m|[0m [1m[91m|[0m     )
+2026-01-18T05:00:58.3453171Z     [1m[94m|[0m [1m[91m|_____^[0m
+2026-01-18T05:00:58.3453623Z     [1m[94m|[0m
+2026-01-18T05:00:58.3455503Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3456797Z 
+2026-01-18T05:00:58.3457570Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3458539Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:205:20
+2026-01-18T05:00:58.3458984Z     [1m[94m|[0m
+2026-01-18T05:00:58.3459823Z [1m[94m205[0m [1m[94m|[0m     let existing = sqlx::query!("SELECT id FROM companies WHERE symbol = 'AAPL'")
+2026-01-18T05:00:58.3460904Z     [1m[94m|[0m                    [1m[91m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+2026-01-18T05:00:58.3461551Z     [1m[94m|[0m
+2026-01-18T05:00:58.3463188Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3464645Z 
+2026-01-18T05:00:58.3606039Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3607967Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:337:5
+2026-01-18T05:00:58.3609192Z     [1m[94m|[0m
+2026-01-18T05:00:58.3610399Z [1m[94m337[0m [1m[94m|[0m [1m[91m/[0m     sqlx::query!(
+2026-01-18T05:00:58.3611127Z [1m[94m338[0m [1m[94m|[0m [1m[91m|[0m         r#"
+2026-01-18T05:00:58.3611831Z [1m[94m339[0m [1m[94m|[0m [1m[91m|[0m         INSERT INTO documents (
+2026-01-18T05:00:58.3612962Z [1m[94m340[0m [1m[94m|[0m [1m[91m|[0m             id, company_id, document_type, period_end_date, fiscal_year, fiscal_quarter,
+2026-01-18T05:00:58.3613885Z [1m[94m...[0m   [1m[91m|[0m
+2026-01-18T05:00:58.3614800Z [1m[94m345[0m [1m[94m|[0m [1m[91m|[0m         Uuid::new_v4(), company_id
+2026-01-18T05:00:58.3615511Z [1m[94m346[0m [1m[94m|[0m [1m[91m|[0m     )
+2026-01-18T05:00:58.3616018Z     [1m[94m|[0m [1m[91m|_____^[0m
+2026-01-18T05:00:58.3616436Z     [1m[94m|[0m
+2026-01-18T05:00:58.3618051Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3619301Z 
+2026-01-18T05:00:58.3620073Z [1m[91merror[0m[1m: set `DATABASE_URL` to use query macros online, or run `cargo sqlx prepare` to update the query cache[0m
+2026-01-18T05:00:58.3621089Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:429:16
+2026-01-18T05:00:58.3621581Z     [1m[94m|[0m
+2026-01-18T05:00:58.3622124Z [1m[94m429[0m [1m[94m|[0m       let rows = sqlx::query!(
+2026-01-18T05:00:58.3622698Z     [1m[94m|[0m [1m[91m ________________^[0m
+2026-01-18T05:00:58.3623868Z [1m[94m430[0m [1m[94m|[0m [1m[91m|[0m         "SELECT count(*) as count FROM documents WHERE company_id = $1",
+2026-01-18T05:00:58.3634824Z [1m[94m431[0m [1m[94m|[0m [1m[91m|[0m         company_id
+2026-01-18T05:00:58.3635549Z [1m[94m432[0m [1m[94m|[0m [1m[91m|[0m     )
+2026-01-18T05:00:58.3636406Z     [1m[94m|[0m [1m[91m|_____^[0m
+2026-01-18T05:00:58.3636836Z     [1m[94m|[0m
+2026-01-18T05:00:58.3638455Z     [1m[94m= [0m[1mnote[0m: this error originates in the macro `$crate::sqlx_macros::expand_query` which comes from the expansion of the macro `sqlx::query` (in Nightly builds, run with -Z macro-backtrace for more info)
+2026-01-18T05:00:58.3639713Z 
+2026-01-18T05:00:58.4880698Z [1m[91merror[E0282][0m[1m: type annotations needed[0m
+2026-01-18T05:00:58.4881239Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:134:20
+2026-01-18T05:00:58.4881542Z     [1m[94m|[0m
+2026-01-18T05:00:58.4882206Z [1m[94m134[0m [1m[94m|[0m       let verdicts = sqlx::query!("SELECT id FROM verdicts WHERE company_id = $1", company_id)
+2026-01-18T05:00:58.4882759Z     [1m[94m|[0m [1m[91m ____________________^[0m
+2026-01-18T05:00:58.4883146Z [1m[94m135[0m [1m[94m|[0m [1m[91m|[0m         .fetch_all(pool)
+2026-01-18T05:00:58.4883538Z [1m[94m136[0m [1m[94m|[0m [1m[91m|[0m         .await
+2026-01-18T05:00:58.4883963Z     [1m[94m|[0m [1m[91m|______________^[0m [1m[91mcannot infer type[0m
+2026-01-18T05:00:58.4884227Z 
+2026-01-18T05:00:58.5169081Z [1m[91merror[E0282][0m[1m: type annotations needed[0m
+2026-01-18T05:00:58.5169558Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:157:20
+2026-01-18T05:00:58.5169865Z     [1m[94m|[0m
+2026-01-18T05:00:58.5170446Z [1m[94m157[0m [1m[94m|[0m       let existing = sqlx::query!("SELECT id FROM companies WHERE symbol = 'AAPL'")
+2026-01-18T05:00:58.5170949Z     [1m[94m|[0m [1m[91m ____________________^[0m
+2026-01-18T05:00:58.5171341Z [1m[94m158[0m [1m[94m|[0m [1m[91m|[0m         .fetch_optional(pool)
+2026-01-18T05:00:58.5171766Z [1m[94m159[0m [1m[94m|[0m [1m[91m|[0m         .await
+2026-01-18T05:00:58.5172161Z     [1m[94m|[0m [1m[91m|______________^[0m [1m[91mcannot infer type[0m
+2026-01-18T05:00:58.5172403Z 
+2026-01-18T05:00:58.5211567Z [1m[91merror[E0282][0m[1m: type annotations needed[0m
+2026-01-18T05:00:58.5212378Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:169:5
+2026-01-18T05:00:58.5212946Z     [1m[94m|[0m
+2026-01-18T05:00:58.5213580Z [1m[94m169[0m [1m[94m|[0m [1m[91m/[0m     sqlx::query!(
+2026-01-18T05:00:58.5214267Z [1m[94m170[0m [1m[94m|[0m [1m[91m|[0m         r#"
+2026-01-18T05:00:58.5215881Z [1m[94m171[0m [1m[94m|[0m [1m[91m|[0m         INSERT INTO companies (id, symbol, exchange, name, sector_id, industry, country, market_cap, is_active, created_at, updated_at)
+2026-01-18T05:00:58.5217821Z [1m[94m172[0m [1m[94m|[0m [1m[91m|[0m         VALUES ($1, 'AAPL', 'NASDAQ', 'Apple Inc.', NULL, 'Consumer Electronics', 'USA', 0, true, NOW(), NOW())
+2026-01-18T05:00:58.5218955Z [1m[94m...[0m   [1m[91m|[0m
+2026-01-18T05:00:58.5219599Z [1m[94m176[0m [1m[94m|[0m [1m[91m|[0m     .execute(pool)
+2026-01-18T05:00:58.5220326Z [1m[94m177[0m [1m[94m|[0m [1m[91m|[0m     .await
+2026-01-18T05:00:58.5221031Z     [1m[94m|[0m [1m[91m|__________^[0m [1m[91mcannot infer type[0m
+2026-01-18T05:00:58.5221410Z 
+2026-01-18T05:00:58.5221735Z [1m[91merror[E0282][0m[1m: type annotations needed[0m
+2026-01-18T05:00:58.5222311Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:181:5
+2026-01-18T05:00:58.5222784Z     [1m[94m|[0m
+2026-01-18T05:00:58.5223380Z [1m[94m181[0m [1m[94m|[0m [1m[91m/[0m     sqlx::query!(
+2026-01-18T05:00:58.5224018Z [1m[94m182[0m [1m[94m|[0m [1m[91m|[0m         r#"
+2026-01-18T05:00:58.5224999Z [1m[94m183[0m [1m[94m|[0m [1m[91m|[0m         INSERT INTO income_statements (
+2026-01-18T05:00:58.5226089Z [1m[94m184[0m [1m[94m|[0m [1m[91m|[0m             id, company_id, period_end_date, period_type, fiscal_year, fiscal_quarter,
+2026-01-18T05:00:58.5227222Z [1m[94m...[0m   [1m[91m|[0m
+2026-01-18T05:00:58.5227755Z [1m[94m197[0m [1m[94m|[0m [1m[91m|[0m     .execute(pool)
+2026-01-18T05:00:58.5228389Z [1m[94m198[0m [1m[94m|[0m [1m[91m|[0m     .await
+2026-01-18T05:00:58.5229307Z     [1m[94m|[0m [1m[91m|__________^[0m [1m[91mcannot infer type[0m
+2026-01-18T05:00:58.5229735Z 
+2026-01-18T05:00:58.5230041Z [1m[91merror[E0282][0m[1m: type annotations needed[0m
+2026-01-18T05:00:58.5230638Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:205:20
+2026-01-18T05:00:58.5231093Z     [1m[94m|[0m
+2026-01-18T05:00:58.5231965Z [1m[94m205[0m [1m[94m|[0m       let existing = sqlx::query!("SELECT id FROM companies WHERE symbol = 'AAPL'")
+2026-01-18T05:00:58.5232826Z     [1m[94m|[0m [1m[91m ____________________^[0m
+2026-01-18T05:00:58.5233506Z [1m[94m206[0m [1m[94m|[0m [1m[91m|[0m         .fetch_optional(pool)
+2026-01-18T05:00:58.5234186Z [1m[94m207[0m [1m[94m|[0m [1m[91m|[0m         .await
+2026-01-18T05:00:58.5235181Z     [1m[94m|[0m [1m[91m|______________^[0m [1m[91mcannot infer type[0m
+2026-01-18T05:00:58.5235601Z 
+2026-01-18T05:00:58.5359798Z [1m[91merror[E0282][0m[1m: type annotations needed[0m
+2026-01-18T05:00:58.5360439Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:337:5
+2026-01-18T05:00:58.5360773Z     [1m[94m|[0m
+2026-01-18T05:00:58.5361156Z [1m[94m337[0m [1m[94m|[0m [1m[91m/[0m     sqlx::query!(
+2026-01-18T05:00:58.5361541Z [1m[94m338[0m [1m[94m|[0m [1m[91m|[0m         r#"
+2026-01-18T05:00:58.5361938Z [1m[94m339[0m [1m[94m|[0m [1m[91m|[0m         INSERT INTO documents (
+2026-01-18T05:00:58.5362593Z [1m[94m340[0m [1m[94m|[0m [1m[91m|[0m             id, company_id, document_type, period_end_date, fiscal_year, fiscal_quarter,
+2026-01-18T05:00:58.5363117Z [1m[94m...[0m   [1m[91m|[0m
+2026-01-18T05:00:58.5363454Z [1m[94m347[0m [1m[94m|[0m [1m[91m|[0m     .execute(&pool)
+2026-01-18T05:00:58.5363839Z [1m[94m348[0m [1m[94m|[0m [1m[91m|[0m     .await
+2026-01-18T05:00:58.5364246Z     [1m[94m|[0m [1m[91m|__________^[0m [1m[91mcannot infer type[0m
+2026-01-18T05:00:58.5364674Z 
+2026-01-18T05:00:58.5678059Z [1m[91merror[E0282][0m[1m: type annotations needed[0m
+2026-01-18T05:00:58.5678942Z    [1m[94m--> [0mapi/tests/analyzer_test.rs:429:16
+2026-01-18T05:00:58.5679354Z     [1m[94m|[0m
+2026-01-18T05:00:58.5679841Z [1m[94m429[0m [1m[94m|[0m       let rows = sqlx::query!(
+2026-01-18T05:00:58.5680319Z     [1m[94m|[0m [1m[91m ________________^[0m
+2026-01-18T05:00:58.5681004Z [1m[94m430[0m [1m[94m|[0m [1m[91m|[0m         "SELECT count(*) as count FROM documents WHERE company_id = $1",
+2026-01-18T05:00:58.5681707Z [1m[94m431[0m [1m[94m|[0m [1m[91m|[0m         company_id
+2026-01-18T05:00:58.5682160Z [1m[94m...[0m   [1m[91m|[0m
+2026-01-18T05:00:58.5682565Z [1m[94m434[0m [1m[94m|[0m [1m[91m|[0m     .await
+2026-01-18T05:00:58.5683097Z     [1m[94m|[0m [1m[91m|__________^[0m [1m[91mcannot infer type[0m
+2026-01-18T05:00:58.5683437Z 
+2026-01-18T05:00:58.7423988Z [1mFor more information about this error, try `rustc --explain E0282`.[0m
+2026-01-18T05:00:58.7575455Z [1m[91merror[0m: could not compile `api` (test "analyzer_test") due to 23 previous errors
+2026-01-18T05:00:58.8059670Z ##[error]Process completed with exit code 101.
