@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useQueryClient } from '@tanstack/react-query';
 import { ControlsBar } from '@/components/analyzer/ControlsBar';
 import { MetricsDashboard } from '@/components/analyzer/MetricsDashboard';
+import { DocumentGrid } from '@/components/analyzer/DocumentGrid';
 
 export default function AnalyzerPage() {
     const { companyId } = useParams<{ companyId: string }>();
@@ -122,21 +123,12 @@ export default function AnalyzerPage() {
                                 <div className="h-6 w-32 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
                             </div>
                             <div className="flex-1 overflow-auto p-4">
-                                {_isLoadingDocs ? (
-                                    <div className="grid grid-cols-4 gap-4">
-                                        {[...Array(8)].map((_, i) => (
-                                            <Skeleton key={i} className="h-24 w-full rounded-lg" />
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="min-h-[200px] flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 bg-slate-50/30 dark:bg-slate-900/30 rounded-lg border-2 border-dashed border-slate-200 dark:border-slate-800">
-                                        <div className="w-12 h-12 mb-3 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                                            <span className="text-xl opacity-50">📂</span>
-                                        </div>
-                                        <p className="font-medium text-sm">Document Grid Visualizer</p>
-                                        <p className="text-xs opacity-70 mt-1">Implementation pending Step 8.6</p>
-                                    </div>
-                                )}
+                                <DocumentGrid
+                                    companyId={companyId!}
+                                    periods={_metrics?.periods || []}
+                                    data={_documents}
+                                    isLoading={_isLoadingDocs}
+                                />
                             </div>
                         </section>
 
