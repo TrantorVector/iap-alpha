@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AnalyzerPage from "@/pages/AnalyzerPage";
@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 
 function HomePage() {
   const [health, setHealth] = useState<string>("Connecting...");
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch("/api/health")
@@ -57,8 +58,8 @@ function HomePage() {
                       localStorage.setItem('access_token', data.access_token);
                       localStorage.setItem('refresh_token', data.refresh_token);
                       localStorage.setItem('user', JSON.stringify(data.user));
-                      // Redirect to AAPL analyzer with correct UUID
-                      window.location.href = '/analyzer/10000000-0000-0000-0000-000000000001';
+                      // Navigate to AAPL analyzer with correct UUID
+                      navigate('/analyzer/10000000-0000-0000-0000-000000000001');
                     } else {
                       alert('Login failed: No access token received');
                     }
@@ -81,18 +82,37 @@ function HomePage() {
   );
 }
 
-function App() {
+function RootLayout() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/analyzer/:companyId" element={<AnalyzerPage />} />
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+    <>
+      <Outlet />
       <Toaster />
-    </BrowserRouter>
+    </>
   );
+}
+
+const router = createBrowserRouter([
+  {
+    element: <RootLayout />,
+    children: [
+      {
+        path: "/",
+        element: <HomePage />,
+      },
+      {
+        path: "/analyzer/:companyId",
+        element: <AnalyzerPage />,
+      },
+      {
+        path: "*",
+        element: <Navigate to="/" replace />,
+      },
+    ],
+  },
+]);
+
+function App() {
+  return <RouterProvider router={router} />;
 }
 
 export default App;

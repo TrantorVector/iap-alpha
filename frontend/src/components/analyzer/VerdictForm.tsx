@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -27,9 +27,10 @@ interface VerdictFormProps {
     companyId: string;
     initialData: VerdictResponse | null;
     onSaved: () => void;
+    onDirtyChange?: (isDirty: boolean) => void;
 }
 
-export function VerdictForm({ companyId, initialData, onSaved }: VerdictFormProps) {
+export function VerdictForm({ companyId, initialData, onSaved, onDirtyChange }: VerdictFormProps) {
     const { toast } = useToast();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -61,11 +62,16 @@ export function VerdictForm({ companyId, initialData, onSaved }: VerdictFormProp
         setValue,
         reset,
         getValues,
-        formState: { errors }
+        formState: { errors, isDirty }
     } = useForm<VerdictFormValues>({
         resolver: zodResolver(verdictSchema),
         defaultValues,
     });
+
+    // Notify parent of dirty state
+    useEffect(() => {
+        onDirtyChange?.(isDirty);
+    }, [isDirty, onDirtyChange]);
 
     const strengths = watch("strengths");
     const weaknesses = watch("weaknesses");
@@ -123,6 +129,10 @@ export function VerdictForm({ companyId, initialData, onSaved }: VerdictFormProp
 
             const response = await verdicts.update(companyId, updateReq);
             setLockVersion(response.lock_version);
+
+            // Allow the form to believe these are the new clean values
+            reset(data);
+
             toast({ title: "Verdict saved successfully" });
             onSaved();
         } catch (error: any) {

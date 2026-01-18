@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, useBlocker } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { companies, verdicts } from '@/api/endpoints';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,12 +11,14 @@ import { ControlsBar } from '@/components/analyzer/ControlsBar';
 import { MetricsDashboard } from '@/components/analyzer/MetricsDashboard';
 import { DocumentGrid } from '@/components/analyzer/DocumentGrid';
 import { VerdictForm } from '@/components/analyzer/VerdictForm';
+import { ConfirmCloseDialog } from '@/components/analyzer/ConfirmCloseDialog';
 
 export default function AnalyzerPage() {
     const { companyId } = useParams<{ companyId: string }>();
     const navigate = useNavigate();
     const [periodType, setPeriodType] = useState<'quarterly' | 'annual'>('quarterly');
     const [periodCount, setPeriodCount] = useState(8);
+    const [isFormDirty, setIsFormDirty] = useState(false);
     const queryClient = useQueryClient();
 
     const { data: company, isLoading: _isLoadingCompany, error: companyError } = useQuery({
@@ -42,6 +44,28 @@ export default function AnalyzerPage() {
         queryFn: () => verdicts.get(companyId!),
         enabled: !!companyId,
     });
+
+    // Navigation Blocking Logic
+    const hasVerdict = !!_verdict?.final_verdict;
+    const isDataLoaded = !_isLoadingVerdict && !!_verdict;
+    const shouldBlock = isDataLoaded && (isFormDirty || !hasVerdict);
+
+    const blocker = useBlocker(
+        ({ currentLocation, nextLocation }) =>
+            shouldBlock && currentLocation.pathname !== nextLocation.pathname
+    );
+
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (shouldBlock) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [shouldBlock]);
+
 
     // const _isLoading = isLoadingCompany || isLoadingMetrics || isLoadingDocs || isLoadingVerdict;
     const anyError = companyError || metricsError || docsError || verdictError;
@@ -162,6 +186,7 @@ export default function AnalyzerPage() {
                                             queryClient.invalidateQueries({ queryKey: ['verdict', companyId] });
                                             // Also refresh history if we had that pane
                                         }}
+                                        onDirtyChange={setIsFormDirty}
                                     />
                                 )}
                             </div>
@@ -169,6 +194,17 @@ export default function AnalyzerPage() {
                     </>
                 )}
             </main>
+
+            {blocker.state === "blocked" && (
+                <ConfirmCloseDialog
+                    open={true}
+                    onOpenChange={(open) => {
+                        if (!open) blocker.reset();
+                    }}
+                    onConfirm={() => blocker.proceed()}
+                    onCancel={() => blocker.reset()}
+                />
+            )}
         </div>
     );
 }
