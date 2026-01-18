@@ -98,87 +98,86 @@ async fn login(client: &Client, base_url: &str) -> String {
 
 async fn cleanup_company(pool: &sqlx::PgPool, company_id: Uuid) {
     // Delete dependent data to avoid FK violations
-    let _ = sqlx::query!("DELETE FROM daily_prices WHERE company_id = $1", company_id)
+    let _ = sqlx::query("DELETE FROM daily_prices WHERE company_id = $1")
+        .bind(company_id)
         .execute(pool)
         .await;
-    let _ = sqlx::query!(
-        "DELETE FROM income_statements WHERE company_id = $1",
-        company_id
-    )
-    .execute(pool)
-    .await;
-    let _ = sqlx::query!(
-        "DELETE FROM balance_sheets WHERE company_id = $1",
-        company_id
-    )
-    .execute(pool)
-    .await;
-    let _ = sqlx::query!(
-        "DELETE FROM cash_flow_statements WHERE company_id = $1",
-        company_id
-    )
-    .execute(pool)
-    .await;
-    let _ = sqlx::query!("DELETE FROM documents WHERE company_id = $1", company_id)
+    let _ = sqlx::query("DELETE FROM income_statements WHERE company_id = $1")
+        .bind(company_id)
         .execute(pool)
         .await;
-    let _ = sqlx::query!(
-        "DELETE FROM derived_metrics WHERE company_id = $1",
-        company_id
-    )
-    .execute(pool)
-    .await;
+    let _ = sqlx::query("DELETE FROM balance_sheets WHERE company_id = $1")
+        .bind(company_id)
+        .execute(pool)
+        .await;
+    let _ = sqlx::query("DELETE FROM cash_flow_statements WHERE company_id = $1")
+        .bind(company_id)
+        .execute(pool)
+        .await;
+    let _ = sqlx::query("DELETE FROM documents WHERE company_id = $1")
+        .bind(company_id)
+        .execute(pool)
+        .await;
+    let _ = sqlx::query("DELETE FROM derived_metrics WHERE company_id = $1")
+        .bind(company_id)
+        .execute(pool)
+        .await;
 
     // Verdicts cleanup
     // Need to find verdict IDs first to delete history
-    let verdicts = sqlx::query!("SELECT id FROM verdicts WHERE company_id = $1", company_id)
+    let verdicts: Vec<(Uuid,)> = sqlx::query_as("SELECT id FROM verdicts WHERE company_id = $1")
+        .bind(company_id)
         .fetch_all(pool)
         .await
         .unwrap_or_default();
 
     for v in verdicts {
-        let _ = sqlx::query!("DELETE FROM verdict_history WHERE verdict_id = $1", v.id)
+        let _ = sqlx::query("DELETE FROM verdict_history WHERE verdict_id = $1")
+            .bind(v.0)
             .execute(pool)
             .await;
         // Also clear analysis reports if relevant, assuming simple FK or ignore if not seeded
-        // let _ = sqlx::query!("DELETE FROM analysis_reports WHERE verdict_id = $1", v.id).execute(pool).await;
-        let _ = sqlx::query!("DELETE FROM verdicts WHERE id = $1", v.id)
+        // let _ = sqlx::query("DELETE FROM analysis_reports WHERE verdict_id = $1").bind(v.0).execute(pool).await;
+        let _ = sqlx::query("DELETE FROM verdicts WHERE id = $1")
+            .bind(v.0)
             .execute(pool)
             .await;
     }
 
-    let _ = sqlx::query!("DELETE FROM companies WHERE id = $1", company_id)
+    let _ = sqlx::query("DELETE FROM companies WHERE id = $1")
+        .bind(company_id)
         .execute(pool)
         .await;
 }
 
 async fn setup_aapl(pool: &sqlx::PgPool) -> Uuid {
     // Attempt to find existing AAPL to clean up old test runs
-    let existing = sqlx::query!("SELECT id FROM companies WHERE symbol = 'AAPL'")
-        .fetch_optional(pool)
-        .await
-        .unwrap_or_default();
+    let existing: Option<(Uuid,)> =
+        sqlx::query_as("SELECT id FROM companies WHERE symbol = 'AAPL'")
+            .fetch_optional(pool)
+            .await
+            .unwrap_or_default();
 
     if let Some(r) = existing {
-        cleanup_company(pool, r.id).await;
+        cleanup_company(pool, r.0).await;
     }
 
     let company_id = Uuid::new_v4();
 
     // Create Company
-    sqlx::query!(
+    sqlx::query(
         r#"
         INSERT INTO companies (id, symbol, exchange, name, sector_id, industry, country, market_cap, is_active, created_at, updated_at)
         VALUES ($1, 'AAPL', 'NASDAQ', 'Apple Inc.', NULL, 'Consumer Electronics', 'USA', 0, true, NOW(), NOW())
         "#,
-        company_id
     )
+    .bind(company_id)
     .execute(pool)
     .await
     .expect("Failed to insert company");
 
     // Create Financial Data (Income Statement)
-    sqlx::query!(
+    sqlx::query(
         r#"
         INSERT INTO income_statements (
             id, company_id, period_end_date, period_type, fiscal_year, fiscal_quarter,
@@ -189,11 +188,11 @@ async fn setup_aapl(pool: &sqlx::PgPool) -> Uuid {
         ($3, $2, '2023-09-30', 'quarterly', 2023, 4, 900000, 180000, NOW()),
         ($4, $2, '2022-12-31', 'annual', 2022, 4, 3500000, 700000, NOW())
         "#,
-        Uuid::new_v4(),
-        company_id,
-        Uuid::new_v4(),
-        Uuid::new_v4()
     )
+    .bind(Uuid::new_v4())
+    .bind(company_id)
+    .bind(Uuid::new_v4())
+    .bind(Uuid::new_v4())
     .execute(pool)
     .await
     .expect("Failed to insert income statements");
@@ -202,13 +201,14 @@ async fn setup_aapl(pool: &sqlx::PgPool) -> Uuid {
 }
 
 async fn cleanup_aapl(pool: &sqlx::PgPool) {
-    let existing = sqlx::query!("SELECT id FROM companies WHERE symbol = 'AAPL'")
-        .fetch_optional(pool)
-        .await
-        .unwrap_or_default();
+    let existing: Option<(Uuid,)> =
+        sqlx::query_as("SELECT id FROM companies WHERE symbol = 'AAPL'")
+            .fetch_optional(pool)
+            .await
+            .unwrap_or_default();
 
     if let Some(r) = existing {
-        cleanup_company(pool, r.id).await;
+        cleanup_company(pool, r.0).await;
     }
 }
 
@@ -334,7 +334,7 @@ async fn test_list_documents_returns_freshness_metadata() {
     let company_id = setup_aapl(&pool).await;
 
     // Seed a document
-    sqlx::query!(
+    sqlx::query(
         r#"
         INSERT INTO documents (
             id, company_id, document_type, period_end_date, fiscal_year, fiscal_quarter,
@@ -342,8 +342,9 @@ async fn test_list_documents_returns_freshness_metadata() {
         )
         VALUES ($1, $2, 'annual_report', '2022-12-31', 2022, 4, '10-K 2022', 'keys/10k.pdf', 'application/pdf', 1024, NOW(), NOW())
         "#,
-        Uuid::new_v4(), company_id
     )
+    .bind(Uuid::new_v4())
+    .bind(company_id)
     .execute(&pool)
     .await
     .unwrap();
@@ -426,14 +427,12 @@ async fn test_upload_document_creates_record() {
     // Expect 200 or 201
 
     // Verify creation
-    let rows = sqlx::query!(
-        "SELECT count(*) as count FROM documents WHERE company_id = $1",
-        company_id
-    )
-    .fetch_one(&pool)
-    .await
-    .unwrap();
-    assert!(rows.count.unwrap() > 0);
+    let (count,): (i64,) = sqlx::query_as("SELECT count(*) FROM documents WHERE company_id = $1")
+        .bind(company_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+    assert!(count > 0);
 
     cleanup_aapl(&pool).await;
 }
