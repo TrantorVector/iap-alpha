@@ -135,7 +135,36 @@ export interface DownloadResponse {
   content_type: string;
 }
 
+
 export interface ApiErrorResponse {
   error: string;
   details?: unknown;
+}
+
+export interface FilterCriteria {
+  min_market_cap?: number;
+  max_market_cap?: number;
+  exchanges?: string[];
+  sectors?: string[];
+}
+
+export interface Screener {
+  id: string;
+  name: string;
+  description: string | null;
+  criteria: FilterCriteria;
+  last_run_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ScreenerResult {
+  company_id: string;
+  symbol: string;
+  name: string;
+  exchange: string;
+  sector: string | null;
+  market_cap: number | null;
+  market_cap_formatted: string;
+  price: number | null;
 }
