@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useParams, useNavigate, useBlocker } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { companies, verdicts } from "@/api/endpoints";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQueryClient } from "@tanstack/react-query";
 import { ControlsBar } from "@/components/analyzer/ControlsBar";
@@ -41,6 +41,7 @@ export default function AnalyzerPage() {
     data: _metrics,
     isLoading: _isLoadingMetrics,
     error: metricsError,
+    refetch: refetchMetrics,
   } = useQuery({
     queryKey: ["metrics", companyId, periodType, periodCount],
     queryFn: () =>
@@ -55,6 +56,7 @@ export default function AnalyzerPage() {
     data: _documents,
     isLoading: _isLoadingDocs,
     error: docsError,
+    refetch: refetchDocuments,
   } = useQuery({
     queryKey: ["documents", companyId],
     queryFn: () => companies.getDocuments(companyId!),
@@ -65,11 +67,36 @@ export default function AnalyzerPage() {
     data: _verdict,
     isLoading: _isLoadingVerdict,
     error: verdictError,
+    refetch: refetchVerdict,
   } = useQuery({
     queryKey: ["verdict", companyId],
     queryFn: () => verdicts.get(companyId!),
     enabled: !!companyId,
   });
+
+  // Memoized handlers for performance
+  const handlePeriodTypeChange = useCallback((type: string) => {
+    setPeriodType(type as "quarterly" | "annual");
+  }, []);
+
+  const handlePeriodCountChange = useCallback((count: number) => {
+    setPeriodCount(count);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["company", companyId] });
+    queryClient.invalidateQueries({ queryKey: ["metrics", companyId] });
+    queryClient.invalidateQueries({ queryKey: ["documents", companyId] });
+    queryClient.invalidateQueries({ queryKey: ["verdict", companyId] });
+  }, [queryClient, companyId]);
+
+  const handleClose = useCallback(() => {
+    navigate("/");
+  }, [navigate]);
+
+  const handleVerdictSaved = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ["verdict", companyId] });
+  }, [queryClient, companyId]);
 
   // Navigation Blocking Logic
   const hasVerdict = !!_verdict?.final_verdict;
@@ -77,7 +104,13 @@ export default function AnalyzerPage() {
   const shouldBlock = isDataLoaded && (isFormDirty || !hasVerdict);
 
   const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
+    ({
+      currentLocation,
+      nextLocation,
+    }: {
+      currentLocation: { pathname: string };
+      nextLocation: { pathname: string };
+    }) =>
       shouldBlock && currentLocation.pathname !== nextLocation.pathname,
   );
 
@@ -148,22 +181,19 @@ export default function AnalyzerPage() {
   const anyError = companyError || metricsError || docsError || verdictError;
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans">
+    <div
+      className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 font-sans"
+      role="main"
+      aria-label="Analyzer Module"
+    >
       <ControlsBar
         company={company}
         periodType={periodType}
         periodCount={periodCount}
-        onPeriodTypeChange={(type: string) =>
-          setPeriodType(type as "quarterly" | "annual")
-        }
-        onPeriodCountChange={setPeriodCount}
-        onRefresh={() => {
-          queryClient.invalidateQueries({ queryKey: ["company", companyId] });
-          queryClient.invalidateQueries({ queryKey: ["metrics", companyId] });
-          queryClient.invalidateQueries({ queryKey: ["documents", companyId] });
-          queryClient.invalidateQueries({ queryKey: ["verdict", companyId] });
-        }}
-        onClose={() => navigate("/")}
+        onPeriodTypeChange={handlePeriodTypeChange}
+        onPeriodCountChange={handlePeriodCountChange}
+        onRefresh={handleRefresh}
+        onClose={handleClose}
       />
 
       <main
@@ -171,27 +201,71 @@ export default function AnalyzerPage() {
         className="flex-1 flex flex-col overflow-y-auto container max-w-[1600px] mx-auto px-6 py-4 gap-6 scroll-smooth"
       >
         {anyError ? (
-          <div className="flex-1 flex items-center justify-center p-8">
+          <div
+            className="flex-1 flex items-center justify-center p-8"
+            role="alert"
+            aria-live="assertive"
+          >
             <div className="max-w-md w-full">
               <Alert
                 variant="destructive"
                 className="shadow-lg border-2 bg-white dark:bg-slate-900"
               >
-                <AlertCircle className="h-5 w-5" />
+                <AlertCircle className="h-5 w-5" aria-hidden="true" />
                 <AlertTitle className="text-lg font-bold">
                   Error Loading Data
                 </AlertTitle>
                 <AlertDescription className="mt-2 text-sm opacity-90">
-                  We encountered a problem fetching the financial data for this
-                  company. Please check your connection or try again later.
+                  {metricsError && <p>Metrics: Failed to load metrics data.</p>}
+                  {docsError && <p>Documents: Failed to load document data.</p>}
+                  {verdictError && <p>Verdict: Failed to load verdict data.</p>}
+                  {companyError && <p>Company: Failed to load company details.</p>}
+                  <p className="mt-2">Please check your connection or try again.</p>
                 </AlertDescription>
-                <Button
-                  variant="outline"
-                  className="mt-4 w-full border-destructive/50 hover:bg-destructive/10"
-                  onClick={() => queryClient.refetchQueries()}
-                >
-                  Retry Refetch
-                </Button>
+                <div className="mt-4 space-y-2">
+                  {metricsError && (
+                    <Button
+                      variant="outline"
+                      className="w-full border-destructive/50 hover:bg-destructive/10"
+                      onClick={() => refetchMetrics()}
+                      aria-label="Retry loading metrics"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                      Retry Metrics
+                    </Button>
+                  )}
+                  {docsError && (
+                    <Button
+                      variant="outline"
+                      className="w-full border-destructive/50 hover:bg-destructive/10"
+                      onClick={() => refetchDocuments()}
+                      aria-label="Retry loading documents"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                      Retry Documents
+                    </Button>
+                  )}
+                  {verdictError && (
+                    <Button
+                      variant="outline"
+                      className="w-full border-destructive/50 hover:bg-destructive/10"
+                      onClick={() => refetchVerdict()}
+                      aria-label="Retry loading verdict"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                      Retry Verdict
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="w-full border-destructive/50 hover:bg-destructive/10"
+                    onClick={() => queryClient.refetchQueries()}
+                    aria-label="Retry all data"
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                    Retry All
+                  </Button>
+                </div>
               </Alert>
             </div>
           </div>
@@ -289,12 +363,7 @@ export default function AnalyzerPage() {
                     ref={verdictFormRef}
                     companyId={companyId!}
                     initialData={_verdict!}
-                    onSaved={() => {
-                      queryClient.invalidateQueries({
-                        queryKey: ["verdict", companyId],
-                      });
-                      // Also refresh history if we had that pane
-                    }}
+                    onSaved={handleVerdictSaved}
                     onDirtyChange={setIsFormDirty}
                   />
                 )}
