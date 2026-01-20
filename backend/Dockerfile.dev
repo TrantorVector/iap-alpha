@@ -20,15 +20,15 @@ COPY Cargo.toml Cargo.lock ./
 
 # Copy all member manifests
 COPY api/Cargo.toml api/
-COPY core/Cargo.toml core/
+COPY domain/Cargo.toml domain/
 COPY db/Cargo.toml db/
 COPY worker/Cargo.toml worker/
 COPY providers/Cargo.toml providers/
 
 # Create dummy source files for all members so cargo build can compile dependencies
-RUN mkdir -p api/src core/src db/src worker/src providers/src && \
+RUN mkdir -p api/src domain/src db/src worker/src providers/src && \
     echo "fn main() {}" > api/src/main.rs && \
-    touch core/src/lib.rs && \
+    touch domain/src/lib.rs && \
     touch db/src/lib.rs && \
     touch worker/src/lib.rs && \
     touch providers/src/lib.rs
@@ -38,7 +38,7 @@ RUN mkdir -p api/src core/src db/src worker/src providers/src && \
 RUN cargo build
 
 # Clean up dummy sources
-RUN rm -rf api/src core/src db/src worker/src providers/src
+RUN rm -rf api/src domain/src db/src worker/src providers/src
 
 # --- SOURCE CODE LAYER ---
 # Copy actual source code

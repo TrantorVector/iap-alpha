@@ -1,0 +1,15 @@
+{
+    "name": "iap-alpha",
+    "version": "1.0.0",
+    "description": "Investment Analysis Platform",
+    "private": true,
+    "scripts": {
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "test:e2e:headed": "playwright test --headed",
+        "test:e2e:debug": "playwright test --debug"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.48.0"
+    }
+}
