@@ -265,7 +265,7 @@ Use react-hook-form for form management.
 
 ---
 
-### Step 9.6: Results Table
+### Step 9.6: Results Table [COMPLETED]
 
 ---
 
@@ -308,7 +308,7 @@ Create `frontend/src/components/screener/ResultRow.tsx`:
    - Color coding for momentum
 ```
 
-**Verification**: Results table shows data with sorting.
+**Verification**: Results table shows data with sorting. [PASSED]
 
 ---
 
