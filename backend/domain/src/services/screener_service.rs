@@ -181,7 +181,7 @@ mod tests {
         let sql = query_builder.sql();
 
         assert!(sql.contains("AND c.exchange = ANY("));
-        assert!(sql.contains("AND m.market_cap >="));
-        assert!(sql.contains("ORDER BY m.market_cap DESC"));
+        assert!(sql.contains("AND c.market_cap >= "));
+        assert!(sql.contains("ORDER BY c.market_cap DESC"));
     }
 }
