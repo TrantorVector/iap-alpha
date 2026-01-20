@@ -73,3 +73,21 @@ export const verdicts = {
       `/companies/${companyId}/verdict/history`,
     ),
 };
+export const screeners = {
+  list: () => client.get<T.Screener[]>("/screeners"),
+
+  get: (id: string) => client.get<T.Screener>(`/screeners/${id}`),
+
+  create: (screener: T.CreateScreener) =>
+    client.post<T.Screener>("/screeners", screener),
+
+  update: (id: string, screener: T.UpdateScreener) =>
+    client.put<T.Screener>(`/screeners/${id}`, screener),
+
+  delete: (id: string) => client.delete<void>(`/screeners/${id}`),
+
+  run: (id: string, overrideCriteria?: T.FilterCriteria) =>
+    client.post<T.ScreenerResultsResponse>(`/screeners/${id}/run`, {
+      override_criteria: overrideCriteria,
+    }),
+};

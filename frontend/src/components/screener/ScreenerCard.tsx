@@ -18,7 +18,7 @@ export function ScreenerCard({ screener, onRun, onEdit, onDelete, isSelected }: 
         >
             <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
-                    <CardTitle className="text-base font-medium leading-none">{screener.name}</CardTitle>
+                    <CardTitle className="text-base font-medium leading-none">{screener.title}</CardTitle>
                 </div>
                 <CardDescription className="line-clamp-2 text-xs mt-1">
                     {screener.description || "No description provided."}

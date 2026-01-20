@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { ScreenerList } from "@/components/screener/ScreenerList";
-import { Screener, ScreenerResult } from "@/api/types";
-import { client } from "@/api/client";
+import { ScreenerEditor } from "@/components/screener/ScreenerEditor";
+import { Screener, ScreenerResult, CreateScreener } from "@/api/types";
+import { screeners as screenersApi } from "@/api/endpoints";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,9 @@ export default function ScreenerPage() {
     const [selectedScreener, setSelectedScreener] = useState<Screener | null>(null);
     const [results, setResults] = useState<ScreenerResult[]>([]);
     const [isRunning, setIsRunning] = useState(false);
-    const [, setIsLoadingList] = useState(false); // Used for initial loading state
+    const [isLoadingList, setIsLoadingList] = useState(false);
+    const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [editorMode, setEditorMode] = useState<'create' | 'edit'>('create');
     const { toast } = useToast();
 
     useEffect(() => {
@@ -23,16 +26,13 @@ export default function ScreenerPage() {
     const fetchScreeners = async () => {
         setIsLoadingList(true);
         try {
-            // Try to fetch screeners, if endpoint assumes empty array if 404 or empty
-            const data = await client.get<Screener[]>("/screener/screeners");
+            const data = await screenersApi.list();
             setScreeners(data);
             if (data && data.length > 0 && !selectedScreener) {
                 setSelectedScreener(data[0]);
             }
         } catch (error) {
             console.error("Failed to fetch screeners", error);
-            // Suppress error toast for now as backend might be empty or in dev
-            // But log it.
         } finally {
             setIsLoadingList(false);
         }
@@ -40,20 +40,18 @@ export default function ScreenerPage() {
 
     const handleRunScreener = async (id: string) => {
         setIsRunning(true);
-        // Find the screener to ensure we select it if not already
         const screenerToRun = screeners.find(s => s.id === id);
         if (screenerToRun) {
             setSelectedScreener(screenerToRun);
         }
 
         try {
-            const data = await client.post<ScreenerResult[]>(`/screener/screeners/${id}/execute`);
-            setResults(data);
+            const data = await screenersApi.run(id);
+            setResults(data.results);
             toast({
                 title: "Success",
-                description: `Screener executed successfully. Found ${data.length} results.`,
+                description: `Screener executed successfully. Found ${data.total_results} results.`,
             });
-            // Refresh screeners to update last_run_at
             fetchScreeners();
         } catch (error) {
             console.error("Failed to run screener", error);
@@ -69,7 +67,7 @@ export default function ScreenerPage() {
 
     const handleDeleteScreener = async (id: string) => {
         try {
-            await client.delete(`/screener/screeners/${id}`);
+            await screenersApi.delete(id);
             setScreeners(prev => prev.filter(s => s.id !== id));
             if (selectedScreener?.id === id) {
                 const remaining = screeners.filter(s => s.id !== id);
@@ -91,22 +89,42 @@ export default function ScreenerPage() {
     };
 
     const handleCreateScreener = () => {
-        toast({
-            title: "Not Implemented",
-            description: "Create screener functionality coming soon",
-        });
+        setEditorMode('create');
+        setIsEditorOpen(true);
     };
 
     const handleEditScreener = (screener: Screener) => {
-        toast({
-            title: "Not Implemented",
-            description: `Edit functionality for ${screener.name} coming soon`,
-        });
+        setSelectedScreener(screener);
+        setEditorMode('edit');
+        setIsEditorOpen(true);
+    };
+
+    const handleSaveScreener = async (data: CreateScreener) => {
+        try {
+            if (editorMode === 'create') {
+                const newScreener = await screenersApi.create(data);
+                setScreeners(prev => [...prev, newScreener]);
+                setSelectedScreener(newScreener);
+                toast({ title: "Success", description: "Screener created" });
+            } else if (selectedScreener) {
+                const updatedScreener = await screenersApi.update(selectedScreener.id, data);
+                setScreeners(prev => prev.map(s => s.id === updatedScreener.id ? updatedScreener : s));
+                setSelectedScreener(updatedScreener);
+                toast({ title: "Success", description: "Screener updated" });
+            }
+            setIsEditorOpen(false);
+        } catch (error) {
+            console.error("Failed to save screener", error);
+            toast({
+                title: "Error",
+                description: "Failed to save screener",
+                variant: "destructive",
+            });
+        }
     };
 
     return (
         <div className="flex h-full w-full pt-4">
-            {/* Left Pane: List - 30% */}
             <div className="w-[30%] h-full min-w-[300px] max-w-[400px] flex flex-col">
                 <ScreenerList
                     screeners={screeners}
@@ -114,7 +132,7 @@ export default function ScreenerPage() {
                     onSelect={(s) => {
                         if (selectedScreener?.id !== s.id) {
                             setSelectedScreener(s);
-                            setResults([]); // Clear results on new selection
+                            setResults([]);
                         }
                     }}
                     onCreate={handleCreateScreener}
@@ -124,14 +142,19 @@ export default function ScreenerPage() {
                 />
             </div>
 
-            {/* Right Pane: Results - 70% */}
             <div className="flex-1 h-full overflow-hidden flex flex-col px-6 pb-6">
-                {selectedScreener ? (
+                {isLoadingList ? (
+                    <div className="flex h-full items-center justify-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                ) : selectedScreener ? (
                     <div className="flex flex-col h-full gap-4 animate-in fade-in duration-500">
                         <div className="flex justify-between items-start">
-                            <div>
-                                <h1 className="text-3xl font-bold tracking-tight">{selectedScreener.name}</h1>
-                                <p className="text-muted-foreground mt-1 text-sm">{selectedScreener.description}</p>
+                            <div className="max-w-[70%]">
+                                <h1 className="text-3xl font-bold tracking-tight truncate" title={selectedScreener.title}>
+                                    {selectedScreener.title}
+                                </h1>
+                                <p className="text-muted-foreground mt-1 text-sm line-clamp-2">{selectedScreener.description}</p>
                             </div>
                             <Button onClick={() => handleRunScreener(selectedScreener.id)} disabled={isRunning}>
                                 {isRunning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
@@ -163,7 +186,9 @@ export default function ScreenerPage() {
                                         <TableBody>
                                             {results.map((result) => (
                                                 <TableRow key={result.company_id} className="hover:bg-muted/10">
-                                                    <TableCell className="font-medium">{result.symbol}</TableCell>
+                                                    <TableCell className="font-medium text-primary cursor-pointer hover:underline" onClick={() => window.location.href = `/analyzer/${result.company_id}`}>
+                                                        {result.symbol}
+                                                    </TableCell>
                                                     <TableCell className="max-w-[200px] truncate" title={result.name}>{result.name}</TableCell>
                                                     <TableCell>{result.market_cap_formatted}</TableCell>
                                                     <TableCell>{result.sector || "-"}</TableCell>
@@ -194,6 +219,14 @@ export default function ScreenerPage() {
                     </div>
                 )}
             </div>
+
+            <ScreenerEditor
+                open={isEditorOpen}
+                mode={editorMode}
+                initialData={selectedScreener}
+                onSave={handleSaveScreener}
+                onClose={() => setIsEditorOpen(false)}
+            />
         </div>
     );
 }

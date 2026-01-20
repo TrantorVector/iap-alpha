@@ -142,20 +142,52 @@ export interface ApiErrorResponse {
 }
 
 export interface FilterCriteria {
-  min_market_cap?: number;
-  max_market_cap?: number;
+  market_cap_min?: number;
+  market_cap_max?: number;
   exchanges?: string[];
   sectors?: string[];
+  momentum_1m_min?: number;
+  momentum_3m_min?: number;
+  momentum_6m_min?: number;
+  verdict_types?: string[];
+  has_verdict?: boolean;
 }
 
 export interface Screener {
   id: string;
-  name: string;
+  title: string;
   description: string | null;
-  criteria: FilterCriteria;
-  last_run_at: string | null;
+  filter_criteria: FilterCriteria;
+  sort_config: any;
+  display_columns: any;
+  display_order: number | null;
   created_at: string;
   updated_at: string;
+  // This is a UI field, backend doesn't have it in the main table but ScreenerResultsResponse has executed_at
+  last_run_at?: string | null;
+}
+
+export interface CreateScreener {
+  title: string;
+  description?: string;
+  filter_criteria: FilterCriteria;
+  sort_config?: any;
+  display_columns?: any;
+}
+
+export interface UpdateScreener {
+  title?: string;
+  description?: string;
+  filter_criteria?: FilterCriteria;
+  sort_config?: any;
+  display_columns?: any;
+}
+
+export interface ScreenerResultsResponse {
+  screener_id: string;
+  executed_at: string;
+  total_results: number;
+  results: ScreenerResult[];
 }
 
 export interface ScreenerResult {
