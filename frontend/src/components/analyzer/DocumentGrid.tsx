@@ -236,29 +236,39 @@ export const DocumentGrid = memo(function DocumentGrid({
     }
   }, []);
 
-  const handleDownload = useCallback(async (doc: Document) => {
-    try {
-      const { download_url } = await companies.getDownloadUrl(
-        companyId,
-        doc.id,
-      );
-      window.open(download_url, "_blank");
-    } catch {
-      toast({
-        title: "Error",
-        description: "Failed to get download URL",
-        variant: "destructive",
-      });
-    }
-  }, [companyId]);
+  const handleDownload = useCallback(
+    async (doc: Document) => {
+      try {
+        const { download_url } = await companies.getDownloadUrl(
+          companyId,
+          doc.id,
+        );
+        window.open(download_url, "_blank");
+      } catch {
+        toast({
+          title: "Error",
+          description: "Failed to get download URL",
+          variant: "destructive",
+        });
+      }
+    },
+    [companyId],
+  );
 
-  const handleUpload = useCallback((file: File, period: string) => {
-    uploadMutation.mutate({ file, period });
-  }, [uploadMutation]);
+  const handleUpload = useCallback(
+    (file: File, period: string) => {
+      uploadMutation.mutate({ file, period });
+    },
+    [uploadMutation],
+  );
 
   if (isLoading && !data) {
     return (
-      <div className="p-4 space-y-4" role="status" aria-label="Loading documents">
+      <div
+        className="p-4 space-y-4"
+        role="status"
+        aria-label="Loading documents"
+      >
         <div className="flex justify-between">
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-6 w-24" />
@@ -306,7 +316,11 @@ export const DocumentGrid = memo(function DocumentGrid({
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <table className="w-full text-sm text-left" role="table" aria-label="Document repository grid">
+          <table
+            className="w-full text-sm text-left"
+            role="table"
+            aria-label="Document repository grid"
+          >
             <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
               <tr>
                 <th

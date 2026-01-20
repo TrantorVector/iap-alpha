@@ -111,7 +111,10 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
               value={String(periodCount)}
               onValueChange={(val) => onPeriodCountChange(parseInt(val))}
             >
-              <SelectTrigger className="h-8 w-[70px] text-xs bg-slate-100/50 dark:bg-slate-800/50 border-none" aria-label="Period count">
+              <SelectTrigger
+                className="h-8 w-[70px] text-xs bg-slate-100/50 dark:bg-slate-800/50 border-none"
+                aria-label="Period count"
+              >
                 <SelectValue placeholder="Count" />
               </SelectTrigger>
               <SelectContent>

@@ -14,8 +14,8 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: test_db
+          POSTGRES_PASSWORD: dev
+          POSTGRES_DB: irp_dev
         ports:
           - 5432:5432
         options: >-
@@ -48,12 +48,12 @@ jobs:
       - name: Run migrations
         run: cd backend && sqlx migrate run --source db/migrations
         env:
-          DATABASE_URL: postgres://postgres:password@localhost:5432/test_db
+          DATABASE_URL: postgres://postgres:dev@localhost:5432/irp_dev
       
       - name: Run tests
         run: cd backend && cargo test --workspace -- --test-threads=1
         env:
-          DATABASE_URL: postgres://postgres:password@localhost:5432/test_db
+          DATABASE_URL: postgres://postgres:dev@localhost:5432/irp_dev
 
   check-frontend:
     runs-on: ubuntu-latest

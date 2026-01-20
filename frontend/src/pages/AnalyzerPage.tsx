@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate, useBlocker } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { companies, verdicts } from "@/api/endpoints";
@@ -110,8 +110,7 @@ export default function AnalyzerPage() {
     }: {
       currentLocation: { pathname: string };
       nextLocation: { pathname: string };
-    }) =>
-      shouldBlock && currentLocation.pathname !== nextLocation.pathname,
+    }) => shouldBlock && currentLocation.pathname !== nextLocation.pathname,
   );
 
   useEffect(() => {
@@ -219,8 +218,12 @@ export default function AnalyzerPage() {
                   {metricsError && <p>Metrics: Failed to load metrics data.</p>}
                   {docsError && <p>Documents: Failed to load document data.</p>}
                   {verdictError && <p>Verdict: Failed to load verdict data.</p>}
-                  {companyError && <p>Company: Failed to load company details.</p>}
-                  <p className="mt-2">Please check your connection or try again.</p>
+                  {companyError && (
+                    <p>Company: Failed to load company details.</p>
+                  )}
+                  <p className="mt-2">
+                    Please check your connection or try again.
+                  </p>
                 </AlertDescription>
                 <div className="mt-4 space-y-2">
                   {metricsError && (

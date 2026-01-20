@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AnalyzerPage from "@/pages/AnalyzerPage";
+import ScreenerPage from "@/pages/ScreenerPage";
 import { Toaster } from "@/components/ui/toaster";
 
 function HomePage() {
@@ -114,9 +115,14 @@ const router = createBrowserRouter([
         path: "/",
         element: <HomePage />,
       },
+
       {
         path: "/analyzer/:companyId",
         element: <AnalyzerPage />,
+      },
+      {
+        path: "/screener",
+        element: <ScreenerPage />,
       },
       {
         path: "*",

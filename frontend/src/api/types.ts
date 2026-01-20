@@ -139,3 +139,71 @@ export interface ApiErrorResponse {
   error: string;
   details?: unknown;
 }
+
+export interface FilterCriteria {
+  market_cap_min?: number;
+  market_cap_max?: number;
+  exchanges?: string[];
+  sectors?: string[];
+  momentum_1m_min?: number;
+  momentum_3m_min?: number;
+  momentum_6m_min?: number;
+  verdict_types?: string[];
+  has_verdict?: boolean;
+}
+
+export interface Screener {
+  id: string;
+  title: string;
+  description: string | null;
+  filter_criteria: FilterCriteria;
+  sort_config: Record<string, unknown>;
+  display_columns: Record<string, unknown>;
+  display_order: number | null;
+  created_at: string;
+  updated_at: string;
+  // This is a UI field, backend doesn't have it in the main table but ScreenerResultsResponse has executed_at
+  last_run_at?: string | null;
+}
+
+export interface CreateScreener {
+  title: string;
+  description?: string;
+  filter_criteria: FilterCriteria;
+  sort_config?: Record<string, unknown>;
+  display_columns?: Record<string, unknown>;
+}
+
+export interface UpdateScreener {
+  title?: string;
+  description?: string;
+  filter_criteria?: FilterCriteria;
+  sort_config?: Record<string, unknown>;
+  display_columns?: Record<string, unknown>;
+}
+
+export interface ScreenerResultsResponse {
+  screener_id: string;
+  executed_at: string;
+  total_results: number;
+  results: ScreenerResult[];
+}
+
+export interface ScreenerResult {
+  company_id: string;
+  symbol: string;
+  company_name: string;
+  exchange: string;
+  sector: string | null;
+  industry: string | null;
+  market_cap: number;
+  market_cap_formatted: string;
+  momentum_1m: number | null;
+  momentum_3m: number | null;
+  momentum_6m: number | null;
+  revenue_yoy_growth: number | null;
+  operating_margin: number | null;
+  verdict: string | null;
+  last_analyzed: string | null;
+  guidance_summary: string | null;
+}

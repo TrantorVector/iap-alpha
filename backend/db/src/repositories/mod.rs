@@ -1,5 +1,6 @@
 pub mod company;
 pub mod document;
+pub mod screener_repository;
 /// Database repositories
 ///
 /// This module contains repository pattern implementations for data access.
@@ -13,5 +14,6 @@ pub use company::{
     DailyPriceInsert, IncomeStatementInsert, Pagination,
 };
 pub use document::{CreateDocumentParams, DocumentRepository};
+pub use screener_repository::{CreateScreener, ScreenerRepository, UpdateScreener};
 pub use user::{CreateUserRequest, UserPreferencesUpdate, UserRepository};
 pub use verdict::{VerdictCreate, VerdictRepository, VerdictUpdate};
