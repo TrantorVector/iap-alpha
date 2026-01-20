@@ -135,7 +135,6 @@ export interface DownloadResponse {
   content_type: string;
 }
 
-
 export interface ApiErrorResponse {
   error: string;
   details?: unknown;
@@ -208,4 +207,3 @@ export interface ScreenerResult {
   last_analyzed: string | null;
   guidance_summary: string | null;
 }
-

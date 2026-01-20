@@ -73,7 +73,11 @@ const MetricSectionComponent = memo(function MetricSectionComponent({
       {/* Section content */}
       {!isCollapsed && (
         <div className="overflow-x-auto">
-          <table className="w-full" role="table" aria-label={`${title} metrics`}>
+          <table
+            className="w-full"
+            role="table"
+            aria-label={`${title} metrics`}
+          >
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50/50">
                 <th
