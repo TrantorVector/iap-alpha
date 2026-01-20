@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { ScreenerList } from "@/components/screener/ScreenerList";
 import { ScreenerEditor } from "@/components/screener/ScreenerEditor";
+import { ResultsTable } from "@/components/screener/ResultsTable";
 import { Screener, ScreenerResult, CreateScreener } from "@/api/types";
 import { screeners as screenersApi } from "@/api/endpoints";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Play } from "lucide-react";
@@ -163,50 +163,16 @@ export default function ScreenerPage() {
                         </div>
 
                         <Card className="flex-1 overflow-hidden flex flex-col border-muted">
-                            <CardHeader className="py-3 px-4 border-b bg-muted/20">
-                                <CardTitle className="text-sm font-medium">Results {results.length > 0 && `(${results.length})`}</CardTitle>
+                            <CardHeader className="py-2 px-4 border-b bg-muted/20 flex flex-row items-center justify-between">
+                                <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Results {results.length > 0 && `(${results.length})`}
+                                </CardTitle>
                             </CardHeader>
                             <CardContent className="flex-1 overflow-auto p-0">
-                                {isRunning ? (
-                                    <div className="flex h-full items-center justify-center flex-col gap-2">
-                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                                        <p className="text-sm text-muted-foreground">Running screener...</p>
-                                    </div>
-                                ) : results.length > 0 ? (
-                                    <Table>
-                                        <TableHeader className="bg-muted/10 sticky top-0 z-10">
-                                            <TableRow>
-                                                <TableHead>Symbol</TableHead>
-                                                <TableHead>Name</TableHead>
-                                                <TableHead>Market Cap</TableHead>
-                                                <TableHead>Sector</TableHead>
-                                                <TableHead>Exchange</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {results.map((result) => (
-                                                <TableRow key={result.company_id} className="hover:bg-muted/10">
-                                                    <TableCell className="font-medium text-primary cursor-pointer hover:underline" onClick={() => window.location.href = `/analyzer/${result.company_id}`}>
-                                                        {result.symbol}
-                                                    </TableCell>
-                                                    <TableCell className="max-w-[200px] truncate" title={result.name}>{result.name}</TableCell>
-                                                    <TableCell>{result.market_cap_formatted}</TableCell>
-                                                    <TableCell>{result.sector || "-"}</TableCell>
-                                                    <TableCell>{result.exchange}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                ) : (
-                                    <div className="flex h-full items-center justify-center text-muted-foreground flex-col gap-2">
-                                        <div className="p-4 bg-muted/20 rounded-full">
-                                            <Play className="h-6 w-6 text-muted-foreground/50" />
-                                        </div>
-                                        <p>Run the screener to see matches.</p>
-                                    </div>
-                                )}
+                                <ResultsTable results={results} isLoading={isRunning} />
                             </CardContent>
                         </Card>
+
                     </div>
                 ) : (
                     <div className="flex h-full items-center justify-center text-muted-foreground bg-muted/5 rounded-lg border border-dashed m-4">

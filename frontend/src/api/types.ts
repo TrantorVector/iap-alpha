@@ -193,10 +193,19 @@ export interface ScreenerResultsResponse {
 export interface ScreenerResult {
   company_id: string;
   symbol: string;
-  name: string;
+  company_name: string;
   exchange: string;
   sector: string | null;
-  market_cap: number | null;
+  industry: string | null;
+  market_cap: number;
   market_cap_formatted: string;
-  price: number | null;
+  momentum_1m: number | null;
+  momentum_3m: number | null;
+  momentum_6m: number | null;
+  revenue_yoy_growth: number | null;
+  operating_margin: number | null;
+  verdict: string | null;
+  last_analyzed: string | null;
+  guidance_summary: string | null;
 }
+
