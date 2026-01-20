@@ -1,12 +1,12 @@
 pub mod company;
 pub mod document;
+pub mod screener_repository;
 /// Database repositories
 ///
 /// This module contains repository pattern implementations for data access.
 /// Each repository handles CRUD operations for a specific entity.
 pub mod user;
 pub mod verdict;
-pub mod screener_repository;
 
 // Re-export commonly used repositories
 pub use company::{

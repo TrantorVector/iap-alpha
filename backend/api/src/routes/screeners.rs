@@ -9,9 +9,7 @@ use axum::{
 };
 use chrono::{DateTime, Utc};
 use db::models::screener::Screener;
-use db::repositories::screener_repository::{
-    CreateScreener, ScreenerRepository, UpdateScreener,
-};
+use db::repositories::screener_repository::{CreateScreener, ScreenerRepository, UpdateScreener};
 use domain::services::screener_service::{FilterCriteria, ScreenerResult, ScreenerService};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
@@ -22,7 +20,9 @@ pub fn screeners_router() -> Router<AppState> {
         .route("/", get(list_screeners).post(create_screener))
         .route(
             "/:id",
-            get(get_screener).put(update_screener).delete(delete_screener),
+            get(get_screener)
+                .put(update_screener)
+                .delete(delete_screener),
         )
         .route("/:id/run", post(run_screener))
 }
@@ -73,14 +73,14 @@ pub struct CreateScreenerRequest {
     pub display_columns: Option<serde_json::Value>,
 }
 
-impl Into<CreateScreener> for CreateScreenerRequest {
-    fn into(self) -> CreateScreener {
+impl From<CreateScreenerRequest> for CreateScreener {
+    fn from(val: CreateScreenerRequest) -> Self {
         CreateScreener {
-            title: self.title,
-            description: self.description,
-            filter_criteria: self.filter_criteria,
-            sort_config: self.sort_config,
-            display_columns: self.display_columns,
+            title: val.title,
+            description: val.description,
+            filter_criteria: val.filter_criteria,
+            sort_config: val.sort_config,
+            display_columns: val.display_columns,
         }
     }
 }
@@ -97,14 +97,14 @@ pub struct UpdateScreenerRequest {
     pub display_columns: Option<serde_json::Value>,
 }
 
-impl Into<UpdateScreener> for UpdateScreenerRequest {
-    fn into(self) -> UpdateScreener {
+impl From<UpdateScreenerRequest> for UpdateScreener {
+    fn from(val: UpdateScreenerRequest) -> Self {
         UpdateScreener {
-            title: self.title,
-            description: self.description,
-            filter_criteria: self.filter_criteria,
-            sort_config: self.sort_config,
-            display_columns: self.display_columns,
+            title: val.title,
+            description: val.description,
+            filter_criteria: val.filter_criteria,
+            sort_config: val.sort_config,
+            display_columns: val.display_columns,
         }
     }
 }
@@ -138,7 +138,7 @@ pub async fn list_screeners(
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
     let user_id = Uuid::parse_str(&claims.sub)
         .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid user ID".to_string()))?;
-        
+
     let repo = ScreenerRepository::new(state.db.clone());
     let screeners = repo
         .list_by_user(user_id)
@@ -231,10 +231,11 @@ pub async fn update_screener(
 
     // Check existence first
     let repo = ScreenerRepository::new(state.db.clone());
-    
-    let existing = repo.find_by_id(id, user_id)
+
+    let existing = repo
+        .find_by_id(id, user_id)
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?; 
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     if existing.is_none() {
         return Err((StatusCode::NOT_FOUND, "Screener not found".to_string()));
@@ -305,7 +306,7 @@ pub async fn run_screener(
         .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid user ID".to_string()))?;
 
     let repo = ScreenerRepository::new(state.db.clone());
-    
+
     // 1. Fetch screener definition
     let screener = repo
         .find_by_id(id, user_id)
@@ -318,14 +319,22 @@ pub async fn run_screener(
         if let Some(override_criteria) = req.override_criteria {
             override_criteria
         } else {
-             // Parse from screener.filter_criteria
-             serde_json::from_value(screener.filter_criteria)
-                .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Invalid stored criteria: {}", e)))?
+            // Parse from screener.filter_criteria
+            serde_json::from_value(screener.filter_criteria).map_err(|e| {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Invalid stored criteria: {}", e),
+                )
+            })?
         }
     } else {
-         // Parse from screener.filter_criteria
-         serde_json::from_value(screener.filter_criteria)
-            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Invalid stored criteria: {}", e)))?
+        // Parse from screener.filter_criteria
+        serde_json::from_value(screener.filter_criteria).map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Invalid stored criteria: {}", e),
+            )
+        })?
     };
 
     // 3. Execute screener

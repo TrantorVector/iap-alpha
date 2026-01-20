@@ -32,8 +32,8 @@ pub struct ScreenerResult {
     // If strict requirement implies it comes from DB, we might need a SQL function or backend logic.
     // For now, let's calculate it or leave it as a string field if the view provides it.
     // Given the prompt asks for it in the struct, I'll add the field but we might need to compute it.
-    #[sqlx(default)] 
-    pub market_cap_formatted: String, 
+    #[sqlx(default)]
+    pub market_cap_formatted: String,
     pub momentum_1m: Option<f64>,
     pub momentum_3m: Option<f64>,
     pub momentum_6m: Option<f64>,
@@ -56,8 +56,9 @@ impl ScreenerService {
     pub async fn execute(&self, criteria: FilterCriteria) -> Result<Vec<ScreenerResult>, AppError> {
         let mut query_builder = Self::build_query(&criteria);
         let query = query_builder.build_query_as::<ScreenerResult>();
-        
-        let mut results = query.fetch_all(&self.pool)
+
+        let mut results = query
+            .fetch_all(&self.pool)
             .await
             .map_err(AppError::DatabaseError)?;
 
@@ -96,7 +97,7 @@ impl ScreenerService {
             -- LEFT JOIN market_data m ON c.id = m.company_id -- Table does not exist
             -- LEFT JOIN financial_metrics ...
             WHERE 1=1
-            "#
+            "#,
         );
 
         if let Some(exchanges) = &criteria.exchanges {

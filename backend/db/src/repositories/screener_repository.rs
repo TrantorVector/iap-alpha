@@ -87,7 +87,12 @@ impl ScreenerRepository {
         Ok(created_screener)
     }
 
-    pub async fn update(&self, id: Uuid, user_id: Uuid, screener: UpdateScreener) -> DbResult<Screener> {
+    pub async fn update(
+        &self,
+        id: Uuid,
+        user_id: Uuid,
+        screener: UpdateScreener,
+    ) -> DbResult<Screener> {
         let updated_screener = sqlx::query_as::<_, Screener>(
             r#"
             UPDATE screeners
