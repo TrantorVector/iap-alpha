@@ -1,20 +1,18 @@
 import { useState, useMemo } from "react";
 import {
   ColumnDef,
-  ColumnFiltersState,
   SortingState,
   VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
+  HeaderContext,
+  CellContext,
 } from "@tanstack/react-table";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -43,7 +41,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
     () => [
       {
         accessorKey: "symbol",
-        header: ({ column }: any) => (
+        header: ({ column }: HeaderContext<ScreenerResult, string>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -64,7 +62,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "market_cap",
-        header: ({ column }: any) => (
+        header: ({ column }: HeaderContext<ScreenerResult, number>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -74,11 +72,12 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }: any) => row.original.market_cap_formatted,
+        cell: ({ row }: CellContext<ScreenerResult, number>) =>
+          row.original.market_cap_formatted,
       },
       {
         accessorKey: "sector",
-        header: ({ column }: any) => (
+        header: ({ column }: HeaderContext<ScreenerResult, string | null>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -92,7 +91,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
 
       {
         accessorKey: "momentum_1m",
-        header: ({ column }: any) => (
+        header: ({ column }: HeaderContext<ScreenerResult, number | null>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -105,7 +104,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "momentum_3m",
-        header: ({ column }: any) => (
+        header: ({ column }: HeaderContext<ScreenerResult, number | null>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -118,7 +117,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "momentum_6m",
-        header: ({ column }: any) => (
+        header: ({ column }: HeaderContext<ScreenerResult, number | null>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -131,7 +130,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "revenue_yoy_growth",
-        header: ({ column }: any) => (
+        header: ({ column }: HeaderContext<ScreenerResult, number | null>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -144,7 +143,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "operating_margin",
-        header: ({ column }: any) => (
+        header: ({ column }: HeaderContext<ScreenerResult, number | null>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -157,7 +156,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "verdict",
-        header: ({ column }: any) => (
+        header: ({ column }: HeaderContext<ScreenerResult, string | null>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -170,7 +169,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "last_analyzed",
-        header: ({ column }: any) => (
+        header: ({ column }: HeaderContext<ScreenerResult, string | null>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -189,6 +188,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
     [],
   );
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: results,
     columns,
@@ -306,9 +306,9 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
                   </TableHead>
                 ))}
               </TableRow>

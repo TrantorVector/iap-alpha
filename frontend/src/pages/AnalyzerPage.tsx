@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate, useBlocker } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { companies, verdicts } from "@/api/endpoints";

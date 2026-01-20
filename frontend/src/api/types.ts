@@ -157,8 +157,8 @@ export interface Screener {
   title: string;
   description: string | null;
   filter_criteria: FilterCriteria;
-  sort_config: any;
-  display_columns: any;
+  sort_config: Record<string, unknown>;
+  display_columns: Record<string, unknown>;
   display_order: number | null;
   created_at: string;
   updated_at: string;
@@ -170,16 +170,16 @@ export interface CreateScreener {
   title: string;
   description?: string;
   filter_criteria: FilterCriteria;
-  sort_config?: any;
-  display_columns?: any;
+  sort_config?: Record<string, unknown>;
+  display_columns?: Record<string, unknown>;
 }
 
 export interface UpdateScreener {
   title?: string;
   description?: string;
   filter_criteria?: FilterCriteria;
-  sort_config?: any;
-  display_columns?: any;
+  sort_config?: Record<string, unknown>;
+  display_columns?: Record<string, unknown>;
 }
 
 export interface ScreenerResultsResponse {

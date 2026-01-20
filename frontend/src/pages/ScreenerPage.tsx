@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ScreenerList } from "@/components/screener/ScreenerList";
 import { ScreenerEditor } from "@/components/screener/ScreenerEditor";
 import { ResultsTable } from "@/components/screener/ResultsTable";
@@ -21,11 +21,7 @@ export default function ScreenerPage() {
   const [editorMode, setEditorMode] = useState<"create" | "edit">("create");
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchScreeners();
-  }, []);
-
-  const fetchScreeners = async () => {
+  const fetchScreeners = useCallback(async () => {
     setIsLoadingList(true);
     try {
       const data = await screenersApi.list();
@@ -38,7 +34,11 @@ export default function ScreenerPage() {
     } finally {
       setIsLoadingList(false);
     }
-  };
+  }, [selectedScreener]);
+
+  useEffect(() => {
+    fetchScreeners();
+  }, [fetchScreeners]);
 
   const handleRunScreener = async (id: string) => {
     setIsRunning(true);

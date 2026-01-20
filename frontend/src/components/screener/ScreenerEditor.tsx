@@ -172,7 +172,8 @@ export function ScreenerEditor({
     field: "exchanges" | "sectors" | "verdict_types",
     value: string,
   ) => {
-    const current = watch(`filter_criteria.${field}`) || [];
+    // eslint-disable-next-line react-hooks/incompatible-library
+    const current = (watch(`filter_criteria.${field}`) as string[]) || [];
     if (current.includes(value)) {
       setValue(
         `filter_criteria.${field}`,
