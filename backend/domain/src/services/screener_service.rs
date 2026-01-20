@@ -1,11 +1,12 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Postgres, QueryBuilder};
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::error::AppError;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct FilterCriteria {
     pub exchanges: Option<Vec<String>>,
     pub sectors: Option<Vec<String>>,
@@ -18,7 +19,7 @@ pub struct FilterCriteria {
     pub verdict_types: Option<Vec<String>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow, ToSchema)]
 pub struct ScreenerResult {
     pub company_id: Uuid,
     pub symbol: String,
@@ -76,25 +77,24 @@ impl ScreenerService {
                 c.symbol,
                 c.name as company_name,
                 c.exchange,
-                c.sector,
+                s.name as sector,
                 c.industry,
-                m.market_cap,
-                -- format market cap in application code usually, but we can placeholder it here
+                COALESCE(c.market_cap, 0)::float8 as market_cap,
                 '' as market_cap_formatted,
-                m.momentum_1m,
-                m.momentum_3m,
-                m.momentum_6m,
-                f.revenue_yoy_growth,
-                f.operating_margin,
-                a.verdict,
-                a.created_at as last_analyzed,
-                a.summary as guidance_summary
+                -- Placeholders for momentum until derived_metrics integration
+                NULL::float8 as momentum_1m,
+                NULL::float8 as momentum_3m,
+                NULL::float8 as momentum_6m,
+                NULL::float8 as revenue_yoy_growth,
+                NULL::float8 as operating_margin,
+                v.final_verdict as verdict,
+                v.updated_at as last_analyzed,
+                v.guidance_summary
             FROM companies c
-            LEFT JOIN market_data m ON c.id = m.company_id
-            LEFT JOIN financial_metrics f ON c.id = f.company_id
-                AND f.period = 'TTM' -- Assuming TTM for screener
-            LEFT JOIN analysis_results a ON c.id = a.company_id
-                AND a.is_latest = true
+            LEFT JOIN sectors s ON c.sector_id = s.id
+            LEFT JOIN verdicts v ON c.id = v.company_id
+            -- LEFT JOIN market_data m ON c.id = m.company_id -- Table does not exist
+            -- LEFT JOIN financial_metrics ...
             WHERE 1=1
             "#
         );
@@ -109,54 +109,41 @@ impl ScreenerService {
 
         if let Some(sectors) = &criteria.sectors {
             if !sectors.is_empty() {
-                query_builder.push(" AND c.sector = ANY(");
+                query_builder.push(" AND s.name = ANY(");
                 query_builder.push_bind(sectors.clone());
                 query_builder.push(")");
             }
         }
 
         if let Some(min) = criteria.market_cap_min {
-            query_builder.push(" AND m.market_cap >= ");
+            query_builder.push(" AND c.market_cap >= ");
             query_builder.push_bind(min);
         }
 
         if let Some(max) = criteria.market_cap_max {
-            query_builder.push(" AND m.market_cap <= ");
+            query_builder.push(" AND c.market_cap <= ");
             query_builder.push_bind(max);
         }
 
-        if let Some(min) = criteria.momentum_1m_min {
-            query_builder.push(" AND m.momentum_1m >= ");
-            query_builder.push_bind(min);
-        }
-
-        if let Some(min) = criteria.momentum_3m_min {
-            query_builder.push(" AND m.momentum_3m >= ");
-            query_builder.push_bind(min);
-        }
-
-        if let Some(min) = criteria.momentum_6m_min {
-            query_builder.push(" AND m.momentum_6m >= ");
-            query_builder.push_bind(min);
-        }
+        // Momentum filters ignored for now as columns are NULL
 
         if let Some(has_verdict) = criteria.has_verdict {
             if has_verdict {
-                query_builder.push(" AND a.verdict IS NOT NULL");
+                query_builder.push(" AND v.final_verdict IS NOT NULL");
             } else {
-                query_builder.push(" AND a.verdict IS NULL");
+                query_builder.push(" AND v.final_verdict IS NULL");
             }
         }
 
         if let Some(verdicts) = &criteria.verdict_types {
             if !verdicts.is_empty() {
-                query_builder.push(" AND a.verdict = ANY(");
+                query_builder.push(" AND v.final_verdict = ANY(");
                 query_builder.push_bind(verdicts.clone());
                 query_builder.push(")");
             }
         }
 
-        query_builder.push(" ORDER BY m.market_cap DESC LIMIT 100");
+        query_builder.push(" ORDER BY c.market_cap DESC NULLS LAST LIMIT 100");
         query_builder
     }
 }

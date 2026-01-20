@@ -28,6 +28,12 @@ pub mod users;
         companies::get_document_download_url,
         companies::get_verdict,
         companies::update_verdict,
+        screeners::list_screeners,
+        screeners::create_screener,
+        screeners::get_screener,
+        screeners::update_screener,
+        screeners::delete_screener,
+        screeners::run_screener,
         // More paths added as we implement them
     ),
     components(schemas(
@@ -53,6 +59,13 @@ pub mod users;
         companies::LinkedReport,
         domain::periods::FiscalPeriod,
         domain::periods::PeriodType,
+        screeners::ScreenerResponse,
+        screeners::CreateScreenerRequest,
+        screeners::UpdateScreenerRequest,
+        screeners::ScreenerResultsResponse,
+        screeners::RunScreenerRequest,
+        domain::services::screener_service::ScreenerResult,
+        domain::services::screener_service::FilterCriteria,
     )),
     tags(
         (name = "health", description = "Health check endpoints"),
