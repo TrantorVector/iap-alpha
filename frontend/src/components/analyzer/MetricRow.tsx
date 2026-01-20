@@ -98,6 +98,7 @@ export function MetricRow({
               color: textColor,
             }}
             title={`${label}: ${formattedValue || formatter(value)}`}
+            data-cell-type="metric-value"
           >
             {formattedValue || formatter(value)}
           </td>

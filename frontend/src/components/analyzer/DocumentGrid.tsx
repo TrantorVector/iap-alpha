@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -106,8 +106,9 @@ function SortableRow({
             {...attributes}
             {...listeners}
             className="p-1.5 rounded cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label={`Drag to reorder ${docType.label}`}
           >
-            <GripVertical className="h-4 w-4" />
+            <GripVertical className="h-4 w-4" aria-hidden="true" />
           </button>
           <span className="text-sm font-medium text-gray-700">
             {docType.label}
@@ -159,7 +160,7 @@ function SortableRow({
   );
 }
 
-export function DocumentGrid({
+export const DocumentGrid = memo(function DocumentGrid({
   companyId,
   periods,
   data,
@@ -217,7 +218,7 @@ export function DocumentGrid({
     },
   });
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
@@ -233,9 +234,9 @@ export function DocumentGrid({
         return newOrder;
       });
     }
-  };
+  }, []);
 
-  const handleDownload = async (doc: Document) => {
+  const handleDownload = useCallback(async (doc: Document) => {
     try {
       const { download_url } = await companies.getDownloadUrl(
         companyId,
@@ -249,15 +250,15 @@ export function DocumentGrid({
         variant: "destructive",
       });
     }
-  };
+  }, [companyId]);
 
-  const handleUpload = (file: File, period: string) => {
+  const handleUpload = useCallback((file: File, period: string) => {
     uploadMutation.mutate({ file, period });
-  };
+  }, [uploadMutation]);
 
   if (isLoading && !data) {
     return (
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-4" role="status" aria-label="Loading documents">
         <div className="flex justify-between">
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-6 w-24" />
@@ -274,10 +275,14 @@ export function DocumentGrid({
   return (
     <div className="flex flex-col h-full bg-white rounded-lg">
       {/* Local Header with status badges */}
-      <div className="px-4 py-2 flex items-center justify-end gap-3 border-b border-gray-100 min-h-[40px]">
+      <div
+        className="px-4 py-2 flex items-center justify-end gap-3 border-b border-gray-100 min-h-[40px]"
+        role="status"
+        aria-live="polite"
+      >
         {isRefreshing && (
           <Badge variant="secondary" className="gap-1 text-xs">
-            <RefreshCw className="h-3 w-3 animate-spin" />
+            <RefreshCw className="h-3 w-3 animate-spin" aria-hidden="true" />
             Refreshing...
           </Badge>
         )}
@@ -301,16 +306,20 @@ export function DocumentGrid({
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
-          <table className="w-full text-sm text-left">
+          <table className="w-full text-sm text-left" role="table" aria-label="Document repository grid">
             <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 font-medium w-64 sticky left-0 bg-gray-50 border-r border-gray-200 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                <th
+                  className="px-4 py-3 font-medium w-64 sticky left-0 bg-gray-50 border-r border-gray-200 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]"
+                  scope="col"
+                >
                   Type
                 </th>
                 {periods.map((period) => (
                   <th
                     key={period}
                     className="px-4 py-3 font-medium text-center min-w-[100px]"
+                    scope="col"
                   >
                     {period}
                   </th>
@@ -339,4 +348,4 @@ export function DocumentGrid({
       </div>
     </div>
   );
-}
+});

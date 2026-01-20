@@ -93,6 +93,7 @@ docker-compose.override.yml
 # ============================================
 *.log
 logs/
+ci-logs/
 *.swp
 *.swo
 *.tmp

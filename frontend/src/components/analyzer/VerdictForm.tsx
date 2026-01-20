@@ -297,6 +297,7 @@ export const VerdictForm = forwardRef<VerdictFormHandle, VerdictFormProps>(
                         value={strengths[index]}
                         onChange={(e) => updateStrength(index, e.target.value)}
                         placeholder="Strength point..."
+                        aria-label={`Strength ${index + 1}`}
                       />
                       <Button
                         type="button"
@@ -335,6 +336,7 @@ export const VerdictForm = forwardRef<VerdictFormHandle, VerdictFormProps>(
                         value={weaknesses[index]}
                         onChange={(e) => updateWeakness(index, e.target.value)}
                         placeholder="Weakness point..."
+                        aria-label={`Weakness ${index + 1}`}
                       />
                       <Button
                         type="button"

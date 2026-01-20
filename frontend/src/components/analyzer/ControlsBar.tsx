@@ -70,6 +70,7 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
             variant="ghost"
             size="icon"
             onClick={onClose}
+            aria-label="Close"
             className="h-8 w-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
           >
             <X className="h-4 w-4" />
@@ -110,7 +111,7 @@ export const ControlsBar: React.FC<ControlsBarProps> = ({
               value={String(periodCount)}
               onValueChange={(val) => onPeriodCountChange(parseInt(val))}
             >
-              <SelectTrigger className="h-8 w-[70px] text-xs bg-slate-100/50 dark:bg-slate-800/50 border-none">
+              <SelectTrigger className="h-8 w-[70px] text-xs bg-slate-100/50 dark:bg-slate-800/50 border-none" aria-label="Period count">
                 <SelectValue placeholder="Count" />
               </SelectTrigger>
               <SelectContent>

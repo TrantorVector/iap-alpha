@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { MetricsResponse, MetricRow as ApiMetricRow } from "@/api/types";
 import { MetricRow } from "./MetricRow";
@@ -42,7 +42,7 @@ function MetricSectionSkeleton({ rowCount }: { rowCount: number }) {
 /**
  * Collapsible section component
  */
-function MetricSectionComponent({
+const MetricSectionComponent = memo(function MetricSectionComponent({
   title,
   metrics,
   periods,
@@ -59,28 +59,34 @@ function MetricSectionComponent({
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-200"
+        aria-expanded={!isCollapsed}
+        aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${title} section`}
       >
         <h3 className="text-base font-semibold text-gray-900">{title}</h3>
         {isCollapsed ? (
-          <ChevronRight className="h-5 w-5 text-gray-500" />
+          <ChevronRight className="h-5 w-5 text-gray-500" aria-hidden="true" />
         ) : (
-          <ChevronDown className="h-5 w-5 text-gray-500" />
+          <ChevronDown className="h-5 w-5 text-gray-500" aria-hidden="true" />
         )}
       </button>
 
       {/* Section content */}
       {!isCollapsed && (
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full" role="table" aria-label={`${title} metrics`}>
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50/50">
-                <th className="py-2 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider sticky left-0 bg-gray-50 border-r border-gray-200">
+                <th
+                  className="py-2 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider sticky left-0 bg-gray-50 border-r border-gray-200"
+                  scope="col"
+                >
                   Metric
                 </th>
                 {periods.map((period, index) => (
                   <th
                     key={index}
                     className="py-2 px-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                    scope="col"
                   >
                     {period}
                   </th>
@@ -112,7 +118,7 @@ function MetricSectionComponent({
       )}
     </div>
   );
-}
+});
 
 /**
  * MetricsDashboard - Pane 1: Key Metrics Dashboard
@@ -127,12 +133,16 @@ function MetricSectionComponent({
  * - Collapsible sections
  * - Responsive table layout
  * - Loading skeletons
+ * - Performance optimized with React.memo
  */
-export function MetricsDashboard({ data, isLoading }: MetricsDashboardProps) {
+export const MetricsDashboard = memo(function MetricsDashboard({
+  data,
+  isLoading,
+}: MetricsDashboardProps) {
   // Loading state
   if (isLoading || !data) {
     return (
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-6" role="status" aria-label="Loading metrics">
         <div className="space-y-4">
           {Object.keys(SECTION_TITLES).map((sectionKey) => (
             <div
@@ -150,7 +160,11 @@ export function MetricsDashboard({ data, isLoading }: MetricsDashboardProps) {
 
   // Render sections with data
   return (
-    <div className="space-y-4 p-6 bg-gray-50">
+    <div
+      className="space-y-4 p-6 bg-gray-50"
+      role="region"
+      aria-label="Key Metrics Dashboard"
+    >
       <div className="mb-4">
         <h2 className="text-2xl font-bold text-gray-900">
           Key Metrics Dashboard
@@ -174,4 +188,4 @@ export function MetricsDashboard({ data, isLoading }: MetricsDashboardProps) {
       </div>
     </div>
   );
-}
+});
