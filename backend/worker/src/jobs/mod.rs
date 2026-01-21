@@ -36,12 +36,5 @@ impl Job for DocumentRefresh {
     }
 }
 
-pub struct MetricsRecalc;
-#[async_trait]
-impl Job for MetricsRecalc {
-    fn name(&self) -> &str { "metrics_recalc" }
-    async fn run(&self, _pool: &PgPool) -> Result<()> {
-        info!("Running metrics_recalc job");
-        Ok(())
-    }
-}
+pub mod metrics_recalc;
+pub use metrics_recalc::MetricsRecalculationJob;

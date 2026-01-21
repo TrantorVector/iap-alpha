@@ -5,7 +5,7 @@ use std::env;
 use tracing::{error, info};
 
 mod jobs;
-use jobs::{Job, EarningsPollingJob, PriceRefreshJob, FxRefresh, DocumentRefresh, MetricsRecalc};
+use jobs::{Job, EarningsPollingJob, PriceRefreshJob, FxRefresh, DocumentRefresh, MetricsRecalculationJob};
 use providers::mock::MockMarketDataProvider;
 use std::sync::Arc;
 
@@ -71,7 +71,7 @@ async fn main() -> Result<()> {
         Box::new(PriceRefreshJob::new(pool.clone(), provider.clone())),
         Box::new(FxRefresh),
         Box::new(DocumentRefresh),
-        Box::new(MetricsRecalc),
+        Box::new(MetricsRecalculationJob),
     ];
 
     let mut failed = false;
