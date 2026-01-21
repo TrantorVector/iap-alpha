@@ -6,6 +6,8 @@ use tracing::{error, info};
 
 mod jobs;
 use jobs::{Job, EarningsPollingJob, PriceRefreshJob, FxRefresh, DocumentRefresh, MetricsRecalculationJob};
+mod scheduler;
+use scheduler::Scheduler;
 use providers::mock::MockMarketDataProvider;
 use std::sync::Arc;
 
@@ -13,11 +15,21 @@ use std::sync::Arc;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
+    /// Run a specific job by name
     #[arg(long)]
     job: Option<String>,
 
+    /// Run all jobs immediately once
     #[arg(long)]
     all: bool,
+
+    /// Run all jobs immediately once (alias for --all)
+    #[arg(long)]
+    run_now: bool,
+
+    /// Run in scheduler mode (continuous loop)
+    #[arg(long)]
+    schedule: bool,
 }
 
 #[derive(Debug)]
@@ -46,8 +58,8 @@ async fn main() -> Result<()> {
 
     let args = Args::parse();
     
-    // We only need config and DB if we are running jobs
-    if !args.all && args.job.is_none() {
+    // We only need config and DB if we are running jobs or scheduler
+    if !args.all && args.job.is_none() && !args.run_now && !args.schedule {
         use clap::CommandFactory;
         Args::command().print_help()?;
         return Ok(());
@@ -66,17 +78,25 @@ async fn main() -> Result<()> {
     // Initialize provider (using Mock for now as per build plan context)
     let provider = Arc::new(MockMarketDataProvider::new());
 
-    let jobs: Vec<Box<dyn Job>> = vec![
-        Box::new(EarningsPollingJob::new(pool.clone(), provider.clone())),
-        Box::new(PriceRefreshJob::new(pool.clone(), provider.clone())),
-        Box::new(FxRefresh),
-        Box::new(DocumentRefresh),
-        Box::new(MetricsRecalculationJob),
-    ];
+    // Helper to create job list
+    let create_jobs = |pool: &sqlx::PgPool| -> Vec<Box<dyn Job>> {
+        vec![
+            Box::new(EarningsPollingJob::new(pool.clone(), provider.clone())),
+            Box::new(PriceRefreshJob::new(pool.clone(), provider.clone())),
+            Box::new(FxRefresh),
+            Box::new(DocumentRefresh),
+            Box::new(MetricsRecalculationJob),
+        ]
+    };
 
+    let jobs = create_jobs(&pool);
     let mut failed = false;
 
-    if args.all {
+    if args.schedule {
+        let scheduler = Scheduler::new(pool.clone(), jobs);
+        scheduler.run().await?;
+    } else if args.all || args.run_now {
+        info!("Running all jobs immediately...");
         for job in jobs {
             info!("Running job: {}", job.name());
             if let Err(e) = job.run(&pool).await {
@@ -87,8 +107,8 @@ async fn main() -> Result<()> {
             }
         }
     } else if let Some(job_name) = args.job {
-        let job = jobs.iter().find(|j| j.name() == job_name)
-            .context(format!("Job '{}' not found. Available jobs: {:?}", job_name, jobs.iter().map(|j| j.name()).collect::<Vec<_>>()))?;
+        let job = jobs.into_iter().find(|j| j.name() == job_name)
+            .context(format!("Job '{}' not found.", job_name))?;
         
         info!("Running job: {}", job.name());
         if let Err(e) = job.run(&pool).await {
