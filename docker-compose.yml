@@ -47,6 +47,7 @@ services:
     volumes:
       - ./backend:/app/api
       - ./secrets:/app/secrets
+      - ./golden-copy:/app/golden-copy
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,6 +81,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app/api
+      - ./golden-copy:/app/golden-copy
     command: cargo run -p worker -- --all
     profiles:
       - jobs
