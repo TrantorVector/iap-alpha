@@ -1,6 +1,6 @@
+use anyhow::Result;
 use async_trait::async_trait;
 use sqlx::PgPool;
-use anyhow::Result;
 use tracing::info;
 
 #[async_trait]
@@ -12,14 +12,15 @@ pub trait Job: Send + Sync {
 pub mod earnings_poll;
 pub use earnings_poll::EarningsPollingJob;
 
-
 pub mod price_refresh;
 pub use price_refresh::PriceRefreshJob;
 
 pub struct FxRefresh;
 #[async_trait]
 impl Job for FxRefresh {
-    fn name(&self) -> &str { "fx_refresh" }
+    fn name(&self) -> &str {
+        "fx_refresh"
+    }
     async fn run(&self, _pool: &PgPool) -> Result<()> {
         info!("Running fx_refresh job");
         Ok(())
@@ -29,7 +30,9 @@ impl Job for FxRefresh {
 pub struct DocumentRefresh;
 #[async_trait]
 impl Job for DocumentRefresh {
-    fn name(&self) -> &str { "document_refresh" }
+    fn name(&self) -> &str {
+        "document_refresh"
+    }
     async fn run(&self, _pool: &PgPool) -> Result<()> {
         info!("Running document_refresh job");
         Ok(())

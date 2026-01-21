@@ -4,11 +4,12 @@ use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tracing::{error, info};
 
-use worker::jobs::{Job, EarningsPollingJob, PriceRefreshJob, FxRefresh, DocumentRefresh, MetricsRecalculationJob};
-use worker::scheduler::Scheduler;
 use providers::mock::MockMarketDataProvider;
 use std::sync::Arc;
-
+use worker::jobs::{
+    DocumentRefresh, EarningsPollingJob, FxRefresh, Job, MetricsRecalculationJob, PriceRefreshJob,
+};
+use worker::scheduler::Scheduler;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -37,12 +38,10 @@ struct Config {
 
 impl Config {
     fn from_env() -> Result<Self> {
-        let database_url = env::var("DATABASE_URL")
-            .context("DATABASE_URL must be set")?;
+        let database_url = env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
         Ok(Self { database_url })
     }
 }
-
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -55,7 +54,7 @@ async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let args = Args::parse();
-    
+
     // We only need config and DB if we are running jobs or scheduler
     if !args.all && args.job.is_none() && !args.run_now && !args.schedule {
         use clap::CommandFactory;
@@ -105,9 +104,11 @@ async fn main() -> Result<()> {
             }
         }
     } else if let Some(job_name) = args.job {
-        let job = jobs.into_iter().find(|j| j.name() == job_name)
+        let job = jobs
+            .into_iter()
+            .find(|j| j.name() == job_name)
             .context(format!("Job '{}' not found.", job_name))?;
-        
+
         info!("Running job: {}", job.name());
         if let Err(e) = job.run(&pool).await {
             error!("Job {} failed: {:?}", job.name(), e);

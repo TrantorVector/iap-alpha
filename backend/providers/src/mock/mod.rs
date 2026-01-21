@@ -56,7 +56,10 @@ impl MockMarketDataProvider {
         PathBuf::from("golden-copy")
     }
 
-    async fn read_json<T: serde::de::DeserializeOwned>(&self, filename: &str) -> Result<T, AppError> {
+    async fn read_json<T: serde::de::DeserializeOwned>(
+        &self,
+        filename: &str,
+    ) -> Result<T, AppError> {
         let path = self.data_path.join(filename);
         let content = tokio::fs::read(&path).await.map_err(|e| {
             AppError::InternalError(format!("Failed to read mock data file {:?}: {}", path, e))
@@ -96,8 +99,9 @@ impl MarketDataProvider for MockMarketDataProvider {
     async fn get_company_overview(&self, symbol: &str) -> Result<CompanyOverview, AppError> {
         self.simulate_delay().await;
         // Load using helper to handle PascalCase keys
-        let mut helper: MockCompanyOverviewResponse = self.read_json("overview-output.json").await?;
-        
+        let mut helper: MockCompanyOverviewResponse =
+            self.read_json("overview-output.json").await?;
+
         let mut overview: CompanyOverview = helper.into();
 
         if symbol != "IBM" {
@@ -108,42 +112,47 @@ impl MarketDataProvider for MockMarketDataProvider {
                 _ => format!("Mock Company {}", symbol),
             };
         }
-        
+
         Ok(overview)
     }
 
     async fn get_income_statement(&self, _symbol: &str) -> Result<Vec<IncomeStatement>, AppError> {
         self.simulate_delay().await;
         // Note: filename typo in golden copy "inome"
-        let response: MockIncomeStatementResponse = self.read_json("inome-statement-output.json").await?; 
-        
+        let response: MockIncomeStatementResponse =
+            self.read_json("inome-statement-output.json").await?;
+
         // Convert to domain types
         // Simple mapping: serialize back to Value then deserialize to domain type or manual mapping.
         // Domain types use camelCase or snake_case? Domain uses snake_case, JSON uses camelCase.
         // We rely on serde renaming or we need to map manually.
-        // Since we didn't add serde(rename_all) to domain types (we just added fields), 
+        // Since we didn't add serde(rename_all) to domain types (we just added fields),
         // we might have issues if keys don't match.
         // CompanyOverview matched because keys were explicit.
         // For IncomeStatement, let's try direct deserialization with a helper or manual map.
         // The domain fields are like `gross_profit`, JSON is `grossProfit`.
         // We need a helper struct to deserialize camelCase then convert.
-        
+
         let mut statements = Vec::new();
-        for report in response.annualReports { // Use annual reports
-             // Use serde_json::from_value with a helper struct that has [serde(rename_all = "camelCase")]
-             let helper: IncomeStatementHelper = serde_json::from_value(report).map_err(|e| AppError::InternalError(e.to_string()))?;
-             statements.push(helper.into());
+        for report in response.annualReports {
+            // Use annual reports
+            // Use serde_json::from_value with a helper struct that has [serde(rename_all = "camelCase")]
+            let helper: IncomeStatementHelper = serde_json::from_value(report)
+                .map_err(|e| AppError::InternalError(e.to_string()))?;
+            statements.push(helper.into());
         }
-        
+
         Ok(statements)
     }
 
     async fn get_balance_sheet(&self, _symbol: &str) -> Result<Vec<BalanceSheet>, AppError> {
         self.simulate_delay().await;
-        let response: MockBalanceSheetResponse = self.read_json("balance-sheet-output.json").await?;
+        let response: MockBalanceSheetResponse =
+            self.read_json("balance-sheet-output.json").await?;
         let mut sheets = Vec::new();
         for report in response.annualReports {
-            let helper: BalanceSheetHelper = serde_json::from_value(report).map_err(|e| AppError::InternalError(e.to_string()))?;
+            let helper: BalanceSheetHelper = serde_json::from_value(report)
+                .map_err(|e| AppError::InternalError(e.to_string()))?;
             sheets.push(helper.into());
         }
         Ok(sheets)
@@ -154,7 +163,8 @@ impl MarketDataProvider for MockMarketDataProvider {
         let response: MockCashFlowResponse = self.read_json("cash-flow-output.json").await?;
         let mut flows = Vec::new();
         for report in response.annualReports {
-            let helper: CashFlowHelper = serde_json::from_value(report).map_err(|e| AppError::InternalError(e.to_string()))?;
+            let helper: CashFlowHelper = serde_json::from_value(report)
+                .map_err(|e| AppError::InternalError(e.to_string()))?;
             flows.push(helper.into());
         }
         Ok(flows)
@@ -166,21 +176,44 @@ impl MarketDataProvider for MockMarketDataProvider {
         _output_size: OutputSize,
     ) -> Result<Vec<DailyPrice>, AppError> {
         self.simulate_delay().await;
-        let json: serde_json::Value = self.read_json("time-series-daily-adjusted-output.json").await?;
-        
-        let time_series = json.get("Time Series (Daily)").ok_or_else(|| AppError::InternalError("Missing Time Series (Daily)".into()))?;
-        let time_series = time_series.as_object().ok_or_else(|| AppError::InternalError("Time Series is not an object".into()))?;
+        let json: serde_json::Value = self
+            .read_json("time-series-daily-adjusted-output.json")
+            .await?;
+
+        let time_series = json
+            .get("Time Series (Daily)")
+            .ok_or_else(|| AppError::InternalError("Missing Time Series (Daily)".into()))?;
+        let time_series = time_series
+            .as_object()
+            .ok_or_else(|| AppError::InternalError("Time Series is not an object".into()))?;
 
         let mut prices = Vec::new();
         for (date_str, values) in time_series {
-            let date = chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d")
-                .map_err(|e| AppError::InternalError(format!("Failed to parse date {}: {}", date_str, e)))?;
-            
-            let open = values["1. open"].as_str().unwrap_or("0").parse().unwrap_or(0.0);
-            let high = values["2. high"].as_str().unwrap_or("0").parse().unwrap_or(0.0);
-            let low = values["3. low"].as_str().unwrap_or("0").parse().unwrap_or(0.0);
-            let close = values["4. close"].as_str().unwrap_or("0").parse().unwrap_or(0.0);
-            
+            let date = chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d").map_err(|e| {
+                AppError::InternalError(format!("Failed to parse date {}: {}", date_str, e))
+            })?;
+
+            let open = values["1. open"]
+                .as_str()
+                .unwrap_or("0")
+                .parse()
+                .unwrap_or(0.0);
+            let high = values["2. high"]
+                .as_str()
+                .unwrap_or("0")
+                .parse()
+                .unwrap_or(0.0);
+            let low = values["3. low"]
+                .as_str()
+                .unwrap_or("0")
+                .parse()
+                .unwrap_or(0.0);
+            let close = values["4. close"]
+                .as_str()
+                .unwrap_or("0")
+                .parse()
+                .unwrap_or(0.0);
+
             prices.push(DailyPrice {
                 date,
                 open,
@@ -189,7 +222,7 @@ impl MarketDataProvider for MockMarketDataProvider {
                 close,
             });
         }
-        
+
         prices.sort_by_key(|p| p.date);
         Ok(prices)
     }
@@ -203,34 +236,44 @@ impl MarketDataProvider for MockMarketDataProvider {
 
         let mut events = Vec::new();
         for (i, line) in content.lines().enumerate() {
-            if i == 0 { continue; } // Skip header
+            if i == 0 {
+                continue;
+            } // Skip header
             let parts: Vec<&str> = line.split(',').collect::<Vec<&str>>();
             if parts.len() >= 3 {
                 let symbol = parts[0].to_string();
                 let name = parts[1].to_string();
                 let report_date_str = parts[2];
-                if let Ok(report_date) = chrono::NaiveDate::parse_from_str(report_date_str, "%Y-%m-%d") {
-                     // Basic mapping
-                     let fiscal_date_ending = if parts.len() > 3 && !parts[3].is_empty() {
-                         chrono::NaiveDate::parse_from_str(parts[3], "%Y-%m-%d").ok()
-                     } else { None };
-                     
-                     let estimate = if parts.len() > 4 && !parts[4].is_empty() {
-                         parts[4].parse().ok()
-                     } else { None };
-                     
-                     let currency = if parts.len() > 5 && !parts[5].is_empty() {
-                         Some(parts[5].to_string())
-                     } else { None };
+                if let Ok(report_date) =
+                    chrono::NaiveDate::parse_from_str(report_date_str, "%Y-%m-%d")
+                {
+                    // Basic mapping
+                    let fiscal_date_ending = if parts.len() > 3 && !parts[3].is_empty() {
+                        chrono::NaiveDate::parse_from_str(parts[3], "%Y-%m-%d").ok()
+                    } else {
+                        None
+                    };
 
-                     events.push(EarningsEvent {
+                    let estimate = if parts.len() > 4 && !parts[4].is_empty() {
+                        parts[4].parse().ok()
+                    } else {
+                        None
+                    };
+
+                    let currency = if parts.len() > 5 && !parts[5].is_empty() {
+                        Some(parts[5].to_string())
+                    } else {
+                        None
+                    };
+
+                    events.push(EarningsEvent {
                         symbol,
                         name,
                         report_date,
                         fiscal_date_ending,
                         estimate,
                         currency,
-                     });
+                    });
                 }
             }
         }
@@ -341,8 +384,12 @@ impl Into<CompanyOverview> for MockCompanyOverviewResponse {
             revenue_ttm: self.revenue_ttm.and_then(|s| s.parse().ok()),
             gross_profit_ttm: self.gross_profit_ttm.and_then(|s| s.parse().ok()),
             diluted_eps_ttm: self.diluted_eps_ttm.and_then(|s| s.parse().ok()),
-            quarterly_earnings_growth_yoy: self.quarterly_earnings_growth_yoy.and_then(|s| s.parse().ok()),
-            quarterly_revenue_growth_yoy: self.quarterly_revenue_growth_yoy.and_then(|s| s.parse().ok()),
+            quarterly_earnings_growth_yoy: self
+                .quarterly_earnings_growth_yoy
+                .and_then(|s| s.parse().ok()),
+            quarterly_revenue_growth_yoy: self
+                .quarterly_revenue_growth_yoy
+                .and_then(|s| s.parse().ok()),
             analyst_target_price: self.analyst_target_price.and_then(|s| s.parse().ok()),
             trailing_pe: self.trailing_pe.and_then(|s| s.parse().ok()),
             forward_pe: self.forward_pe.and_then(|s| s.parse().ok()),
@@ -359,8 +406,12 @@ impl Into<CompanyOverview> for MockCompanyOverviewResponse {
             shares_float: self.shares_float.and_then(|s| s.parse().ok()),
             percent_insiders: self.percent_insiders.and_then(|s| s.parse().ok()),
             percent_institutions: self.percent_institutions.and_then(|s| s.parse().ok()),
-            dividend_date: self.dividend_date.and_then(|s| chrono::NaiveDate::parse_from_str(&s, "%Y-%m-%d").ok()),
-            ex_dividend_date: self.ex_dividend_date.and_then(|s| chrono::NaiveDate::parse_from_str(&s, "%Y-%m-%d").ok()),
+            dividend_date: self
+                .dividend_date
+                .and_then(|s| chrono::NaiveDate::parse_from_str(&s, "%Y-%m-%d").ok()),
+            ex_dividend_date: self
+                .ex_dividend_date
+                .and_then(|s| chrono::NaiveDate::parse_from_str(&s, "%Y-%m-%d").ok()),
         }
     }
 }
@@ -383,10 +434,20 @@ struct IncomeStatementHelper {
 impl Into<IncomeStatement> for IncomeStatementHelper {
     fn into(self) -> IncomeStatement {
         IncomeStatement {
-            period_end_date: chrono::NaiveDate::parse_from_str(&self.fiscal_date_ending, "%Y-%m-%d").unwrap_or_default(),
-            revenue: self.total_revenue.and_then(|s| BigDecimal::from_str(&s).ok()),
-            gross_profit: self.gross_profit.and_then(|s| BigDecimal::from_str(&s).ok()),
-            operating_income: self.operating_income.and_then(|s| BigDecimal::from_str(&s).ok()),
+            period_end_date: chrono::NaiveDate::parse_from_str(
+                &self.fiscal_date_ending,
+                "%Y-%m-%d",
+            )
+            .unwrap_or_default(),
+            revenue: self
+                .total_revenue
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
+            gross_profit: self
+                .gross_profit
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
+            operating_income: self
+                .operating_income
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
             net_income: self.net_income.and_then(|s| BigDecimal::from_str(&s).ok()),
             eps: None, // Not in mock data
         }
@@ -411,16 +472,36 @@ struct BalanceSheetHelper {
 impl Into<BalanceSheet> for BalanceSheetHelper {
     fn into(self) -> BalanceSheet {
         BalanceSheet {
-            period_end_date: chrono::NaiveDate::parse_from_str(&self.fiscal_date_ending, "%Y-%m-%d").unwrap_or_default(),
-            total_assets: self.total_assets.and_then(|s| BigDecimal::from_str(&s).ok()),
-            total_liabilities: self.total_liabilities.and_then(|s| BigDecimal::from_str(&s).ok()),
-            total_equity: self.total_shareholder_equity.and_then(|s| BigDecimal::from_str(&s).ok()),
-            cash_and_equivalents: self.cash_and_cash_equivalents_at_carrying_value.and_then(|s| BigDecimal::from_str(&s).ok()),
-            short_term_investments: self.short_term_investments.and_then(|s| BigDecimal::from_str(&s).ok()),
-            short_term_debt: self.short_term_debt.and_then(|s| BigDecimal::from_str(&s).ok()),
-            long_term_debt: self.long_term_debt.and_then(|s| BigDecimal::from_str(&s).ok()),
+            period_end_date: chrono::NaiveDate::parse_from_str(
+                &self.fiscal_date_ending,
+                "%Y-%m-%d",
+            )
+            .unwrap_or_default(),
+            total_assets: self
+                .total_assets
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
+            total_liabilities: self
+                .total_liabilities
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
+            total_equity: self
+                .total_shareholder_equity
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
+            cash_and_equivalents: self
+                .cash_and_cash_equivalents_at_carrying_value
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
+            short_term_investments: self
+                .short_term_investments
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
+            short_term_debt: self
+                .short_term_debt
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
+            long_term_debt: self
+                .long_term_debt
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
             net_debt: None,
-            common_stock_shares_outstanding: self.common_stock_shares_outstanding.and_then(|s| s.parse().ok()),
+            common_stock_shares_outstanding: self
+                .common_stock_shares_outstanding
+                .and_then(|s| s.parse().ok()),
         }
     }
 }
@@ -438,9 +519,17 @@ struct CashFlowHelper {
 impl Into<CashFlowStatement> for CashFlowHelper {
     fn into(self) -> CashFlowStatement {
         CashFlowStatement {
-            period_end_date: chrono::NaiveDate::parse_from_str(&self.fiscal_date_ending, "%Y-%m-%d").unwrap_or_default(),
-            operating_cash_flow: self.operating_cashflow.and_then(|s| BigDecimal::from_str(&s).ok()),
-            capital_expenditures: self.capital_expenditures.and_then(|s| BigDecimal::from_str(&s).ok()),
+            period_end_date: chrono::NaiveDate::parse_from_str(
+                &self.fiscal_date_ending,
+                "%Y-%m-%d",
+            )
+            .unwrap_or_default(),
+            operating_cash_flow: self
+                .operating_cashflow
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
+            capital_expenditures: self
+                .capital_expenditures
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
             free_cash_flow: None, // Calculate if needed: operating - capex
         }
     }

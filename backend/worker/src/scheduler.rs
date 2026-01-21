@@ -1,9 +1,9 @@
+use crate::jobs::Job;
 use anyhow::Result;
 use sqlx::PgPool;
 use std::time::Duration;
 use tokio::time;
-use tracing::{info, error};
-use crate::jobs::Job;
+use tracing::{error, info};
 
 pub struct Scheduler {
     pool: PgPool,

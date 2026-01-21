@@ -1,24 +1,20 @@
 use crate::jobs::Job;
 use anyhow::Result;
 use async_trait::async_trait;
-use bigdecimal::{BigDecimal, ToPrimitive, FromPrimitive};
-use chrono::{NaiveDate, Datelike};
+use bigdecimal::{BigDecimal, FromPrimitive, ToPrimitive};
+use chrono::{Datelike, NaiveDate};
 use db::models::financials::{
-    IncomeStatement as DbIncome, 
-    BalanceSheet as DbBalance, 
-    CashFlowStatement as DbCashFlow
+    BalanceSheet as DbBalance, CashFlowStatement as DbCashFlow, IncomeStatement as DbIncome,
 };
 use db::models::DailyPrice as DbPrice;
 use domain::domain::{
-    IncomeStatement as DomainIncome, 
-    BalanceSheet as DomainBalance, 
-    CashFlowStatement as DomainCashFlow, 
-    DailyPrice as DomainPrice
+    BalanceSheet as DomainBalance, CashFlowStatement as DomainCashFlow, DailyPrice as DomainPrice,
+    IncomeStatement as DomainIncome,
 };
 use domain::metrics::calculator::MetricsCalculator;
 use sqlx::PgPool;
 use std::collections::HashMap;
-use tracing::{info, error};
+use tracing::{error, info};
 
 pub struct MetricsRecalculationJob;
 
@@ -32,11 +28,10 @@ impl Job for MetricsRecalculationJob {
         info!("Starting metrics recalculation job");
 
         // Fetch active companies
-        let companies = sqlx::query!(
-            "SELECT id, symbol, currency FROM companies WHERE is_active = true"
-        )
-        .fetch_all(pool)
-        .await?;
+        let companies =
+            sqlx::query!("SELECT id, symbol, currency FROM companies WHERE is_active = true")
+                .fetch_all(pool)
+                .await?;
 
         info!("Found {} active companies to process", companies.len());
 
@@ -50,7 +45,10 @@ impl Job for MetricsRecalculationJob {
                     success_count += 1;
                 }
                 Err(e) => {
-                    error!("Failed to calculate metrics for {}: {:?}", company.symbol, e);
+                    error!(
+                        "Failed to calculate metrics for {}: {:?}",
+                        company.symbol, e
+                    );
                     fail_count += 1;
                 }
             }
@@ -105,7 +103,7 @@ async fn process_company(
         .into_iter()
         .map(|b| ((b.period_end_date, b.period_type.clone()), b))
         .collect();
-    
+
     let cf_map: HashMap<(NaiveDate, String), DbCashFlow> = cash_flows
         .into_iter()
         .map(|c| ((c.period_end_date, c.period_type.clone()), c))
@@ -128,7 +126,7 @@ async fn process_company(
             gross_profit: income.gross_profit.clone(),
             operating_income: income.operating_income.clone(),
             net_income: income.net_income.clone(),
-            eps: income.basic_eps.clone(), 
+            eps: income.basic_eps.clone(),
         });
 
         // Align Balance
@@ -142,14 +140,14 @@ async fn process_company(
             short_term_debt: b.short_term_debt.clone(),
             long_term_debt: b.long_term_debt.clone(),
             net_debt: b.net_debt.clone(),
-            common_stock_shares_outstanding: None, 
+            common_stock_shares_outstanding: None,
         });
 
         // Try to patch shares from income if available
         if let Some(ref mut db) = domain_bal {
-             if let Some(shares) = income.shares_outstanding {
-                 db.common_stock_shares_outstanding = Some(shares);
-             }
+            if let Some(shares) = income.shares_outstanding {
+                db.common_stock_shares_outstanding = Some(shares);
+            }
         }
         aligned_balances.push(domain_bal);
 
@@ -168,19 +166,19 @@ async fn process_company(
     for income in &incomes {
         let target_date = income.period_end_date;
         let prior = incomes.iter().find(|i| {
-            i.period_type == income.period_type && 
-            i.period_end_date < target_date && 
-            (target_date.year() - i.period_end_date.year() == 1) &&
-             (target_date.month() as i32 - i.period_end_date.month() as i32).abs() <= 1
+            i.period_type == income.period_type
+                && i.period_end_date < target_date
+                && (target_date.year() - i.period_end_date.year() == 1)
+                && (target_date.month() as i32 - i.period_end_date.month() as i32).abs() <= 1
         });
-        
+
         let prior_domain = prior.map(|p| DomainIncome {
-             period_end_date: p.period_end_date,
-             revenue: p.total_revenue.clone(),
-             gross_profit: p.gross_profit.clone(),
-             operating_income: p.operating_income.clone(),
-             net_income: p.net_income.clone(),
-             eps: p.basic_eps.clone(),
+            period_end_date: p.period_end_date,
+            revenue: p.total_revenue.clone(),
+            gross_profit: p.gross_profit.clone(),
+            operating_income: p.operating_income.clone(),
+            net_income: p.net_income.clone(),
+            eps: p.basic_eps.clone(),
         });
         prior_year_incomes.push(prior_domain);
     }
@@ -208,70 +206,74 @@ async fn process_company(
     }
 
     // 5. Run Calculations
-    
+
     // Revenue Metrics
     let (_, yoy_growths, qoq_growths) = MetricsCalculator::calculate_revenue_metrics(
-        &domain_incomes, &prior_year_incomes, currency
+        &domain_incomes,
+        &prior_year_incomes,
+        currency,
     );
-    
+
     // Margins
-    let (gross_margins, op_margins, net_margins) = MetricsCalculator::calculate_margin_metrics(
-        &domain_incomes
-    );
-    
+    let (gross_margins, op_margins, net_margins) =
+        MetricsCalculator::calculate_margin_metrics(&domain_incomes);
+
     // Acceleration
     let accels = MetricsCalculator::calculate_revenue_acceleration(&yoy_growths);
 
     // Cash Metrics
-    let (ocf_ratios, fcf_ratios) = MetricsCalculator::calculate_cash_metrics(
-        &domain_incomes, &aligned_cash_flows
-    );
+    let (ocf_ratios, fcf_ratios) =
+        MetricsCalculator::calculate_cash_metrics(&domain_incomes, &aligned_cash_flows);
 
     // Leverage
-    let (rev_net_debt, _shares) = MetricsCalculator::calculate_leverage_metrics(
-        &domain_incomes, &aligned_balances
-    );
+    let (rev_net_debt, _shares) =
+        MetricsCalculator::calculate_leverage_metrics(&domain_incomes, &aligned_balances);
 
     // Valuation (Point-in-time)
-    let val_metrics = MetricsCalculator::calculate_valuation_metrics(
-        &domain_incomes, &aligned_prices
-    );
+    let val_metrics =
+        MetricsCalculator::calculate_valuation_metrics(&domain_incomes, &aligned_prices);
 
     // 6. Save Metrics
     for i in 0..domain_incomes.len() {
         let period_end = domain_incomes[i].period_end_date;
-        let period_type = incomes[i].period_type.clone(); 
-        
+        let period_type = incomes[i].period_type.clone();
+
         let mut metrics_to_save: HashMap<String, Option<f64>> = HashMap::new();
-        
+
         metrics_to_save.insert("yoy_revenue_growth_pct".to_string(), yoy_growths[i].value);
         metrics_to_save.insert("qoq_revenue_growth_pct".to_string(), qoq_growths[i].value);
         metrics_to_save.insert("growth_acceleration".to_string(), accels[i].value);
-        
+
         metrics_to_save.insert("gross_margin_pct".to_string(), gross_margins[i].value);
         metrics_to_save.insert("operating_margin_pct".to_string(), op_margins[i].value);
         metrics_to_save.insert("net_margin_pct".to_string(), net_margins[i].value);
-        
+
         metrics_to_save.insert("ocf_revenue_pct".to_string(), ocf_ratios[i].value);
         metrics_to_save.insert("fcf_revenue_pct".to_string(), fcf_ratios[i].value);
-        
-        metrics_to_save.insert("revenue_minus_net_debt_pct".to_string(), rev_net_debt[i].value);
-        
-        metrics_to_save.insert("pe_ratio_historical".to_string(), val_metrics.pe_ratios[i].value);
-        
+
+        metrics_to_save.insert(
+            "revenue_minus_net_debt_pct".to_string(),
+            rev_net_debt[i].value,
+        );
+
+        metrics_to_save.insert(
+            "pe_ratio_historical".to_string(),
+            val_metrics.pe_ratios[i].value,
+        );
+
         for (name, val_opt) in metrics_to_save {
             if let Some(val) = val_opt {
                 insert_metric(pool, company_id, period_end, &period_type, &name, val).await?;
             }
         }
     }
-    
+
     // 7. Latest Price Metrics
     if let Some(latest_idx) = domain_incomes.len().checked_sub(1) {
         let latest_income = &domain_incomes[latest_idx];
         let latest_period_end = latest_income.period_end_date;
         let latest_period_type = incomes[latest_idx].period_type.clone();
-        
+
         let latest_price_row = sqlx::query_as!(
             DbPrice,
             "SELECT * FROM daily_prices WHERE company_id = $1 ORDER BY price_date DESC LIMIT 1",
@@ -282,25 +284,33 @@ async fn process_company(
 
         if let Some(lp) = latest_price_row {
             let close = lp.close.and_then(|v| v.to_f64()).unwrap_or(0.0);
-            
+
             // P/E (Latest)
             if let Some(eps) = latest_income.eps.as_ref().and_then(|v| v.to_f64()) {
                 if eps > 0.0 {
                     let pe = close / eps;
-                    insert_metric(pool, company_id, latest_period_end, &latest_period_type, "pe_ratio_ttm", pe).await?;
+                    insert_metric(
+                        pool,
+                        company_id,
+                        latest_period_end,
+                        &latest_period_type,
+                        "pe_ratio_ttm",
+                        pe,
+                    )
+                    .await?;
                 }
             }
-            
+
             // Momentum
             let dates = [
                 ("momentum_1m", 30),
                 ("momentum_3m", 90),
                 ("momentum_6m", 180),
             ];
-            
+
             for (name, days) in dates {
-                 let target_date = lp.price_date - chrono::Duration::days(days);
-                 let hist_price = sqlx::query_as!(
+                let target_date = lp.price_date - chrono::Duration::days(days);
+                let hist_price = sqlx::query_as!(
                     DbPrice,
                     "SELECT * FROM daily_prices WHERE company_id = $1 AND price_date <= $2 ORDER BY price_date DESC LIMIT 1",
                     company_id,
@@ -308,12 +318,20 @@ async fn process_company(
                 )
                 .fetch_optional(pool)
                 .await?;
-                
+
                 if let Some(hp) = hist_price {
                     let hp_close = hp.close.and_then(|v| v.to_f64()).unwrap_or(0.0);
                     if hp_close > 0.0 {
                         let mom = (close / hp_close - 1.0) * 100.0;
-                         insert_metric(pool, company_id, latest_period_end, &latest_period_type, name, mom).await?;
+                        insert_metric(
+                            pool,
+                            company_id,
+                            latest_period_end,
+                            &latest_period_type,
+                            name,
+                            mom,
+                        )
+                        .await?;
                     }
                 }
             }
@@ -324,12 +342,12 @@ async fn process_company(
 }
 
 async fn insert_metric(
-    pool: &PgPool, 
-    company_id: uuid::Uuid, 
-    date: NaiveDate, 
-    ptype: &str, 
-    name: &str, 
-    val: f64
+    pool: &PgPool,
+    company_id: uuid::Uuid,
+    date: NaiveDate,
+    ptype: &str,
+    name: &str,
+    val: f64,
 ) -> Result<()> {
     let val_bd = BigDecimal::from_f64(val).unwrap_or_default();
     sqlx::query!(

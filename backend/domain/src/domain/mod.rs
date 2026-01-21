@@ -104,8 +104,6 @@ pub enum OutputSize {
     Full,
 }
 
-
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Transcript {
     // Add fields

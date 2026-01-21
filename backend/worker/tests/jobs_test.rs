@@ -1,16 +1,19 @@
-use worker::jobs::{Job, EarningsPollingJob, PriceRefreshJob, MetricsRecalculationJob};
+use async_trait::async_trait;
+use bigdecimal::BigDecimal;
+use chrono::NaiveDate;
+use domain::domain::{
+    BalanceSheet, CashFlowStatement, CompanyOverview, DailyPrice, EarningsEvent, IncomeStatement,
+    OutputSize,
+};
+use domain::error::AppError;
+use domain::ports::market_data::MarketDataProvider;
 use providers::mock::MockMarketDataProvider;
 use sqlx::postgres::PgPoolOptions;
-use std::sync::Arc;
 use std::env;
-use uuid::Uuid;
-use chrono::{NaiveDate};
-use bigdecimal::BigDecimal;
 use std::str::FromStr;
-use async_trait::async_trait;
-use domain::ports::market_data::MarketDataProvider;
-use domain::error::AppError;
-use domain::domain::{CompanyOverview, IncomeStatement, BalanceSheet, CashFlowStatement, DailyPrice, EarningsEvent, OutputSize};
+use std::sync::Arc;
+use uuid::Uuid;
+use worker::jobs::{EarningsPollingJob, Job, MetricsRecalculationJob, PriceRefreshJob};
 
 async fn setup_db() -> sqlx::PgPool {
     let database_url = env::var("DATABASE_URL")
@@ -26,12 +29,30 @@ async fn setup_db() -> sqlx::PgPool {
 async fn clear_db(pool: &sqlx::PgPool) {
     // Order matters for FK
     sqlx::query("DELETE FROM job_runs").execute(pool).await.ok();
-    sqlx::query("DELETE FROM derived_metrics").execute(pool).await.ok();
-    sqlx::query("DELETE FROM daily_prices").execute(pool).await.ok();
-    sqlx::query("DELETE FROM income_statements").execute(pool).await.ok();
-    sqlx::query("DELETE FROM balance_sheets").execute(pool).await.ok();
-    sqlx::query("DELETE FROM cash_flow_statements").execute(pool).await.ok();
-    sqlx::query("DELETE FROM companies").execute(pool).await.ok();
+    sqlx::query("DELETE FROM derived_metrics")
+        .execute(pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM daily_prices")
+        .execute(pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM income_statements")
+        .execute(pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM balance_sheets")
+        .execute(pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM cash_flow_statements")
+        .execute(pool)
+        .await
+        .ok();
+    sqlx::query("DELETE FROM companies")
+        .execute(pool)
+        .await
+        .ok();
 }
 
 async fn seed_company(pool: &sqlx::PgPool, symbol: &str) -> Uuid {
@@ -60,13 +81,17 @@ async fn test_earnings_poll_updates_calendar() {
 
     job.run(&pool).await.expect("Job failed");
 
-    let latest_quarter: Option<NaiveDate> = sqlx::query_scalar("SELECT latest_quarter FROM companies WHERE id = $1")
-        .bind(company_id)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+    let latest_quarter: Option<NaiveDate> =
+        sqlx::query_scalar("SELECT latest_quarter FROM companies WHERE id = $1")
+            .bind(company_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
 
-    assert!(latest_quarter.is_some(), "latest_quarter should be updated for IBM");
+    assert!(
+        latest_quarter.is_some(),
+        "latest_quarter should be updated for IBM"
+    );
 }
 
 #[tokio::test]
@@ -99,11 +124,12 @@ async fn test_price_refresh_updates_market_cap() {
 
     job.run(&pool).await.expect("Job failed");
 
-    let market_cap: Option<i64> = sqlx::query_scalar("SELECT market_cap FROM companies WHERE id = $1")
-        .bind(company_id)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+    let market_cap: Option<i64> =
+        sqlx::query_scalar("SELECT market_cap FROM companies WHERE id = $1")
+            .bind(company_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
 
     assert!(market_cap.is_some(), "market_cap should be updated");
     assert!(market_cap.unwrap() > 0, "market_cap should be positive");
@@ -129,24 +155,23 @@ async fn test_metrics_recalc_creates_derived_metrics() {
     .await
     .unwrap();
 
-    sqlx::query(
-        "INSERT INTO daily_prices (company_id, price_date, close) VALUES ($1, $2, $3)"
-    )
-    .bind(company_id)
-    .bind(NaiveDate::from_ymd_opt(2023, 12, 31).unwrap())
-    .bind(BigDecimal::from_str("150").unwrap())
-    .execute(&pool)
-    .await
-    .unwrap();
+    sqlx::query("INSERT INTO daily_prices (company_id, price_date, close) VALUES ($1, $2, $3)")
+        .bind(company_id)
+        .bind(NaiveDate::from_ymd_opt(2023, 12, 31).unwrap())
+        .bind(BigDecimal::from_str("150").unwrap())
+        .execute(&pool)
+        .await
+        .unwrap();
 
     let job = MetricsRecalculationJob;
     job.run(&pool).await.expect("Job failed");
 
-    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM derived_metrics WHERE company_id = $1")
-        .bind(company_id)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+    let count: i64 =
+        sqlx::query_scalar("SELECT count(*) FROM derived_metrics WHERE company_id = $1")
+            .bind(company_id)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
 
     assert!(count > 0, "derived_metrics should be created");
 }
@@ -162,10 +187,11 @@ async fn test_job_records_success_in_database() {
 
     job.run(&pool).await.expect("Job failed");
 
-    let status: String = sqlx::query_scalar("SELECT status FROM job_runs ORDER BY started_at DESC LIMIT 1")
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+    let status: String =
+        sqlx::query_scalar("SELECT status FROM job_runs ORDER BY started_at DESC LIMIT 1")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
 
     assert_eq!(status, "completed");
 }
@@ -185,7 +211,11 @@ impl MarketDataProvider for FailingProvider {
     async fn get_cash_flow(&self, _symbol: &str) -> Result<Vec<CashFlowStatement>, AppError> {
         Err(AppError::InternalError("Provider error".into()))
     }
-    async fn get_daily_prices(&self, _symbol: &str, _output_size: OutputSize) -> Result<Vec<DailyPrice>, AppError> {
+    async fn get_daily_prices(
+        &self,
+        _symbol: &str,
+        _output_size: OutputSize,
+    ) -> Result<Vec<DailyPrice>, AppError> {
         Err(AppError::InternalError("Provider error".into()))
     }
     async fn get_earnings_calendar(&self) -> Result<Vec<EarningsEvent>, AppError> {
@@ -202,12 +232,15 @@ async fn test_job_handles_provider_errors_gracefully() {
     let provider = Arc::new(FailingProvider);
     let job = EarningsPollingJob::new(pool.clone(), provider);
 
-    job.run(&pool).await.expect("Job should return Ok but set status to failed");
-
-    let status: String = sqlx::query_scalar("SELECT status FROM job_runs ORDER BY started_at DESC LIMIT 1")
-        .fetch_one(&pool)
+    job.run(&pool)
         .await
-        .unwrap();
+        .expect("Job should return Ok but set status to failed");
+
+    let status: String =
+        sqlx::query_scalar("SELECT status FROM job_runs ORDER BY started_at DESC LIMIT 1")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
 
     assert_eq!(status, "failed");
 }
