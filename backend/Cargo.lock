@@ -2273,12 +2273,14 @@ dependencies = [
  "async-trait",
  "aws-config",
  "aws-sdk-s3",
+ "bigdecimal",
  "bytes",
  "chrono",
  "domain",
  "reqwest",
  "serde",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
