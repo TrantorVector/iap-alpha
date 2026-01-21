@@ -4,10 +4,8 @@ use sqlx::postgres::PgPoolOptions;
 use std::env;
 use tracing::{error, info};
 
-mod jobs;
-use jobs::{Job, EarningsPollingJob, PriceRefreshJob, FxRefresh, DocumentRefresh, MetricsRecalculationJob};
-mod scheduler;
-use scheduler::Scheduler;
+use worker::jobs::{Job, EarningsPollingJob, PriceRefreshJob, FxRefresh, DocumentRefresh, MetricsRecalculationJob};
+use worker::scheduler::Scheduler;
 use providers::mock::MockMarketDataProvider;
 use std::sync::Arc;
 
