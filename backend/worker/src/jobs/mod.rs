@@ -9,25 +9,12 @@ pub trait Job: Send + Sync {
     async fn run(&self, pool: &PgPool) -> Result<()>;
 }
 
-pub struct EarningsPoll;
-#[async_trait]
-impl Job for EarningsPoll {
-    fn name(&self) -> &str { "earnings_poll" }
-    async fn run(&self, _pool: &PgPool) -> Result<()> {
-        info!("Running earnings_poll job");
-        Ok(())
-    }
-}
+pub mod earnings_poll;
+pub use earnings_poll::EarningsPollingJob;
 
-pub struct PriceRefresh;
-#[async_trait]
-impl Job for PriceRefresh {
-    fn name(&self) -> &str { "price_refresh" }
-    async fn run(&self, _pool: &PgPool) -> Result<()> {
-        info!("Running price_refresh job");
-        Ok(())
-    }
-}
+
+pub mod price_refresh;
+pub use price_refresh::PriceRefreshJob;
 
 pub struct FxRefresh;
 #[async_trait]

@@ -4307,15 +4307,20 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bigdecimal",
+ "chrono",
  "clap",
  "db",
  "domain",
  "dotenvy",
  "providers",
+ "serde",
+ "serde_json",
  "sqlx",
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]

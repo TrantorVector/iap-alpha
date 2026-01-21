@@ -5,7 +5,10 @@ use std::env;
 use tracing::{error, info};
 
 mod jobs;
-use jobs::{Job, EarningsPoll, PriceRefresh, FxRefresh, DocumentRefresh, MetricsRecalc};
+use jobs::{Job, EarningsPollingJob, PriceRefreshJob, FxRefresh, DocumentRefresh, MetricsRecalc};
+use providers::mock::MockMarketDataProvider;
+use std::sync::Arc;
+
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -29,6 +32,7 @@ impl Config {
         Ok(Self { database_url })
     }
 }
+
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -59,13 +63,12 @@ async fn main() -> Result<()> {
         .await
         .context("Failed to connect to database")?;
 
-    // TODO: Initialize providers (mock or real based on env)
-    // let market_data_provider = ...
-
+    // Initialize provider (using Mock for now as per build plan context)
+    let provider = Arc::new(MockMarketDataProvider::new());
 
     let jobs: Vec<Box<dyn Job>> = vec![
-        Box::new(EarningsPoll),
-        Box::new(PriceRefresh),
+        Box::new(EarningsPollingJob::new(pool.clone(), provider.clone())),
+        Box::new(PriceRefreshJob::new(pool.clone(), provider.clone())),
         Box::new(FxRefresh),
         Box::new(DocumentRefresh),
         Box::new(MetricsRecalc),
