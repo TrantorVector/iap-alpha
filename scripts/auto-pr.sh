@@ -156,7 +156,7 @@ get_or_create_pr() {
     pr_title="${1:-$current_branch}"
 
     # Check if PR already exists (robust JSON parsing, no regex)
-    pr_number=$(gh pr view --json number --jq '.number' 2>/dev/null || echo "")
+    pr_number=$(gh pr view --json state,number --jq 'select(.state == "OPEN") | .number' 2>/dev/null || echo "")
 
     if [[ -n "$pr_number" ]]; then
         log_info "PR #$pr_number already exists for this branch"

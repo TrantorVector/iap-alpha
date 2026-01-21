@@ -47,12 +47,13 @@ services:
     volumes:
       - ./backend:/app/api
       - ./secrets:/app/secrets
+      - ./golden-copy:/app/golden-copy
     depends_on:
       postgres:
         condition: service_healthy
       minio:
         condition: service_started
-    command: cargo run
+    command: cargo run -p api
     working_dir: /app/api
 
   frontend:
@@ -67,6 +68,23 @@ services:
     command: npm run dev
     environment:
       VITE_API_URL: http://localhost:8080
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    environment:
+      - DATABASE_URL=postgres://postgres:dev@postgres:5432/irp_dev
+      - RUST_LOG=debug
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/api
+      - ./golden-copy:/app/golden-copy
+    command: cargo run -p worker -- --all
+    profiles:
+      - jobs
 
 volumes:
   postgres_data:
