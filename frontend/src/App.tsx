@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AnalyzerPage from "@/pages/AnalyzerPage";
 import ScreenerPage from "@/pages/ScreenerPage";
+import TrackerPage from "@/pages/TrackerPage";
 import { Toaster } from "@/components/ui/toaster";
 
 function HomePage() {
@@ -123,6 +124,10 @@ const router = createBrowserRouter([
       {
         path: "/screener",
         element: <ScreenerPage />,
+      },
+      {
+        path: "/tracker",
+        element: <TrackerPage />,
       },
       {
         path: "*",

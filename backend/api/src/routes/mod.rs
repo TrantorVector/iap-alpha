@@ -12,6 +12,7 @@ pub mod auth;
 pub mod companies;
 pub mod health;
 pub mod screeners;
+pub mod tracker;
 pub mod users;
 
 #[derive(OpenApi)]
@@ -34,6 +35,8 @@ pub mod users;
         screeners::update_screener,
         screeners::delete_screener,
         screeners::run_screener,
+        tracker::list_verdicts,
+        tracker::get_summary,
         // More paths added as we implement them
     ),
     components(schemas(
@@ -66,6 +69,10 @@ pub mod users;
         screeners::RunScreenerRequest,
         domain::services::screener_service::ScreenerResult,
         domain::services::screener_service::FilterCriteria,
+        tracker::TrackerSummaryResponse,
+        tracker::RecentActivityOut,
+        tracker::VerdictListResponse,
+        tracker::TrackerItemOut,
     )),
     tags(
         (name = "health", description = "Health check endpoints"),
@@ -73,6 +80,7 @@ pub mod users;
         (name = "companies", description = "Company data endpoints"),
         (name = "screeners", description = "Screener endpoints"),
         (name = "verdicts", description = "Verdict endpoints"),
+        (name = "tracker", description = "Results tracker endpoints"),
     )
 )]
 pub struct ApiDoc;
@@ -98,6 +106,7 @@ fn protected_routes(state: AppState) -> Router<AppState> {
         .route("/auth/logout", post(auth::logout))
         .nest("/companies", companies::companies_router())
         .nest("/screeners", screeners::screeners_router())
+        .nest("/tracker", tracker::tracker_router())
         .nest("/users/me", users::user_router())
         .layer(axum::middleware::from_fn_with_state(
             state,
