@@ -105,8 +105,7 @@ impl MarketDataProvider for MockMarketDataProvider {
     async fn get_company_overview(&self, symbol: &str) -> Result<CompanyOverview, AppError> {
         self.simulate_delay().await;
         // Load using helper to handle PascalCase keys
-        let helper: MockCompanyOverviewResponse =
-            self.read_json("overview-output.json").await?;
+        let helper: MockCompanyOverviewResponse = self.read_json("overview-output.json").await?;
 
         let mut overview: CompanyOverview = helper.into();
 
