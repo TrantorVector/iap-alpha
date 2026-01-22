@@ -77,21 +77,24 @@ impl MockMarketDataProvider {
 }
 
 #[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct MockIncomeStatementResponse {
-    annualReports: Vec<serde_json::Value>,
-    quarterlyReports: Vec<serde_json::Value>,
+    annual_reports: Vec<serde_json::Value>,
+    quarterly_reports: Vec<serde_json::Value>,
 }
 
 #[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct MockBalanceSheetResponse {
-    annualReports: Vec<serde_json::Value>,
-    quarterlyReports: Vec<serde_json::Value>,
+    annual_reports: Vec<serde_json::Value>,
+    quarterly_reports: Vec<serde_json::Value>,
 }
 
 #[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct MockCashFlowResponse {
-    annualReports: Vec<serde_json::Value>,
-    quarterlyReports: Vec<serde_json::Value>,
+    annual_reports: Vec<serde_json::Value>,
+    quarterly_reports: Vec<serde_json::Value>,
 }
 
 #[async_trait]
@@ -134,7 +137,7 @@ impl MarketDataProvider for MockMarketDataProvider {
         // We need a helper struct to deserialize camelCase then convert.
 
         let mut statements = Vec::new();
-        for report in response.annualReports {
+        for report in response.annual_reports {
             // Use annual reports
             // Use serde_json::from_value with a helper struct that has [serde(rename_all = "camelCase")]
             let helper: IncomeStatementHelper = serde_json::from_value(report)
@@ -150,7 +153,7 @@ impl MarketDataProvider for MockMarketDataProvider {
         let response: MockBalanceSheetResponse =
             self.read_json("balance-sheet-output.json").await?;
         let mut sheets = Vec::new();
-        for report in response.annualReports {
+        for report in response.annual_reports {
             let helper: BalanceSheetHelper = serde_json::from_value(report)
                 .map_err(|e| AppError::InternalError(e.to_string()))?;
             sheets.push(helper.into());
@@ -162,7 +165,7 @@ impl MarketDataProvider for MockMarketDataProvider {
         self.simulate_delay().await;
         let response: MockCashFlowResponse = self.read_json("cash-flow-output.json").await?;
         let mut flows = Vec::new();
-        for report in response.annualReports {
+        for report in response.annual_reports {
             let helper: CashFlowHelper = serde_json::from_value(report)
                 .map_err(|e| AppError::InternalError(e.to_string()))?;
             flows.push(helper.into());
