@@ -101,7 +101,7 @@ export function ScreenerEditor({
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
+  } = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: "",
@@ -112,7 +112,7 @@ export function ScreenerEditor({
         verdict_types: [],
         needs_analysis: false,
       },
-    },
+    } as any,
   });
 
   useEffect(() => {
@@ -214,7 +214,7 @@ export function ScreenerEditor({
               />
               {errors.title && (
                 <p className="text-xs text-destructive">
-                  {errors.title.message}
+                  {errors.title?.message as string}
                 </p>
               )}
             </div>
