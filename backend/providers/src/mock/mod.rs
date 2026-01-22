@@ -7,7 +7,7 @@ use domain::domain::{
 use domain::error::AppError;
 use domain::ports::market_data::MarketDataProvider;
 use domain::ports::storage::ObjectStorage;
-use std::collections::HashMap;
+
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use tokio::time::sleep;
@@ -105,7 +105,7 @@ impl MarketDataProvider for MockMarketDataProvider {
     async fn get_company_overview(&self, symbol: &str) -> Result<CompanyOverview, AppError> {
         self.simulate_delay().await;
         // Load using helper to handle PascalCase keys
-        let mut helper: MockCompanyOverviewResponse =
+        let helper: MockCompanyOverviewResponse =
             self.read_json("overview-output.json").await?;
 
         let mut overview: CompanyOverview = helper.into();
