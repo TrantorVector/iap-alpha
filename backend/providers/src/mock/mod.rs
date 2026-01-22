@@ -442,7 +442,9 @@ impl From<IncomeStatementHelper> for IncomeStatement {
         IncomeStatement {
             period_end_date: chrono::NaiveDate::parse_from_str(&val.fiscal_date_ending, "%Y-%m-%d")
                 .unwrap_or_default(),
-            revenue: val.total_revenue.and_then(|s| BigDecimal::from_str(&s).ok()),
+            revenue: val
+                .total_revenue
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
             gross_profit: val.gross_profit.and_then(|s| BigDecimal::from_str(&s).ok()),
             operating_income: val
                 .operating_income
@@ -489,7 +491,9 @@ impl From<BalanceSheetHelper> for BalanceSheet {
             short_term_debt: val
                 .short_term_debt
                 .and_then(|s| BigDecimal::from_str(&s).ok()),
-            long_term_debt: val.long_term_debt.and_then(|s| BigDecimal::from_str(&s).ok()),
+            long_term_debt: val
+                .long_term_debt
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
             net_debt: None,
             common_stock_shares_outstanding: val
                 .common_stock_shares_outstanding
