@@ -28,6 +28,20 @@ pub struct JwtService {
 
 impl JwtService {
     pub fn new(private_key_pem: &str, public_key_pem: &str) -> Result<Self, AppError> {
+        Self::with_durations(
+            private_key_pem,
+            public_key_pem,
+            std::time::Duration::from_secs(24 * 60 * 60),
+            std::time::Duration::from_secs(30 * 24 * 60 * 60),
+        )
+    }
+
+    pub fn with_durations(
+        private_key_pem: &str,
+        public_key_pem: &str,
+        access_token_duration: std::time::Duration,
+        refresh_token_duration: std::time::Duration,
+    ) -> Result<Self, AppError> {
         let encoding_key = EncodingKey::from_rsa_pem(private_key_pem.as_bytes())
             .map_err(|e| AppError::InternalError(format!("Failed to parse private key: {}", e)))?;
         let decoding_key = DecodingKey::from_rsa_pem(public_key_pem.as_bytes())
@@ -36,8 +50,8 @@ impl JwtService {
         Ok(Self {
             encoding_key,
             decoding_key,
-            access_token_duration: std::time::Duration::from_secs(24 * 60 * 60), // 24 hours
-            refresh_token_duration: std::time::Duration::from_secs(30 * 24 * 60 * 60), // 30 days
+            access_token_duration,
+            refresh_token_duration,
         })
     }
 
@@ -96,6 +110,7 @@ impl JwtService {
     pub fn validate_access_token(&self, token: &str) -> Result<Claims, AppError> {
         let mut validation = Validation::new(Algorithm::RS256);
         validation.set_issuer(&["iap-api"]);
+        validation.leeway = 0;
 
         let token_data = decode::<Claims>(token, &self.decoding_key, &validation)
             .map_err(|e| AppError::AuthError(format!("Invalid token: {}", e)))?;
@@ -178,5 +193,66 @@ mod tests {
             .validate_access_token(&token)
             .expect("Failed to validate refresh token");
         assert_eq!(claims.sub, user_id.to_string());
+    }
+
+    #[test]
+    fn test_expired_token() {
+        let (priv_key, pub_key) = JwtService::generate_dev_keypair();
+        // Set duration to 0 to expire immediately (or negative if iat is same, but let's use small duration and sleep or just rely on iat)
+        // Actually, let's set duration to -10 seconds by calculating exp manually or just using 0 duration.
+        let service = JwtService::with_durations(
+            &priv_key,
+            &pub_key,
+            std::time::Duration::from_secs(0),
+            std::time::Duration::from_secs(0),
+        )
+        .unwrap();
+
+        let token = service.create_access_token(Uuid::new_v4(), vec![]).unwrap();
+        
+        // Wait 1s to be sure
+        std::thread::sleep(std::time::Duration::from_secs(1));
+
+        let res = service.validate_access_token(&token);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_invalid_signature() {
+        let (priv_key1, pub_key1) = JwtService::generate_dev_keypair();
+        let (priv_key2, pub_key2) = JwtService::generate_dev_keypair();
+
+        let service1 = JwtService::new(&priv_key1, &pub_key1).unwrap();
+        let service2 = JwtService::new(&priv_key2, &pub_key2).unwrap();
+
+        let token = service1.create_access_token(Uuid::new_v4(), vec![]).unwrap();
+        
+        // Validate token from service1 using service2
+        let res = service2.validate_access_token(&token);
+        assert!(res.is_err());
+    }
+
+    #[test]
+    fn test_wrong_algorithm() {
+        let (priv_key, pub_key) = JwtService::generate_dev_keypair();
+        let service = JwtService::new(&priv_key, &pub_key).unwrap();
+
+        let claims = Claims {
+            sub: Uuid::new_v4().to_string(),
+            iat: 1000,
+            exp: 10000000000,
+            iss: "iap-api".to_string(),
+            scope: vec![],
+        };
+
+        // Create token with HS256 (symmetric) while service expects RS256
+        let token = encode(
+            &Header::new(Algorithm::HS256),
+            &claims,
+            &EncodingKey::from_secret("secret".as_bytes()),
+        ).unwrap();
+
+        let res = service.validate_access_token(&token);
+        assert!(res.is_err());
     }
 }
