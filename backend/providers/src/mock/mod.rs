@@ -78,6 +78,7 @@ impl MockMarketDataProvider {
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 struct MockIncomeStatementResponse {
     annual_reports: Vec<serde_json::Value>,
     quarterly_reports: Vec<serde_json::Value>,
@@ -85,6 +86,7 @@ struct MockIncomeStatementResponse {
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 struct MockBalanceSheetResponse {
     annual_reports: Vec<serde_json::Value>,
     quarterly_reports: Vec<serde_json::Value>,
@@ -92,6 +94,7 @@ struct MockBalanceSheetResponse {
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
 struct MockCashFlowResponse {
     annual_reports: Vec<serde_json::Value>,
     quarterly_reports: Vec<serde_json::Value>,
