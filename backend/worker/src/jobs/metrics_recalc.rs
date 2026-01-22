@@ -286,7 +286,11 @@ async fn process_company(
             let close = lp.close.and_then(|v: BigDecimal| v.to_f64()).unwrap_or(0.0);
 
             // P/E (Latest)
-            if let Some(eps) = latest_income.eps.as_ref().and_then(|v: &BigDecimal| v.to_f64()) {
+            if let Some(eps) = latest_income
+                .eps
+                .as_ref()
+                .and_then(|v: &BigDecimal| v.to_f64())
+            {
                 if eps > 0.0 {
                     let pe = close / eps;
                     insert_metric(

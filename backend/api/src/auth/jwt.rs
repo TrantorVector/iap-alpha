@@ -209,7 +209,7 @@ mod tests {
         .unwrap();
 
         let token = service.create_access_token(Uuid::new_v4(), vec![]).unwrap();
-        
+
         // Wait 1s to be sure
         std::thread::sleep(std::time::Duration::from_secs(1));
 
@@ -225,8 +225,10 @@ mod tests {
         let service1 = JwtService::new(&priv_key1, &pub_key1).unwrap();
         let service2 = JwtService::new(&priv_key2, &pub_key2).unwrap();
 
-        let token = service1.create_access_token(Uuid::new_v4(), vec![]).unwrap();
-        
+        let token = service1
+            .create_access_token(Uuid::new_v4(), vec![])
+            .unwrap();
+
         // Validate token from service1 using service2
         let res = service2.validate_access_token(&token);
         assert!(res.is_err());
@@ -250,7 +252,8 @@ mod tests {
             &Header::new(Algorithm::HS256),
             &claims,
             &EncodingKey::from_secret("secret".as_bytes()),
-        ).unwrap();
+        )
+        .unwrap();
 
         let res = service.validate_access_token(&token);
         assert!(res.is_err());
