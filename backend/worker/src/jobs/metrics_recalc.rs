@@ -28,7 +28,7 @@ impl Job for MetricsRecalculationJob {
         info!("Starting metrics recalculation job");
 
         // Fetch active companies
-        let companies =
+        let companies: Vec<_> =
             sqlx::query!("SELECT id, symbol, currency FROM companies WHERE is_active = true")
                 .fetch_all(pool)
                 .await?;
@@ -70,7 +70,7 @@ async fn process_company(
     currency: &str,
 ) -> Result<()> {
     // 1. Fetch all financial statements sorted by period_end_date ASC
-    let incomes = sqlx::query_as!(
+    let incomes: Vec<DbIncome> = sqlx::query_as!(
         DbIncome,
         "SELECT * FROM income_statements WHERE company_id = $1 ORDER BY period_end_date ASC",
         company_id
@@ -82,7 +82,7 @@ async fn process_company(
         return Ok(());
     }
 
-    let balances = sqlx::query_as!(
+    let balances: Vec<DbBalance> = sqlx::query_as!(
         DbBalance,
         "SELECT * FROM balance_sheets WHERE company_id = $1 ORDER BY period_end_date ASC",
         company_id
@@ -90,7 +90,7 @@ async fn process_company(
     .fetch_all(pool)
     .await?;
 
-    let cash_flows = sqlx::query_as!(
+    let cash_flows: Vec<DbCashFlow> = sqlx::query_as!(
         DbCashFlow,
         "SELECT * FROM cash_flow_statements WHERE company_id = $1 ORDER BY period_end_date ASC",
         company_id
@@ -186,7 +186,7 @@ async fn process_company(
     // 4. Fetch Prices
     let mut aligned_prices = Vec::new();
     for date in &dates {
-        let price = sqlx::query_as!(
+        let price: Option<DbPrice> = sqlx::query_as!(
             DbPrice,
             "SELECT * FROM daily_prices WHERE company_id = $1 AND price_date <= $2 ORDER BY price_date DESC LIMIT 1",
             company_id,
@@ -197,10 +197,10 @@ async fn process_company(
 
         let domain_price = price.map(|p| DomainPrice {
             date: p.price_date,
-            open: p.open.and_then(|v| v.to_f64()).unwrap_or(0.0),
-            high: p.high.and_then(|v| v.to_f64()).unwrap_or(0.0),
-            low: p.low.and_then(|v| v.to_f64()).unwrap_or(0.0),
-            close: p.close.and_then(|v| v.to_f64()).unwrap_or(0.0),
+            open: p.open.and_then(|v: BigDecimal| v.to_f64()).unwrap_or(0.0),
+            high: p.high.and_then(|v: BigDecimal| v.to_f64()).unwrap_or(0.0),
+            low: p.low.and_then(|v: BigDecimal| v.to_f64()).unwrap_or(0.0),
+            close: p.close.and_then(|v: BigDecimal| v.to_f64()).unwrap_or(0.0),
         });
         aligned_prices.push(domain_price);
     }
@@ -274,7 +274,7 @@ async fn process_company(
         let latest_period_end = latest_income.period_end_date;
         let latest_period_type = incomes[latest_idx].period_type.clone();
 
-        let latest_price_row = sqlx::query_as!(
+        let latest_price_row: Option<DbPrice> = sqlx::query_as!(
             DbPrice,
             "SELECT * FROM daily_prices WHERE company_id = $1 ORDER BY price_date DESC LIMIT 1",
             company_id
@@ -283,10 +283,14 @@ async fn process_company(
         .await?;
 
         if let Some(lp) = latest_price_row {
-            let close = lp.close.and_then(|v| v.to_f64()).unwrap_or(0.0);
+            let close = lp.close.and_then(|v: BigDecimal| v.to_f64()).unwrap_or(0.0);
 
             // P/E (Latest)
-            if let Some(eps) = latest_income.eps.as_ref().and_then(|v| v.to_f64()) {
+            if let Some(eps) = latest_income
+                .eps
+                .as_ref()
+                .and_then(|v: &BigDecimal| v.to_f64())
+            {
                 if eps > 0.0 {
                     let pe = close / eps;
                     insert_metric(
@@ -310,7 +314,7 @@ async fn process_company(
 
             for (name, days) in dates {
                 let target_date = lp.price_date - chrono::Duration::days(days);
-                let hist_price = sqlx::query_as!(
+                let hist_price: Option<DbPrice> = sqlx::query_as!(
                     DbPrice,
                     "SELECT * FROM daily_prices WHERE company_id = $1 AND price_date <= $2 ORDER BY price_date DESC LIMIT 1",
                     company_id,
@@ -320,7 +324,7 @@ async fn process_company(
                 .await?;
 
                 if let Some(hp) = hist_price {
-                    let hp_close = hp.close.and_then(|v| v.to_f64()).unwrap_or(0.0);
+                    let hp_close = hp.close.and_then(|v: BigDecimal| v.to_f64()).unwrap_or(0.0);
                     if hp_close > 0.0 {
                         let mom = (close / hp_close - 1.0) * 100.0;
                         insert_metric(

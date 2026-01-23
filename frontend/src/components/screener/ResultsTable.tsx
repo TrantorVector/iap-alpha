@@ -41,7 +41,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
     () => [
       {
         accessorKey: "symbol",
-        header: ({ column }: HeaderContext<ScreenerResult, string>) => (
+        header: ({ column }: HeaderContext<ScreenerResult, unknown>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -62,7 +62,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "market_cap",
-        header: ({ column }: HeaderContext<ScreenerResult, number>) => (
+        header: ({ column }: HeaderContext<ScreenerResult, unknown>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -72,12 +72,12 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         ),
-        cell: ({ row }: CellContext<ScreenerResult, number>) =>
+        cell: ({ row }: CellContext<ScreenerResult, unknown>) =>
           row.original.market_cap_formatted,
       },
       {
         accessorKey: "sector",
-        header: ({ column }: HeaderContext<ScreenerResult, string | null>) => (
+        header: ({ column }: HeaderContext<ScreenerResult, unknown>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -91,7 +91,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
 
       {
         accessorKey: "momentum_1m",
-        header: ({ column }: HeaderContext<ScreenerResult, number | null>) => (
+        header: ({ column }: HeaderContext<ScreenerResult, unknown>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -104,7 +104,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "momentum_3m",
-        header: ({ column }: HeaderContext<ScreenerResult, number | null>) => (
+        header: ({ column }: HeaderContext<ScreenerResult, unknown>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -117,7 +117,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "momentum_6m",
-        header: ({ column }: HeaderContext<ScreenerResult, number | null>) => (
+        header: ({ column }: HeaderContext<ScreenerResult, unknown>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -130,7 +130,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "revenue_yoy_growth",
-        header: ({ column }: HeaderContext<ScreenerResult, number | null>) => (
+        header: ({ column }: HeaderContext<ScreenerResult, unknown>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -143,7 +143,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "operating_margin",
-        header: ({ column }: HeaderContext<ScreenerResult, number | null>) => (
+        header: ({ column }: HeaderContext<ScreenerResult, unknown>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -156,7 +156,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "verdict",
-        header: ({ column }: HeaderContext<ScreenerResult, string | null>) => (
+        header: ({ column }: HeaderContext<ScreenerResult, unknown>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -169,7 +169,7 @@ export function ResultsTable({ results, isLoading }: ResultsTableProps) {
       },
       {
         accessorKey: "last_analyzed",
-        header: ({ column }: HeaderContext<ScreenerResult, string | null>) => (
+        header: ({ column }: HeaderContext<ScreenerResult, unknown>) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}

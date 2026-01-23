@@ -199,8 +199,29 @@ enable_auto_merge() {
 #-------------------------------------------------------------------------------
 
 wait_for_checks_to_register() {
-    log_info "Waiting ${CI_REGISTRATION_WAIT}s for GitHub to register checks..."
-    sleep "$CI_REGISTRATION_WAIT"
+    local pr_number=$1
+    local max_wait=120
+    local waited=0
+
+    log_info "Polling GitHub until checks appear (max ${max_wait}s)..."
+
+    while [[ $waited -lt $max_wait ]]; do
+        local status
+        status=$(get_ci_status "$pr_number")
+
+        if [[ "$status" != "none" ]]; then
+            log_success "CI checks registered and in status: $status"
+            return 0
+        fi
+
+        sleep 5
+        waited=$((waited + 5))
+        if (( waited % 20 == 0 )); then
+            log_info "Still waiting for checks to register... (${waited}s)"
+        fi
+    done
+
+    log_warning "No checks appeared after ${max_wait}s. This might cause an immediate merge if you are an admin."
 }
 
 get_ci_status() {
@@ -448,7 +469,7 @@ main() {
     pr_number=$(get_or_create_pr "$pr_title")
 
     # Phase 3: Wait for checks to register (race condition fix)
-    wait_for_checks_to_register
+    wait_for_checks_to_register "$pr_number"
 
     # Phase 4: Try to enable auto-merge (Fire-and-Forget)
     if enable_auto_merge "$pr_number"; then

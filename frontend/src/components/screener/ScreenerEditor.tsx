@@ -214,7 +214,7 @@ export function ScreenerEditor({
               />
               {errors.title && (
                 <p className="text-xs text-destructive">
-                  {errors.title.message}
+                  {errors.title?.message as string}
                 </p>
               )}
             </div>

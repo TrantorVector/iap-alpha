@@ -14,8 +14,7 @@ pub struct CreateDocumentParams {
     pub company_id: Uuid,
     pub document_type: String,
     pub period_end_date: Option<chrono::NaiveDate>,
-    pub fiscal_year: Option<i32>,
-    pub fiscal_quarter: Option<i32>,
+
     pub title: String,
     pub storage_key: String,
     pub source_url: Option<String>,
@@ -33,7 +32,7 @@ impl DocumentRepository {
     pub async fn find_by_id(&self, id: Uuid) -> DbResult<Option<Document>> {
         let document = sqlx::query_as::<_, Document>(
             r#"
-            SELECT id, company_id, document_type, period_end_date, fiscal_year, fiscal_quarter,
+            SELECT id, company_id, document_type, period_end_date,
                    title, storage_key, source_url, file_size, mime_type, created_at, updated_at
             FROM documents
             WHERE id = $1
@@ -55,7 +54,7 @@ impl DocumentRepository {
     ) -> DbResult<Vec<Document>> {
         let mut query = String::from(
             r#"
-            SELECT id, company_id, document_type, period_end_date, fiscal_year, fiscal_quarter,
+            SELECT id, company_id, document_type, period_end_date,
                    title, storage_key, source_url, file_size, mime_type, created_at, updated_at
             FROM documents
             WHERE company_id = $1
@@ -84,11 +83,11 @@ impl DocumentRepository {
         let document = sqlx::query_as::<_, Document>(
             r#"
             INSERT INTO documents (
-                id, company_id, document_type, period_end_date, fiscal_year, fiscal_quarter,
+                id, company_id, document_type, period_end_date,
                 title, storage_key, source_url, file_size, mime_type, created_at, updated_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
-            RETURNING id, company_id, document_type, period_end_date, fiscal_year, fiscal_quarter,
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+            RETURNING id, company_id, document_type, period_end_date,
                       title, storage_key, source_url, file_size, mime_type, created_at, updated_at
             "#,
         )
@@ -96,8 +95,6 @@ impl DocumentRepository {
         .bind(params.company_id)
         .bind(params.document_type)
         .bind(params.period_end_date)
-        .bind(params.fiscal_year)
-        .bind(params.fiscal_quarter)
         .bind(params.title)
         .bind(params.storage_key)
         .bind(params.source_url)

@@ -46,7 +46,7 @@ impl Config {
 #[tokio::main]
 async fn main() -> Result<()> {
     // Load .env file (try from root first, then current)
-    if let Err(_) = dotenvy::from_path("../.env") {
+    if dotenvy::from_path("../.env").is_err() {
         dotenvy::dotenv().ok();
     }
 

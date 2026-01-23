@@ -507,10 +507,8 @@ pub async fn get_company_documents(
                 id: d.id,
                 document_type: d.document_type,
                 period_end_date: d.period_end_date,
-                fiscal_year: d
-                    .fiscal_year
-                    .unwrap_or_else(|| d.period_end_date.map(|dt| dt.year()).unwrap_or(0)),
-                fiscal_quarter: d.fiscal_quarter,
+                fiscal_year: d.period_end_date.map(|dt| dt.year()).unwrap_or(0),
+                fiscal_quarter: d.period_end_date.map(|dt| (dt.month() - 1) as i32 / 3 + 1),
                 title: d.title,
                 source_url: d.source_url,
                 storage_key: d.storage_key,
@@ -768,10 +766,6 @@ pub async fn upload_company_document(
             )
         })?;
 
-    // 9. Determine fiscal year and quarter from period_end_date if provided
-    let fiscal_year = period_end_date.map(|d| d.year());
-    let fiscal_quarter = None; // Could calculate this based on company fiscal year end month
-
     // 10. Create document record
     let title = format!("{} - {}", document_type, file_name);
     let document = doc_repo
@@ -779,8 +773,6 @@ pub async fn upload_company_document(
             company_id,
             document_type: document_type.clone(),
             period_end_date,
-            fiscal_year,
-            fiscal_quarter,
             title,
             storage_key: storage_key.clone(),
             source_url: None, // source_url (not applicable for uploads)
