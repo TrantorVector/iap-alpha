@@ -5,6 +5,7 @@ use std::sync::Arc;
 use tokio::net::TcpListener;
 use uuid::Uuid;
 
+#[allow(dead_code)]
 pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
@@ -77,6 +78,7 @@ impl TestApp {
     }
 
     /// Clean up data for a specific user or company
+    #[allow(dead_code)]
     pub async fn cleanup_verdicts(&self, user_id: Uuid) {
         sqlx::query("DELETE FROM verdicts WHERE user_id = $1")
             .bind(user_id)
