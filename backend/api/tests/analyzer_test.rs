@@ -1,3 +1,4 @@
+use api::auth::password::hash_password;
 use api::{create_router, AppState, Config};
 use reqwest::{Client, StatusCode};
 use serde_json::{json, Value};
@@ -6,6 +7,29 @@ use std::sync::Arc;
 use std::{env, time::Duration};
 use tokio::net::TcpListener;
 use uuid::Uuid;
+
+async fn ensure_test_user(pool: &sqlx::PgPool) {
+    let username = "testuser";
+    let password = "TestPass123!";
+    let password_hash = hash_password(password).expect("Failed to hash password");
+
+    // Upsert user
+    sqlx::query(
+        r#"
+        INSERT INTO users (id, username, email, password_hash, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, NOW(), NOW())
+        ON CONFLICT (username) DO UPDATE 
+        SET password_hash = EXCLUDED.password_hash
+        "#,
+    )
+    .bind(Uuid::new_v4())
+    .bind(username)
+    .bind("testuser@example.com")
+    .bind(password_hash)
+    .execute(pool)
+    .await
+    .expect("Failed to upsert test user");
+}
 
 async fn spawn_app() -> (String, sqlx::PgPool) {
     let database_url = env::var("DATABASE_URL")
@@ -68,12 +92,9 @@ async fn get_client() -> Client {
         .unwrap()
 }
 
-async fn login(client: &Client, base_url: &str) -> String {
-    // Ensure test user exists (idempotent)
-    // We assume the app or previous seeds created 'testuser'.
-    // If not, we might need to insert it. auth_integration assumes it exists.
-    // We'll try to login, if it fails, we might need to create it.
-    // For now, assume consistent test env or reuse auth_integration logic effectively.
+async fn login(client: &Client, base_url: &str, pool: &sqlx::PgPool) -> String {
+    // Ensure test user exists with known password
+    ensure_test_user(pool).await;
 
     // Login
     let resp = client
@@ -89,7 +110,9 @@ async fn login(client: &Client, base_url: &str) -> String {
     if resp.status() != StatusCode::OK {
         // Fallback: maybe create user? But we don't have signup endpoint exposed in auth_integration.
         // We assume the DB has the user 'testuser' from migrations or seeds.
-        panic!("Login failed: {:?}", resp.status());
+        let status = resp.status();
+        let body = resp.text().await.unwrap_or_default();
+        panic!("Login failed: {:?} | Body: {}", status, body);
     }
 
     let body: Value = resp.json().await.unwrap();
@@ -150,13 +173,15 @@ async fn cleanup_company(pool: &sqlx::PgPool, company_id: Uuid) {
         .await;
 }
 
-async fn setup_aapl(pool: &sqlx::PgPool) -> Uuid {
-    // Attempt to find existing AAPL to clean up old test runs
-    let existing: Option<(Uuid,)> =
-        sqlx::query_as("SELECT id FROM companies WHERE symbol = 'AAPL'")
-            .fetch_optional(pool)
-            .await
-            .unwrap_or_default();
+async fn setup_company(pool: &sqlx::PgPool) -> (Uuid, String) {
+    let symbol = format!("TEST-{}", Uuid::new_v4().to_string()[..8].to_uppercase());
+
+    // Attempt to find existing (unlikely due to UUID) to clean up old test runs
+    let existing: Option<(Uuid,)> = sqlx::query_as("SELECT id FROM companies WHERE symbol = $1")
+        .bind(&symbol)
+        .fetch_optional(pool)
+        .await
+        .unwrap_or_default();
 
     if let Some(r) = existing {
         cleanup_company(pool, r.0).await;
@@ -165,13 +190,15 @@ async fn setup_aapl(pool: &sqlx::PgPool) -> Uuid {
     let company_id = Uuid::new_v4();
 
     // Create Company
+    // Create Company
     sqlx::query(
         r#"
         INSERT INTO companies (id, symbol, exchange, name, sector_id, industry, country, market_cap, is_active, created_at, updated_at)
-        VALUES ($1, 'AAPL', 'NASDAQ', 'Apple Inc.', NULL, 'Consumer Electronics', 'USA', 0, true, NOW(), NOW())
+        VALUES ($1, $2, 'NASDAQ', 'Test Inc.', NULL, 'Consumer Electronics', 'USA', 0, true, NOW(), NOW())
         "#,
     )
     .bind(company_id)
+    .bind(&symbol)
     .execute(pool)
     .await
     .expect("Failed to insert company");
@@ -197,19 +224,11 @@ async fn setup_aapl(pool: &sqlx::PgPool) -> Uuid {
     .await
     .expect("Failed to insert income statements");
 
-    company_id
+    (company_id, symbol)
 }
 
-async fn cleanup_aapl(pool: &sqlx::PgPool) {
-    let existing: Option<(Uuid,)> =
-        sqlx::query_as("SELECT id FROM companies WHERE symbol = 'AAPL'")
-            .fetch_optional(pool)
-            .await
-            .unwrap_or_default();
-
-    if let Some(r) = existing {
-        cleanup_company(pool, r.0).await;
-    }
+async fn cleanup_test_company(pool: &sqlx::PgPool, id: Uuid) {
+    cleanup_company(pool, id).await;
 }
 
 // -----------------------------------------------------------------------------
@@ -220,8 +239,8 @@ async fn cleanup_aapl(pool: &sqlx::PgPool) {
 async fn test_get_company_details_returns_data() {
     let (base_url, pool) = spawn_app().await;
     let client = get_client().await;
-    let token = login(&client, &base_url).await;
-    let company_id = setup_aapl(&pool).await;
+    let token = login(&client, &base_url, &pool).await;
+    let (company_id, symbol) = setup_company(&pool).await;
 
     let resp = client
         .get(format!("{}/api/v1/companies/{}", base_url, company_id))
@@ -232,17 +251,17 @@ async fn test_get_company_details_returns_data() {
 
     assert_eq!(resp.status(), StatusCode::OK);
     let body: Value = resp.json().await.unwrap();
-    assert_eq!(body["symbol"], "AAPL");
-    assert_eq!(body["name"], "Apple Inc.");
+    assert_eq!(body["symbol"], symbol);
+    assert_eq!(body["name"], "Test Inc.");
 
-    cleanup_aapl(&pool).await;
+    cleanup_test_company(&pool, company_id).await;
 }
 
 #[tokio::test]
 async fn test_get_nonexistent_company_returns_404() {
-    let (base_url, _pool) = spawn_app().await;
+    let (base_url, pool) = spawn_app().await;
     let client = get_client().await;
-    let token = login(&client, &base_url).await;
+    let token = login(&client, &base_url, &pool).await;
 
     let fake_id = Uuid::new_v4();
     let resp = client
@@ -263,8 +282,8 @@ async fn test_get_nonexistent_company_returns_404() {
 async fn test_get_metrics_returns_quarterly_data() {
     let (base_url, pool) = spawn_app().await;
     let client = get_client().await;
-    let token = login(&client, &base_url).await;
-    let company_id = setup_aapl(&pool).await;
+    let token = login(&client, &base_url, &pool).await;
+    let (company_id, _) = setup_company(&pool).await;
 
     let resp = client
         .get(format!(
@@ -286,15 +305,15 @@ async fn test_get_metrics_returns_quarterly_data() {
     // Adjust assertions based on actual API response structure
     assert!(body.is_array() || body.is_object());
 
-    cleanup_aapl(&pool).await;
+    cleanup_test_company(&pool, company_id).await;
 }
 
 #[tokio::test]
 async fn test_get_metrics_returns_annual_data() {
     let (base_url, pool) = spawn_app().await;
     let client = get_client().await;
-    let token = login(&client, &base_url).await;
-    let company_id = setup_aapl(&pool).await;
+    let token = login(&client, &base_url, &pool).await;
+    let (company_id, _) = setup_company(&pool).await;
 
     let resp = client
         .get(format!(
@@ -319,7 +338,7 @@ async fn test_get_metrics_returns_annual_data() {
                 .unwrap_or(false)
     );
 
-    cleanup_aapl(&pool).await;
+    cleanup_test_company(&pool, company_id).await;
 }
 
 // -----------------------------------------------------------------------------
@@ -330,17 +349,17 @@ async fn test_get_metrics_returns_annual_data() {
 async fn test_list_documents_returns_freshness_metadata() {
     let (base_url, pool) = spawn_app().await;
     let client = get_client().await;
-    let token = login(&client, &base_url).await;
-    let company_id = setup_aapl(&pool).await;
+    let token = login(&client, &base_url, &pool).await;
+    let (company_id, _) = setup_company(&pool).await;
 
     // Seed a document
     sqlx::query(
         r#"
         INSERT INTO documents (
-            id, company_id, document_type, period_end_date, fiscal_year, fiscal_quarter,
+            id, company_id, document_type, period_end_date,
             title, storage_key, mime_type, file_size, created_at, updated_at
         )
-        VALUES ($1, $2, 'annual_report', '2022-12-31', 2022, 4, '10-K 2022', 'keys/10k.pdf', 'application/pdf', 1024, NOW(), NOW())
+        VALUES ($1, $2, 'annual_report', '2022-12-31', '10-K 2022', 'keys/10k.pdf', 'application/pdf', 1024, NOW(), NOW())
         "#,
     )
     .bind(Uuid::new_v4())
@@ -371,7 +390,7 @@ async fn test_list_documents_returns_freshness_metadata() {
     assert!(body["freshness"].is_object());
     assert!(body["freshness"]["is_stale"].is_boolean());
 
-    cleanup_aapl(&pool).await;
+    cleanup_test_company(&pool, company_id).await;
 }
 
 #[tokio::test]
@@ -388,8 +407,8 @@ async fn test_upload_document_creates_record() {
 
     let (base_url, pool) = spawn_app().await;
     let client = get_client().await;
-    let token = login(&client, &base_url).await;
-    let company_id = setup_aapl(&pool).await;
+    let token = login(&client, &base_url, &pool).await;
+    let (company_id, _) = setup_company(&pool).await;
 
     let form = multipart::Form::new()
         .text("document_type", "quarterly_report")
@@ -434,7 +453,7 @@ async fn test_upload_document_creates_record() {
         .unwrap();
     assert!(count > 0);
 
-    cleanup_aapl(&pool).await;
+    cleanup_test_company(&pool, company_id).await;
 }
 
 // -----------------------------------------------------------------------------
@@ -445,8 +464,8 @@ async fn test_upload_document_creates_record() {
 async fn test_get_verdict_for_unanalyzed_company() {
     let (base_url, pool) = spawn_app().await;
     let client = get_client().await;
-    let token = login(&client, &base_url).await;
-    let company_id = setup_aapl(&pool).await;
+    let token = login(&client, &base_url, &pool).await;
+    let (company_id, _) = setup_company(&pool).await;
 
     let resp = client
         .get(format!(
@@ -468,15 +487,15 @@ async fn test_get_verdict_for_unanalyzed_company() {
     assert_eq!(body["lock_version"].as_i64().unwrap(), 0);
     assert!(body["final_verdict"].is_null());
 
-    cleanup_aapl(&pool).await;
+    cleanup_test_company(&pool, company_id).await;
 }
 
 #[tokio::test]
 async fn test_create_and_update_verdict() {
     let (base_url, pool) = spawn_app().await;
     let client = get_client().await;
-    let token = login(&client, &base_url).await;
-    let company_id = setup_aapl(&pool).await;
+    let token = login(&client, &base_url, &pool).await;
+    let (company_id, _) = setup_company(&pool).await;
 
     // 1. Create Initial Verdict (Update with no version / version 0)
     // Actually our API logic says if verdict not found, CREATE it.
@@ -566,5 +585,5 @@ async fn test_create_and_update_verdict() {
     // We did 1 update (0 -> 1). So history should have 1 entry (snapshot of version 0).
     assert!(!history.is_empty());
 
-    cleanup_aapl(&pool).await;
+    cleanup_test_company(&pool, company_id).await;
 }
