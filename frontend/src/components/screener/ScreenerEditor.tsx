@@ -101,7 +101,7 @@ export function ScreenerEditor({
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<any>({
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: "",
@@ -112,7 +112,7 @@ export function ScreenerEditor({
         verdict_types: [],
         needs_analysis: false,
       },
-    } as any,
+    },
   });
 
   useEffect(() => {
