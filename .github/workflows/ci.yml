@@ -49,6 +49,8 @@ jobs:
       
       - name: Run clippy
         run: cd backend && cargo clippy --all-targets -- -D warnings
+        env:
+          DATABASE_URL: postgres://postgres:dev@localhost:5432/irp_dev
       
       - name: Run tests
         run: cd backend && cargo test --workspace -- --test-threads=1
