@@ -91,3 +91,9 @@ export const screeners = {
       override_criteria: overrideCriteria,
     }),
 };
+
+export const tracker = {
+  getSummary: () => client.get<T.TrackerSummaryResponse>("/tracker/summary"),
+  getVerdicts: (params?: T.TrackerQueryParams) =>
+    client.get<T.VerdictListResponse>("/tracker/verdicts", params as any),
+};

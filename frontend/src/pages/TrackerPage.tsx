@@ -1,92 +1,68 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { SummaryCards } from "@/components/tracker/SummaryCards";
 import { TrackerFilters } from "@/components/tracker/TrackerFilters";
-import { TrackerTable, TrackerItem } from "@/components/tracker/TrackerTable";
-
-interface TrackerSummary {
-    total_analyzed: number;
-    invest_count: number;
-    pass_count: number;
-    watchlist_count: number;
-    no_thesis_count: number;
-}
+import { TrackerTable } from "@/components/tracker/TrackerTable";
+import { PaginationState } from "@tanstack/react-table";
+import { tracker } from "@/api/endpoints";
+import { TrackerSummaryResponse, TrackerItemOut, TrackerQueryParams } from "@/api/types";
 
 export default function TrackerPage() {
-    const [summary, setSummary] = useState<TrackerSummary | null>(null);
-    const [data, setData] = useState<TrackerItem[]>([]);
+    const [summary, setSummary] = useState<TrackerSummaryResponse | null>(null);
+    const [items, setItems] = useState<TrackerItemOut[]>([]);
     const [total, setTotal] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
-    const [page, setPage] = useState(1);
-    const [searchValue, setSearchValue] = useState("");
-    const [verdictFilter, setVerdictFilter] = useState<string | null>(null);
 
-    const perPage = 20;
+    // Filters and Pagination
+    const [filters, setFilters] = useState<TrackerQueryParams>({});
+    const [pagination, setPagination] = useState<PaginationState>({
+        pageIndex: 0,
+        pageSize: 20,
+    });
 
-    const fetchSummary = useCallback(async () => {
+    const sectors = [
+        "Technology", "Healthcare", "Financial Services", "Consumer Cyclical",
+        "Industrials", "Energy", "Utilities", "Real Estate",
+        "Basic Materials", "Communication Services", "Consumer Defensive"
+    ];
+
+    useEffect(() => {
+        fetchSummary();
+    }, []);
+
+    useEffect(() => {
+        fetchVerdicts();
+    }, [filters, pagination]);
+
+    const fetchSummary = async () => {
         try {
-            const token = localStorage.getItem("access_token");
-            const response = await fetch("/api/v1/tracker/summary", {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setSummary(data);
-            }
+            const data = await tracker.getSummary();
+            setSummary(data);
         } catch (err) {
             console.error("Failed to fetch tracker summary:", err);
         }
-    }, []);
+    };
 
-    const fetchVerdicts = useCallback(async () => {
+    const fetchVerdicts = async () => {
         setIsLoading(true);
         try {
-            const token = localStorage.getItem("access_token");
-            let url = `/api/v1/tracker/verdicts?page=${page}&per_page=${perPage}`;
-
-            if (searchValue) {
-                url += `&search=${encodeURIComponent(searchValue)}`;
-            }
-
-            if (verdictFilter) {
-                url += `&verdict_type=${verdictFilter}`;
-            }
-
-            const response = await fetch(url, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                setData(result.items);
-                setTotal(result.total);
-            }
+            const params: TrackerQueryParams = {
+                ...filters,
+                page: pagination.pageIndex + 1,
+                per_page: pagination.pageSize,
+            };
+            const result = await tracker.getVerdicts(params);
+            setItems(result.items);
+            setTotal(result.total);
         } catch (err) {
             console.error("Failed to fetch tracker verdicts:", err);
         } finally {
             setIsLoading(false);
         }
-    }, [page, searchValue, verdictFilter]);
-
-    useEffect(() => {
-        fetchSummary();
-    }, [fetchSummary]);
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            fetchVerdicts();
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [fetchVerdicts]);
-
-    const handleClearFilters = () => {
-        setSearchValue("");
-        setVerdictFilter(null);
-        setPage(1);
     };
 
-    const handleVerdictCardClick = (verdict: string | null) => {
-        setVerdictFilter(verdict);
-        setPage(1);
+    const handleFilterChange = (newFilters: TrackerQueryParams) => {
+        setFilters(newFilters);
+        setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     };
 
     return (
@@ -101,29 +77,34 @@ export default function TrackerPage() {
                     </p>
                 </header>
 
-                <SummaryCards
-                    summary={summary}
-                    onFilterChange={handleVerdictCardClick}
-                    activeFilter={verdictFilter}
-                />
+                {summary && (
+                    <SummaryCards
+                        summary={summary}
+                        onFilter={(verdict) => {
+                            // Logic: If click a card, set verdict filter to [verdict]. 
+                            // If already selected, clear it.
+                            const isSame = filters.verdict_type?.length === 1 && filters.verdict_type[0] === verdict;
+                            handleFilterChange({
+                                ...filters,
+                                verdict_type: (verdict && !isSame) ? [verdict] : undefined
+                            });
+                        }}
+                        activeFilter={filters.verdict_type?.length === 1 ? filters.verdict_type[0] : null}
+                    />
+                )}
 
                 <div className="space-y-4">
                     <TrackerFilters
-                        searchValue={searchValue}
-                        onSearchChange={(val) => {
-                            setSearchValue(val);
-                            setPage(1);
-                        }}
-                        onClearFilters={handleClearFilters}
-                        activeFilterCount={verdictFilter ? 1 : 0}
+                        filters={filters}
+                        onFilterChange={handleFilterChange}
+                        sectors={sectors}
                     />
 
                     <TrackerTable
-                        data={data}
-                        page={page}
-                        perPage={perPage}
+                        data={items}
                         total={total}
-                        onPageChange={setPage}
+                        pagination={pagination}
+                        onPaginationChange={setPagination}
                         isLoading={isLoading}
                     />
                 </div>

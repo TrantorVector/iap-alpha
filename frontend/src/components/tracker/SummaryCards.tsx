@@ -1,101 +1,83 @@
-import { Card, CardContent } from "@/components/ui/card";
-import {
-    BarChart3,
-    TrendingUp,
-    Slash,
-    Eye,
-    FileSearch
-} from "lucide-react";
+import { TrackerSummaryResponse } from "@/api/types";
+import { CheckCircle, XCircle, AlertCircle, MinusCircle, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SummaryCardsProps {
-    summary: {
-        total_analyzed: number;
-        invest_count: number;
-        pass_count: number;
-        watchlist_count: number;
-        no_thesis_count: number;
-    } | null;
-    onFilterChange: (verdict: string | null) => void;
+    summary: TrackerSummaryResponse;
+    onFilter: (verdict: string | null) => void;
     activeFilter: string | null;
 }
 
-export function SummaryCards({ summary, onFilterChange, activeFilter }: SummaryCardsProps) {
+export function SummaryCards({ summary, onFilter, activeFilter }: SummaryCardsProps) {
     const cards = [
         {
-            title: "Total Analyzed",
-            value: summary?.total_analyzed ?? 0,
-            icon: BarChart3,
-            color: "text-blue-500",
-            bg: "bg-blue-50 dark:bg-blue-950/30",
-            filter: null,
+            label: "Invest",
+            count: summary.invest_count,
+            icon: CheckCircle,
+            color: "text-green-500",
+            bg: "bg-green-500/10",
+            border: "border-green-500/20",
+            verdict: "Invest",
         },
         {
-            title: "Invest",
-            value: summary?.invest_count ?? 0,
-            icon: TrendingUp,
-            color: "text-emerald-500",
-            bg: "bg-emerald-50 dark:bg-emerald-950/30",
-            filter: "invest",
+            label: "Watchlist",
+            count: summary.watchlist_count,
+            icon: AlertCircle,
+            color: "text-yellow-500",
+            bg: "bg-yellow-500/10",
+            border: "border-yellow-500/20",
+            verdict: "Watchlist",
         },
         {
-            title: "Pass",
-            value: summary?.pass_count ?? 0,
-            icon: Slash,
-            color: "text-slate-500",
-            bg: "bg-slate-50 dark:bg-slate-950/30",
-            filter: "pass",
+            label: "Pass",
+            count: summary.pass_count,
+            icon: MinusCircle,
+            color: "text-gray-500",
+            bg: "bg-gray-500/10",
+            border: "border-gray-500/20",
+            verdict: "Pass",
         },
         {
-            title: "Watchlist",
-            value: summary?.watchlist_count ?? 0,
-            icon: Eye,
-            color: "text-amber-500",
-            bg: "bg-amber-50 dark:bg-amber-950/30",
-            filter: "watchlist",
-        },
-        {
-            title: "No Thesis",
-            value: summary?.no_thesis_count ?? 0,
-            icon: FileSearch,
-            color: "text-rose-500",
-            bg: "bg-rose-50 dark:bg-rose-950/30",
-            filter: "no_thesis",
+            label: "No Thesis",
+            count: summary.no_thesis_count,
+            icon: XCircle,
+            color: "text-red-500",
+            bg: "bg-red-500/10",
+            border: "border-red-500/20",
+            verdict: "No Thesis",
         },
     ];
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {cards.map((card) => {
-                const Icon = card.icon;
-                const isActive = activeFilter === card.filter;
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="bg-card p-4 rounded-lg border flex items-center gap-4">
+                <div className="p-3 rounded-full bg-primary/10 text-primary">
+                    <BarChart3 className="w-6 h-6" />
+                </div>
+                <div>
+                    <p className="text-sm text-muted-foreground font-medium">Total Analyzed</p>
+                    <p className="text-2xl font-bold">{summary.total_analyzed}</p>
+                </div>
+            </div>
 
-                return (
-                    <Card
-                        key={card.title}
-                        className={cn(
-                            "cursor-pointer transition-all hover:shadow-md border-2",
-                            isActive ? "border-primary" : "border-transparent",
-                            card.bg
-                        )}
-                        onClick={() => onFilterChange(card.filter)}
-                    >
-                        <CardContent className="p-4 flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">
-                                    {card.title}
-                                </p>
-                                <p className="text-2xl font-bold mt-1">
-                                    {card.value}
-                                </p>
-                            </div>
-                            <div className={cn("p-2 rounded-full bg-white dark:bg-slate-900 border", card.color)}>
-                                <Icon className="h-5 w-5" />
-                            </div>
-                        </CardContent>
-                    </Card>
-                );
-            })}
+            {cards.map((card) => (
+                <button
+                    key={card.label}
+                    onClick={() => onFilter(activeFilter === card.verdict ? null : card.verdict)}
+                    className={cn(
+                        "bg-card p-4 rounded-lg border flex items-center gap-4 transition-all hover:bg-accent/50 text-left",
+                        activeFilter === card.verdict ? `ring-2 ring-primary ring-offset-1` : ""
+                    )}
+                >
+                    <div className={cn("p-3 rounded-full", card.bg, card.color)}>
+                        <card.icon className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <p className="text-sm text-muted-foreground font-medium">{card.label}</p>
+                        <p className="text-2xl font-bold">{card.count}</p>
+                    </div>
+                </button>
+            ))}
         </div>
     );
 }
