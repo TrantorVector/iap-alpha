@@ -52,6 +52,8 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:dev@localhost:5432/irp_dev
       
+
+      
       - name: Run tests
         run: cd backend && cargo test --workspace -- --test-threads=1
         env:

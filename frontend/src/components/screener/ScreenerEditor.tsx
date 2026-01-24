@@ -77,7 +77,7 @@ const schema = z.object({
   }),
 });
 
-type FormData = z.infer<typeof schema>;
+type ScreenerFormData = z.infer<typeof schema>;
 
 interface ScreenerEditorProps {
   mode: "create" | "edit";
@@ -101,7 +101,8 @@ export function ScreenerEditor({
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<FormData>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: "",
@@ -153,7 +154,7 @@ export function ScreenerEditor({
     }
   }, [open, mode, initialData, reset]);
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: ScreenerFormData) => {
     // Map needs_analysis back to has_verdict
     const { needs_analysis, ...criteria } = data.filter_criteria;
     const finalCriteria = {
@@ -214,7 +215,8 @@ export function ScreenerEditor({
               />
               {errors.title && (
                 <p className="text-xs text-destructive">
-                  {errors.title?.message as string}
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {(errors.title as any)?.message}
                 </p>
               )}
             </div>

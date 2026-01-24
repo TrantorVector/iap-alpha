@@ -207,3 +207,49 @@ export interface ScreenerResult {
   last_analyzed: string | null;
   guidance_summary: string | null;
 }
+
+export interface TrackerSummaryResponse {
+  total_analyzed: number;
+  invest_count: number;
+  pass_count: number;
+  watchlist_count: number;
+  no_thesis_count: number;
+  recent_activity: RecentActivityOut[];
+}
+
+export interface RecentActivityOut {
+  company_id: string;
+  symbol: string;
+  company_name: string;
+  verdict: string;
+  recorded_at: string;
+}
+
+export interface TrackerItemOut {
+  company_id: string;
+  symbol: string;
+  company_name: string;
+  exchange: string;
+  sector: string | null;
+  verdict: string;
+  verdict_date: string;
+  summary_text: string;
+  version: number;
+}
+
+export interface VerdictListResponse {
+  items: TrackerItemOut[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+export interface TrackerQueryParams {
+  verdict_type?: string[];
+  date_from?: string;
+  date_to?: string;
+  sector?: string[];
+  search?: string;
+  page?: number;
+  per_page?: number;
+}

@@ -78,26 +78,20 @@ impl MockMarketDataProvider {
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[allow(dead_code)]
 struct MockIncomeStatementResponse {
     annual_reports: Vec<serde_json::Value>,
-    quarterly_reports: Vec<serde_json::Value>,
 }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[allow(dead_code)]
 struct MockBalanceSheetResponse {
     annual_reports: Vec<serde_json::Value>,
-    quarterly_reports: Vec<serde_json::Value>,
 }
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[allow(dead_code)]
 struct MockCashFlowResponse {
     annual_reports: Vec<serde_json::Value>,
-    quarterly_reports: Vec<serde_json::Value>,
 }
 
 #[async_trait]
@@ -363,58 +357,58 @@ struct MockCompanyOverviewResponse {
 }
 
 impl From<MockCompanyOverviewResponse> for CompanyOverview {
-    fn from(val: MockCompanyOverviewResponse) -> CompanyOverview {
+    fn from(item: MockCompanyOverviewResponse) -> Self {
         CompanyOverview {
-            symbol: val.symbol,
-            name: val.name,
-            description: val.description,
-            exchange: val.exchange,
-            currency: val.currency,
-            country: val.country,
-            sector: val.sector,
-            industry: val.industry,
-            market_capitalization: val.market_capitalization.and_then(|s| s.parse().ok()),
-            ebitda: val.ebitda.and_then(|s| s.parse().ok()),
-            pe_ratio: val.pe_ratio.and_then(|s| s.parse().ok()),
-            peg_ratio: val.peg_ratio.and_then(|s| s.parse().ok()),
-            book_value: val.book_value.and_then(|s| s.parse().ok()),
-            dividend_per_share: val.dividend_per_share.and_then(|s| s.parse().ok()),
-            dividend_yield: val.dividend_yield.and_then(|s| s.parse().ok()),
-            eps: val.eps.and_then(|s| s.parse().ok()),
-            revenue_per_share_ttm: val.revenue_per_share_ttm.and_then(|s| s.parse().ok()),
-            profit_margin: val.profit_margin.and_then(|s| s.parse().ok()),
-            operating_margin_ttm: val.operating_margin_ttm.and_then(|s| s.parse().ok()),
-            return_on_assets_ttm: val.return_on_assets_ttm.and_then(|s| s.parse().ok()),
-            return_on_equity_ttm: val.return_on_equity_ttm.and_then(|s| s.parse().ok()),
-            revenue_ttm: val.revenue_ttm.and_then(|s| s.parse().ok()),
-            gross_profit_ttm: val.gross_profit_ttm.and_then(|s| s.parse().ok()),
-            diluted_eps_ttm: val.diluted_eps_ttm.and_then(|s| s.parse().ok()),
-            quarterly_earnings_growth_yoy: val
+            symbol: item.symbol,
+            name: item.name,
+            description: item.description,
+            exchange: item.exchange,
+            currency: item.currency,
+            country: item.country,
+            sector: item.sector,
+            industry: item.industry,
+            market_capitalization: item.market_capitalization.and_then(|s| s.parse().ok()),
+            ebitda: item.ebitda.and_then(|s| s.parse().ok()),
+            pe_ratio: item.pe_ratio.and_then(|s| s.parse().ok()),
+            peg_ratio: item.peg_ratio.and_then(|s| s.parse().ok()),
+            book_value: item.book_value.and_then(|s| s.parse().ok()),
+            dividend_per_share: item.dividend_per_share.and_then(|s| s.parse().ok()),
+            dividend_yield: item.dividend_yield.and_then(|s| s.parse().ok()),
+            eps: item.eps.and_then(|s| s.parse().ok()),
+            revenue_per_share_ttm: item.revenue_per_share_ttm.and_then(|s| s.parse().ok()),
+            profit_margin: item.profit_margin.and_then(|s| s.parse().ok()),
+            operating_margin_ttm: item.operating_margin_ttm.and_then(|s| s.parse().ok()),
+            return_on_assets_ttm: item.return_on_assets_ttm.and_then(|s| s.parse().ok()),
+            return_on_equity_ttm: item.return_on_equity_ttm.and_then(|s| s.parse().ok()),
+            revenue_ttm: item.revenue_ttm.and_then(|s| s.parse().ok()),
+            gross_profit_ttm: item.gross_profit_ttm.and_then(|s| s.parse().ok()),
+            diluted_eps_ttm: item.diluted_eps_ttm.and_then(|s| s.parse().ok()),
+            quarterly_earnings_growth_yoy: item
                 .quarterly_earnings_growth_yoy
                 .and_then(|s| s.parse().ok()),
-            quarterly_revenue_growth_yoy: val
+            quarterly_revenue_growth_yoy: item
                 .quarterly_revenue_growth_yoy
                 .and_then(|s| s.parse().ok()),
-            analyst_target_price: val.analyst_target_price.and_then(|s| s.parse().ok()),
-            trailing_pe: val.trailing_pe.and_then(|s| s.parse().ok()),
-            forward_pe: val.forward_pe.and_then(|s| s.parse().ok()),
-            price_to_sales_ratio_ttm: val.price_to_sales_ratio_ttm.and_then(|s| s.parse().ok()),
-            price_to_book_ratio: val.price_to_book_ratio.and_then(|s| s.parse().ok()),
-            ev_to_revenue: val.ev_to_revenue.and_then(|s| s.parse().ok()),
-            ev_to_ebitda: val.ev_to_ebitda.and_then(|s| s.parse().ok()),
-            beta: val.beta.and_then(|s| s.parse().ok()),
-            week_52_high: val.week_52_high.and_then(|s| s.parse().ok()),
-            week_52_low: val.week_52_low.and_then(|s| s.parse().ok()),
-            day_50_moving_average: val.day_50_moving_average.and_then(|s| s.parse().ok()),
-            day_200_moving_average: val.day_200_moving_average.and_then(|s| s.parse().ok()),
-            shares_outstanding: val.shares_outstanding.and_then(|s| s.parse().ok()),
-            shares_float: val.shares_float.and_then(|s| s.parse().ok()),
-            percent_insiders: val.percent_insiders.and_then(|s| s.parse().ok()),
-            percent_institutions: val.percent_institutions.and_then(|s| s.parse().ok()),
-            dividend_date: val
+            analyst_target_price: item.analyst_target_price.and_then(|s| s.parse().ok()),
+            trailing_pe: item.trailing_pe.and_then(|s| s.parse().ok()),
+            forward_pe: item.forward_pe.and_then(|s| s.parse().ok()),
+            price_to_sales_ratio_ttm: item.price_to_sales_ratio_ttm.and_then(|s| s.parse().ok()),
+            price_to_book_ratio: item.price_to_book_ratio.and_then(|s| s.parse().ok()),
+            ev_to_revenue: item.ev_to_revenue.and_then(|s| s.parse().ok()),
+            ev_to_ebitda: item.ev_to_ebitda.and_then(|s| s.parse().ok()),
+            beta: item.beta.and_then(|s| s.parse().ok()),
+            week_52_high: item.week_52_high.and_then(|s| s.parse().ok()),
+            week_52_low: item.week_52_low.and_then(|s| s.parse().ok()),
+            day_50_moving_average: item.day_50_moving_average.and_then(|s| s.parse().ok()),
+            day_200_moving_average: item.day_200_moving_average.and_then(|s| s.parse().ok()),
+            shares_outstanding: item.shares_outstanding.and_then(|s| s.parse().ok()),
+            shares_float: item.shares_float.and_then(|s| s.parse().ok()),
+            percent_insiders: item.percent_insiders.and_then(|s| s.parse().ok()),
+            percent_institutions: item.percent_institutions.and_then(|s| s.parse().ok()),
+            dividend_date: item
                 .dividend_date
                 .and_then(|s| chrono::NaiveDate::parse_from_str(&s, "%Y-%m-%d").ok()),
-            ex_dividend_date: val
+            ex_dividend_date: item
                 .ex_dividend_date
                 .and_then(|s| chrono::NaiveDate::parse_from_str(&s, "%Y-%m-%d").ok()),
         }
@@ -437,18 +431,23 @@ struct IncomeStatementHelper {
 }
 
 impl From<IncomeStatementHelper> for IncomeStatement {
-    fn from(val: IncomeStatementHelper) -> IncomeStatement {
+    fn from(item: IncomeStatementHelper) -> Self {
         IncomeStatement {
-            period_end_date: chrono::NaiveDate::parse_from_str(&val.fiscal_date_ending, "%Y-%m-%d")
-                .unwrap_or_default(),
-            revenue: val
+            period_end_date: chrono::NaiveDate::parse_from_str(
+                &item.fiscal_date_ending,
+                "%Y-%m-%d",
+            )
+            .unwrap_or_default(),
+            revenue: item
                 .total_revenue
                 .and_then(|s| BigDecimal::from_str(&s).ok()),
-            gross_profit: val.gross_profit.and_then(|s| BigDecimal::from_str(&s).ok()),
-            operating_income: val
+            gross_profit: item
+                .gross_profit
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
+            operating_income: item
                 .operating_income
                 .and_then(|s| BigDecimal::from_str(&s).ok()),
-            net_income: val.net_income.and_then(|s| BigDecimal::from_str(&s).ok()),
+            net_income: item.net_income.and_then(|s| BigDecimal::from_str(&s).ok()),
             eps: None, // Not in mock data
         }
     }
@@ -470,31 +469,36 @@ struct BalanceSheetHelper {
 }
 
 impl From<BalanceSheetHelper> for BalanceSheet {
-    fn from(val: BalanceSheetHelper) -> BalanceSheet {
+    fn from(item: BalanceSheetHelper) -> Self {
         BalanceSheet {
-            period_end_date: chrono::NaiveDate::parse_from_str(&val.fiscal_date_ending, "%Y-%m-%d")
-                .unwrap_or_default(),
-            total_assets: val.total_assets.and_then(|s| BigDecimal::from_str(&s).ok()),
-            total_liabilities: val
+            period_end_date: chrono::NaiveDate::parse_from_str(
+                &item.fiscal_date_ending,
+                "%Y-%m-%d",
+            )
+            .unwrap_or_default(),
+            total_assets: item
+                .total_assets
+                .and_then(|s| BigDecimal::from_str(&s).ok()),
+            total_liabilities: item
                 .total_liabilities
                 .and_then(|s| BigDecimal::from_str(&s).ok()),
-            total_equity: val
+            total_equity: item
                 .total_shareholder_equity
                 .and_then(|s| BigDecimal::from_str(&s).ok()),
-            cash_and_equivalents: val
+            cash_and_equivalents: item
                 .cash_and_cash_equivalents_at_carrying_value
                 .and_then(|s| BigDecimal::from_str(&s).ok()),
-            short_term_investments: val
+            short_term_investments: item
                 .short_term_investments
                 .and_then(|s| BigDecimal::from_str(&s).ok()),
-            short_term_debt: val
+            short_term_debt: item
                 .short_term_debt
                 .and_then(|s| BigDecimal::from_str(&s).ok()),
-            long_term_debt: val
+            long_term_debt: item
                 .long_term_debt
                 .and_then(|s| BigDecimal::from_str(&s).ok()),
             net_debt: None,
-            common_stock_shares_outstanding: val
+            common_stock_shares_outstanding: item
                 .common_stock_shares_outstanding
                 .and_then(|s| s.parse().ok()),
         }
@@ -512,14 +516,17 @@ struct CashFlowHelper {
 }
 
 impl From<CashFlowHelper> for CashFlowStatement {
-    fn from(val: CashFlowHelper) -> CashFlowStatement {
+    fn from(item: CashFlowHelper) -> Self {
         CashFlowStatement {
-            period_end_date: chrono::NaiveDate::parse_from_str(&val.fiscal_date_ending, "%Y-%m-%d")
-                .unwrap_or_default(),
-            operating_cash_flow: val
+            period_end_date: chrono::NaiveDate::parse_from_str(
+                &item.fiscal_date_ending,
+                "%Y-%m-%d",
+            )
+            .unwrap_or_default(),
+            operating_cash_flow: item
                 .operating_cashflow
                 .and_then(|s| BigDecimal::from_str(&s).ok()),
-            capital_expenditures: val
+            capital_expenditures: item
                 .capital_expenditures
                 .and_then(|s| BigDecimal::from_str(&s).ok()),
             free_cash_flow: None, // Calculate if needed: operating - capex

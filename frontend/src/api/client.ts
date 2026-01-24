@@ -16,7 +16,7 @@ export class ApiError extends Error {
 }
 
 interface RequestOptions extends RequestInit {
-  params?: Record<string, string | number | boolean | undefined>;
+  params?: Record<string, string | number | boolean | string[] | undefined>;
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {
@@ -97,7 +97,11 @@ async function request<T>(
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
-        searchParams.append(key, String(value));
+        if (Array.isArray(value)) {
+          value.forEach((v) => searchParams.append(key, String(v)));
+        } else {
+          searchParams.append(key, String(value));
+        }
       }
     });
     const queryString = searchParams.toString();
