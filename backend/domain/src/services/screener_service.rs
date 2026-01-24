@@ -9,7 +9,7 @@ use crate::error::AppError;
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct FilterCriteria {
     pub exchanges: Option<Vec<String>>,
-    pub sectors: Option<Vec<String>>,
+    pub industries: Option<Vec<String>>,
     pub market_cap_min: Option<f64>,
     pub market_cap_max: Option<f64>,
     pub momentum_1m_min: Option<f64>,
@@ -78,8 +78,8 @@ impl ScreenerService {
                 c.symbol,
                 c.name as company_name,
                 c.exchange,
-                s.name as sector,
                 c.industry,
+                c.industry as sector, -- For backward compatibility in response if needed, or just rely on industry field
                 COALESCE(c.market_cap, 0)::float8 as market_cap,
                 '' as market_cap_formatted,
                 -- Placeholders for momentum until derived_metrics integration
@@ -92,7 +92,6 @@ impl ScreenerService {
                 v.updated_at as last_analyzed,
                 v.guidance_summary
             FROM companies c
-            LEFT JOIN sectors s ON c.sector_id = s.id
             LEFT JOIN verdicts v ON c.id = v.company_id
             -- LEFT JOIN market_data m ON c.id = m.company_id -- Table does not exist
             -- LEFT JOIN financial_metrics ...
@@ -108,10 +107,10 @@ impl ScreenerService {
             }
         }
 
-        if let Some(sectors) = &criteria.sectors {
-            if !sectors.is_empty() {
-                query_builder.push(" AND s.name = ANY(");
-                query_builder.push_bind(sectors.clone());
+        if let Some(industries) = &criteria.industries {
+            if !industries.is_empty() {
+                query_builder.push(" AND c.industry = ANY(");
+                query_builder.push_bind(industries.clone());
                 query_builder.push(")");
             }
         }
@@ -167,7 +166,7 @@ mod tests {
     fn test_query_building_market_cap_and_exchange() {
         let criteria = FilterCriteria {
             exchanges: Some(vec!["NASDAQ".to_string(), "NYSE".to_string()]),
-            sectors: None,
+            industries: None,
             market_cap_min: Some(1_000_000_000.0),
             market_cap_max: None,
             momentum_1m_min: None,

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use bigdecimal::BigDecimal;
-use chrono::NaiveDate;
+use chrono::{NaiveDate, Utc};
 use domain::domain::{
     BalanceSheet, CashFlowStatement, CompanyOverview, DailyPrice, EarningsEvent, IncomeStatement,
     OutputSize,
@@ -26,35 +26,6 @@ async fn setup_db() -> sqlx::PgPool {
         .expect("Failed to connect to DB")
 }
 
-async fn clear_db(pool: &sqlx::PgPool) {
-    // Order matters for FK
-    sqlx::query("DELETE FROM job_runs").execute(pool).await.ok();
-    sqlx::query("DELETE FROM derived_metrics")
-        .execute(pool)
-        .await
-        .ok();
-    sqlx::query("DELETE FROM daily_prices")
-        .execute(pool)
-        .await
-        .ok();
-    sqlx::query("DELETE FROM income_statements")
-        .execute(pool)
-        .await
-        .ok();
-    sqlx::query("DELETE FROM balance_sheets")
-        .execute(pool)
-        .await
-        .ok();
-    sqlx::query("DELETE FROM cash_flow_statements")
-        .execute(pool)
-        .await
-        .ok();
-    sqlx::query("DELETE FROM companies")
-        .execute(pool)
-        .await
-        .ok();
-}
-
 async fn seed_company(pool: &sqlx::PgPool, symbol: &str) -> Uuid {
     let id = Uuid::new_v4();
     sqlx::query(
@@ -73,8 +44,17 @@ async fn seed_company(pool: &sqlx::PgPool, symbol: &str) -> Uuid {
 #[tokio::test]
 async fn test_earnings_poll_updates_calendar() {
     let pool = setup_db().await;
-    clear_db(&pool).await;
-    let company_id = seed_company(&pool, "IBM").await;
+    // Use a known symbol present in mock data CSV
+    let symbol = "PNC";
+
+    // Clean up if exists to ensure clean state
+    sqlx::query("DELETE FROM companies WHERE symbol = $1")
+        .bind(symbol)
+        .execute(&pool)
+        .await
+        .ok();
+
+    let company_id = seed_company(&pool, symbol).await;
 
     let provider = Arc::new(MockMarketDataProvider::new());
     let job = EarningsPollingJob::new(pool.clone(), provider);
@@ -90,34 +70,36 @@ async fn test_earnings_poll_updates_calendar() {
 
     assert!(
         latest_quarter.is_some(),
-        "latest_quarter should be updated for IBM"
+        "latest_quarter should be updated for {}",
+        symbol
     );
 }
 
 #[tokio::test]
 async fn test_price_refresh_updates_prices() {
     let pool = setup_db().await;
-    clear_db(&pool).await;
-    seed_company(&pool, "IBM").await;
+    let symbol = format!("T-{}", Uuid::new_v4().to_string()[..8].to_uppercase());
+    let company_id = seed_company(&pool, &symbol).await;
 
     let provider = Arc::new(MockMarketDataProvider::new());
     let job = PriceRefreshJob::new(pool.clone(), provider);
 
     job.run(&pool).await.expect("Job failed");
 
-    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM daily_prices")
+    let count: i64 = sqlx::query_scalar("SELECT count(*) FROM daily_prices WHERE company_id = $1")
+        .bind(company_id)
         .fetch_one(&pool)
         .await
         .unwrap();
 
-    assert!(count > 0, "daily_prices should have records");
+    assert!(count > 0, "daily_prices should have records for {}", symbol);
 }
 
 #[tokio::test]
 async fn test_price_refresh_updates_market_cap() {
     let pool = setup_db().await;
-    clear_db(&pool).await;
-    let company_id = seed_company(&pool, "IBM").await;
+    let symbol = format!("T-{}", Uuid::new_v4().to_string()[..8].to_uppercase());
+    let company_id = seed_company(&pool, &symbol).await;
 
     let provider = Arc::new(MockMarketDataProvider::new());
     let job = PriceRefreshJob::new(pool.clone(), provider);
@@ -138,8 +120,8 @@ async fn test_price_refresh_updates_market_cap() {
 #[tokio::test]
 async fn test_metrics_recalc_creates_derived_metrics() {
     let pool = setup_db().await;
-    clear_db(&pool).await;
-    let company_id = seed_company(&pool, "IBM").await;
+    let symbol = format!("T-{}", Uuid::new_v4().to_string()[..8].to_uppercase());
+    let company_id = seed_company(&pool, &symbol).await;
 
     // Seed data needed for metrics
     sqlx::query(
@@ -179,19 +161,29 @@ async fn test_metrics_recalc_creates_derived_metrics() {
 #[tokio::test]
 async fn test_job_records_success_in_database() {
     let pool = setup_db().await;
-    clear_db(&pool).await;
-    seed_company(&pool, "IBM").await;
+    let start_time = Utc::now();
+    let symbol = format!("T-{}", Uuid::new_v4().to_string()[..8].to_uppercase());
+    seed_company(&pool, &symbol).await;
 
     let provider = Arc::new(MockMarketDataProvider::new());
     let job = EarningsPollingJob::new(pool.clone(), provider);
 
     job.run(&pool).await.expect("Job failed");
 
-    let status: String =
-        sqlx::query_scalar("SELECT status FROM job_runs ORDER BY started_at DESC LIMIT 1")
+    // Small delay and retry for status update which might have a slight race in shared pool
+    let mut status = String::new();
+    for _ in 0..10 {
+        status = sqlx::query_scalar("SELECT status FROM job_runs WHERE job_name = 'earnings_poll' AND started_at >= $1 ORDER BY started_at DESC LIMIT 1")
+            .bind(start_time)
             .fetch_one(&pool)
             .await
-            .unwrap();
+            .unwrap_or_else(|_| "not_found".to_string());
+
+        if status == "completed" {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
 
     assert_eq!(status, "completed");
 }
@@ -226,8 +218,9 @@ impl MarketDataProvider for FailingProvider {
 #[tokio::test]
 async fn test_job_handles_provider_errors_gracefully() {
     let pool = setup_db().await;
-    clear_db(&pool).await;
-    seed_company(&pool, "IBM").await;
+    let start_time = Utc::now();
+    let symbol = format!("T-{}", Uuid::new_v4().to_string()[..8].to_uppercase());
+    seed_company(&pool, &symbol).await;
 
     let provider = Arc::new(FailingProvider);
     let job = EarningsPollingJob::new(pool.clone(), provider);
@@ -236,11 +229,19 @@ async fn test_job_handles_provider_errors_gracefully() {
         .await
         .expect("Job should return Ok but set status to failed");
 
-    let status: String =
-        sqlx::query_scalar("SELECT status FROM job_runs ORDER BY started_at DESC LIMIT 1")
+    let mut status = String::new();
+    for _ in 0..10 {
+        status = sqlx::query_scalar("SELECT status FROM job_runs WHERE job_name = 'earnings_poll' AND started_at >= $1 ORDER BY started_at DESC LIMIT 1")
+            .bind(start_time)
             .fetch_one(&pool)
             .await
-            .unwrap();
+            .unwrap_or_else(|_| "not_found".to_string());
+
+        if status == "failed" {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
 
     assert_eq!(status, "failed");
 }

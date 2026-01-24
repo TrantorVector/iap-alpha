@@ -15,8 +15,6 @@ pub struct Document {
     // Document metadata
     pub document_type: String, // "investor_presentation" | "earnings_call_transcript" | etc.
     pub period_end_date: Option<NaiveDate>,
-    pub fiscal_year: Option<i32>,
-    pub fiscal_quarter: Option<i32>,
     pub title: String,
 
     // Storage
