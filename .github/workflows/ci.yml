@@ -39,6 +39,11 @@ jobs:
       - name: Install SQLx CLI
         run: cargo install sqlx-cli --no-default-features --features native-tls,postgres
       
+      - name: Run migrations
+        run: cd backend && sqlx migrate run --source db/migrations
+        env:
+          DATABASE_URL: postgres://postgres:dev@localhost:5432/irp_dev
+
       - name: Check formatting
         run: cd backend && cargo fmt --all -- --check
       
@@ -47,10 +52,7 @@ jobs:
         env:
           DATABASE_URL: postgres://postgres:dev@localhost:5432/irp_dev
       
-      - name: Run migrations
-        run: cd backend && sqlx migrate run --source db/migrations
-        env:
-          DATABASE_URL: postgres://postgres:dev@localhost:5432/irp_dev
+
       
       - name: Run tests
         run: cd backend && cargo test --workspace -- --test-threads=1
