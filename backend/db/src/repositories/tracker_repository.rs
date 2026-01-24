@@ -87,7 +87,10 @@ impl TrackerRepository {
         // Build query
         let verdict_types = filters.verdict_type.as_ref().cloned().unwrap_or_default();
         let sectors = filters.sector.as_ref().cloned().unwrap_or_default();
-        let search = filters.search.as_ref().map(|s| format!("%{}%", s.to_lowercase()));
+        let search = filters
+            .search
+            .as_ref()
+            .map(|s| format!("%{}%", s.to_lowercase()));
 
         let mut query_builder = sqlx::QueryBuilder::<sqlx::Postgres>::new(
             r#"
@@ -103,7 +106,7 @@ impl TrackerRepository {
                 v.lock_version as version
             FROM verdicts v
             JOIN companies c ON v.company_id = c.id
-            WHERE v.user_id = "#
+            WHERE v.user_id = "#,
         );
         query_builder.push_bind(user_id);
 
@@ -115,12 +118,24 @@ impl TrackerRepository {
 
         if let Some(date_from) = filters.date_from {
             query_builder.push(" AND v.updated_at >= ");
-            query_builder.push_bind(date_from.and_hms_opt(0, 0, 0).unwrap().and_local_timezone(Utc).unwrap());
+            query_builder.push_bind(
+                date_from
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap()
+                    .and_local_timezone(Utc)
+                    .unwrap(),
+            );
         }
 
         if let Some(date_to) = filters.date_to {
             query_builder.push(" AND v.updated_at <= ");
-            query_builder.push_bind(date_to.and_hms_opt(23, 59, 59).unwrap().and_local_timezone(Utc).unwrap());
+            query_builder.push_bind(
+                date_to
+                    .and_hms_opt(23, 59, 59)
+                    .unwrap()
+                    .and_local_timezone(Utc)
+                    .unwrap(),
+            );
         }
 
         if !sectors.is_empty() {
@@ -138,15 +153,16 @@ impl TrackerRepository {
         }
 
         // Clone for count before adding order and limit
-        let mut count_query_builder = sqlx::QueryBuilder::<sqlx::Postgres>::new("SELECT COUNT(*) FROM (");
+        let mut count_query_builder =
+            sqlx::QueryBuilder::<sqlx::Postgres>::new("SELECT COUNT(*) FROM (");
         count_query_builder.push(query_builder.sql());
         // We need to re-bind arguments for the count query if we want to use the same builder logic
         // But sqlx::QueryBuilder doesn't easily allow cloning with binds.
         // Let's use a simpler approach for now.
-        
+
         // Actually, let's just do two separate queries or one with window function.
         // Window function is easier for pagination metadata.
-        
+
         let mut final_query_builder = query_builder;
         final_query_builder.push(" ORDER BY v.updated_at DESC LIMIT ");
         final_query_builder.push_bind(pagination.per_page as i64);
@@ -165,23 +181,48 @@ impl TrackerRepository {
         );
         count_query_builder.push_bind(user_id);
 
-        if !filters.verdict_type.as_ref().cloned().unwrap_or_default().is_empty() {
+        if !filters
+            .verdict_type
+            .as_ref()
+            .cloned()
+            .unwrap_or_default()
+            .is_empty()
+        {
             count_query_builder.push(" AND v.final_verdict = ANY(");
-            count_query_builder.push_bind(filters.verdict_type.as_ref().cloned().unwrap_or_default());
+            count_query_builder
+                .push_bind(filters.verdict_type.as_ref().cloned().unwrap_or_default());
             count_query_builder.push(")");
         }
-        
+
         if let Some(date_from) = filters.date_from {
             count_query_builder.push(" AND v.updated_at >= ");
-            count_query_builder.push_bind(date_from.and_hms_opt(0, 0, 0).unwrap().and_local_timezone(Utc).unwrap());
+            count_query_builder.push_bind(
+                date_from
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap()
+                    .and_local_timezone(Utc)
+                    .unwrap(),
+            );
         }
 
         if let Some(date_to) = filters.date_to {
             count_query_builder.push(" AND v.updated_at <= ");
-            count_query_builder.push_bind(date_to.and_hms_opt(23, 59, 59).unwrap().and_local_timezone(Utc).unwrap());
+            count_query_builder.push_bind(
+                date_to
+                    .and_hms_opt(23, 59, 59)
+                    .unwrap()
+                    .and_local_timezone(Utc)
+                    .unwrap(),
+            );
         }
 
-        if !filters.sector.as_ref().cloned().unwrap_or_default().is_empty() {
+        if !filters
+            .sector
+            .as_ref()
+            .cloned()
+            .unwrap_or_default()
+            .is_empty()
+        {
             count_query_builder.push(" AND c.sector = ANY(");
             count_query_builder.push_bind(filters.sector.as_ref().cloned().unwrap_or_default());
             count_query_builder.push(")");

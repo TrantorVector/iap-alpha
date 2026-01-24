@@ -101,6 +101,7 @@ export function ScreenerEditor({
     watch,
     setValue,
     formState: { errors, isSubmitting },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = useForm<any>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -214,6 +215,7 @@ export function ScreenerEditor({
               />
               {errors.title && (
                 <p className="text-xs text-destructive">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {(errors.title as any)?.message}
                 </p>
               )}

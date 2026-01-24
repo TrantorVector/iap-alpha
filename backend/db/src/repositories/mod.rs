@@ -16,9 +16,9 @@ pub use company::{
 };
 pub use document::{CreateDocumentParams, DocumentRepository};
 pub use screener_repository::{CreateScreener, ScreenerRepository, UpdateScreener};
-pub use user::{CreateUserRequest, UserPreferencesUpdate, UserRepository};
-pub use verdict::{VerdictCreate, VerdictRepository, VerdictUpdate};
 pub use tracker_repository::{
     Pagination as TrackerPagination, TrackerItem, TrackerRepository, TrackerSummary,
     VerdictFilters as TrackerFilters, VerdictListResult,
 };
+pub use user::{CreateUserRequest, UserPreferencesUpdate, UserRepository};
+pub use verdict::{VerdictCreate, VerdictRepository, VerdictUpdate};
