@@ -9,8 +9,7 @@ use axum::{
 };
 use chrono::{DateTime, NaiveDate, Utc};
 use db::repositories::tracker_repository::{
-    RecentActivity, TrackerItem, TrackerPagination, TrackerRepository, TrackerSummary,
-    VerdictFilters as TrackerFilters, VerdictListResult,
+    Pagination, TrackerRepository, VerdictFilters as TrackerFilters,
 };
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
@@ -95,7 +94,7 @@ pub async fn list_verdicts(
         .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid user ID".to_string()))?;
 
     let repo = TrackerRepository::new(state.db.clone());
-    
+
     let filters = TrackerFilters {
         verdict_type: params.verdict_type,
         date_from: params.date_from,
@@ -104,7 +103,7 @@ pub async fn list_verdicts(
         search: params.search,
     };
 
-    let pagination = TrackerPagination {
+    let pagination = Pagination {
         page: params.page.unwrap_or(1),
         per_page: params.per_page.unwrap_or(20),
     };
@@ -115,17 +114,21 @@ pub async fn list_verdicts(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     let response = VerdictListResponse {
-        items: result.items.into_iter().map(|i| TrackerItemOut {
-            company_id: i.company_id,
-            symbol: i.symbol,
-            company_name: i.company_name,
-            exchange: i.exchange,
-            sector: i.sector,
-            verdict: i.verdict,
-            verdict_date: i.verdict_date,
-            summary_text: i.summary_text,
-            version: i.version,
-        }).collect(),
+        items: result
+            .items
+            .into_iter()
+            .map(|i| TrackerItemOut {
+                company_id: i.company_id,
+                symbol: i.symbol,
+                company_name: i.company_name,
+                exchange: i.exchange,
+                sector: i.sector,
+                verdict: i.verdict,
+                verdict_date: i.verdict_date,
+                summary_text: i.summary_text,
+                version: i.version,
+            })
+            .collect(),
         total: result.total,
         page: result.page,
         per_page: result.per_page,
@@ -161,13 +164,17 @@ pub async fn get_summary(
         pass_count: summary.pass_count,
         watchlist_count: summary.watchlist_count,
         no_thesis_count: summary.no_thesis_count,
-        recent_activity: summary.recent_activity.into_iter().map(|a| RecentActivityOut {
-            company_id: a.company_id,
-            symbol: a.symbol,
-            company_name: a.company_name,
-            verdict: a.verdict,
-            recorded_at: a.recorded_at,
-        }).collect(),
+        recent_activity: summary
+            .recent_activity
+            .into_iter()
+            .map(|a| RecentActivityOut {
+                company_id: a.company_id,
+                symbol: a.symbol,
+                company_name: a.company_name,
+                verdict: a.verdict,
+                recorded_at: a.recorded_at,
+            })
+            .collect(),
     };
 
     Ok(Json(response))

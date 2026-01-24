@@ -1,68 +1,141 @@
-import { Input } from "@/components/ui/card"; // Wait, Input is usually in ui/input
-import { Search, Filter, X } from "lucide-react";
+import { TrackerQueryParams } from "@/api/types";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Search, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-
-// Let's check where Input is
-// Assuming standard shadcn/ui paths
+import React from "react";
 
 interface TrackerFiltersProps {
-    onSearchChange: (value: string) => void;
-    searchValue: string;
-    onClearFilters: () => void;
-    activeFilterCount: number;
+  filters: TrackerQueryParams;
+  onFilterChange: (filters: TrackerQueryParams) => void;
+  sectors: string[];
 }
 
 export function TrackerFilters({
-    onSearchChange,
-    searchValue,
-    onClearFilters,
-    activeFilterCount
+  filters,
+  onFilterChange,
+  sectors,
 }: TrackerFiltersProps) {
-    return (
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-card p-4 rounded-xl border shadow-sm">
-            <div className="relative w-full sm:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                    type="text"
-                    placeholder="Search by symbol or name..."
-                    className="w-full pl-10 pr-4 py-2 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                    value={searchValue}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                />
-                {searchValue && (
-                    <button
-                        onClick={() => onSearchChange("")}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
-                )}
-            </div>
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onFilterChange({ ...filters, search: e.target.value });
+  };
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-                <div className="flex -space-x-1">
-                    {/* Placeholder for future multi-select filters */}
-                    <Button variant="outline" size="sm" className="rounded-r-none h-9">
-                        <Filter className="mr-2 h-4 w-4" />
-                        Filters
-                        {activeFilterCount > 0 && (
-                            <Badge variant="secondary" className="ml-2 px-1 text-[10px] h-4 min-w-[16px]">
-                                {activeFilterCount}
-                            </Badge>
-                        )}
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-l-none border-l-0 h-9"
-                        onClick={onClearFilters}
-                        disabled={activeFilterCount === 0 && !searchValue}
-                    >
-                        Clear
-                    </Button>
-                </div>
-            </div>
+  const handleSectorChange = (value: string) => {
+    const newSector = value === "all" ? undefined : [value];
+    onFilterChange({ ...filters, sector: newSector });
+  };
+
+  const handleDateChange = (field: "date_from" | "date_to", value: string) => {
+    onFilterChange({ ...filters, [field]: value || undefined });
+  };
+
+  const toggleVerdict = (verdict: string) => {
+    const current = filters.verdict_type || [];
+    const next = current.includes(verdict)
+      ? current.filter((v) => v !== verdict)
+      : [...current, verdict];
+    onFilterChange({
+      ...filters,
+      verdict_type: next.length ? next : undefined,
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-4 p-4 bg-card border rounded-lg shadow-sm">
+      <div className="flex flex-col xl:flex-row gap-4 xl:items-end">
+        <div className="flex-1 space-y-2">
+          <label className="text-sm font-medium">Search</label>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by symbol or company..."
+              className="pl-8"
+              value={filters.search || ""}
+              onChange={handleSearchChange}
+            />
+            {filters.search && (
+              <button
+                onClick={() => onFilterChange({ ...filters, search: "" })}
+                className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
-    );
+
+        <div className="w-full xl:w-48 space-y-2">
+          <label className="text-sm font-medium">Sector</label>
+          <Select
+            value={filters.sector?.[0] || "all"}
+            onValueChange={handleSectorChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="All Sectors" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sectors</SelectItem>
+              {sectors.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex gap-2 w-full xl:w-auto">
+          <div className="space-y-2 flex-1 xl:flex-none">
+            <label className="text-sm font-medium">From Date</label>
+            <Input
+              type="date"
+              value={filters.date_from || ""}
+              onChange={(e) => handleDateChange("date_from", e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-2 flex-1 xl:flex-none">
+            <label className="text-sm font-medium">To Date</label>
+            <Input
+              type="date"
+              value={filters.date_to || ""}
+              onChange={(e) => handleDateChange("date_to", e.target.value)}
+            />
+          </div>
+        </div>
+
+        <Button
+          variant="ghost"
+          onClick={() => onFilterChange({})}
+          className="shrink-0"
+        >
+          Reset Filters
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2 items-center pt-2 border-t">
+        <span className="text-sm font-medium mr-2">Verdicts:</span>
+        {["Invest", "Watchlist", "Pass", "No Thesis"].map((v) => {
+          const isSelected = filters.verdict_type?.includes(v);
+          return (
+            <Badge
+              key={v}
+              variant={isSelected ? "default" : "outline"}
+              className="cursor-pointer hover:bg-primary/90 hover:text-primary-foreground selection:bg-none"
+              onClick={() => toggleVerdict(v)}
+            >
+              {v}
+            </Badge>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
