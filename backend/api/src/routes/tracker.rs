@@ -9,8 +9,7 @@ use axum::{
 };
 use chrono::{DateTime, NaiveDate, Utc};
 use db::repositories::tracker_repository::{
-    RecentActivity, TrackerItem, TrackerPagination, TrackerRepository, TrackerSummary,
-    VerdictFilters as TrackerFilters, VerdictListResult,
+    Pagination, TrackerRepository, VerdictFilters as TrackerFilters,
 };
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
@@ -104,7 +103,7 @@ pub async fn list_verdicts(
         search: params.search,
     };
 
-    let pagination = TrackerPagination {
+    let pagination = Pagination {
         page: params.page.unwrap_or(1),
         per_page: params.per_page.unwrap_or(20),
     };
